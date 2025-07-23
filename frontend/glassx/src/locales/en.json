@@ -1,0 +1,246 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "edit": "Edit",
+    "save": "Save",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "close": "Close",
+    "search": "Search",
+    "filter": "Filter",
+    "refresh": "Refresh",
+    "export": "Export",
+    "import": "Import",
+    "success": "Success",
+    "error": "Error",
+    "warning": "Warning",
+    "info": "Info",
+    "back_home": "Back to Home"
+  },
+  "nav": {
+    "home": "Home",
+    "register": "Register",
+    "login": "Login",
+    "admin": "Admin",
+    "logout": "Logout"
+  },
+  "home": {
+    "title": "VerifyMC Whitelist System",
+    "subtitle": "Modern Minecraft Server Whitelist Management Platform",
+    "description": "Secure, efficient, and beautiful whitelist registration and management solution",
+    "welcome": "Welcome to",
+    "features": {
+      "title": "Core Features",
+      "security": {
+        "title": "Secure & Reliable",
+        "description": "Multi-layer verification ensures server security"
+      },
+      "modern": {
+        "title": "Modern Design",
+        "description": "Glassmorphism design style with outstanding visual experience"
+      },
+      "efficient": {
+        "title": "Efficient Management",
+        "description": "Intelligent review process improves management efficiency"
+      }
+    },
+    "cta": {
+      "register": "Register Now",
+      "learn_more": "Learn More"
+    },
+    "announcement": {
+      "title": "System Announcement",
+      "no_announcement": "No announcements"
+    }
+  },
+  "register": {
+    "title": "Whitelist Registration",
+    "subtitle": "Apply to join our Minecraft server whitelist",
+    "form": {
+      "username": "Username",
+      "username_placeholder": "Enter your game username",
+      "email": "Email Address",
+      "email_placeholder": "Enter your email address",
+      "code": "Verification Code",
+      "code_placeholder": "Enter verification code",
+      "submit": "Submit Whitelist Application"
+    },
+    "validation": {
+      "username_required": "Please enter username",
+      "username_length": "Username should be 3-16 characters long",
+      "username_format": "Username can only contain letters, numbers and underscores",
+      "email_required": "Please enter email address",
+      "email_format": "Please enter a valid email address",
+      "code_required": "Please enter verification code"
+    },
+    "messages": {
+      "success": "Whitelist application submitted successfully, please wait for admin review",
+      "error": "Application submission failed, please try again later",
+      "user_exists": "Username or email already exists"
+    },
+    "send_code": "Send Code",
+    "sending": "Sending...",
+    "code_sent": "Code sent! Please check your inbox.",
+    "send_failed": "Failed to send code. Please try again.",
+    "success": "Registration successful! Please wait for review.",
+    "failed": "Registration failed. Please try again."
+  },
+  "login": {
+    "title": "Admin Login",
+    "subtitle": "Enter admin account credentials",
+    "form": {
+      "email": "Admin Password",
+      "email_placeholder": "Enter admin password",
+      "submit": "Login"
+    },
+    "validation": {
+      "email_required": "Please enter admin password",
+      "email_format": "Please enter a valid admin password"
+    },
+    "messages": {
+      "success": "Login successful, redirecting to admin panel...",
+      "error": "Login failed, please try again later",
+      "invalid_credentials": "Invalid admin credentials, please try again"
+    }
+  },
+  "admin": {
+    "login_success": "Admin login successful, redirecting...",
+    "title": "Admin Panel",
+    "tabs": {
+      "review": "Pending Review",
+      "users": "User Management",
+      "announcement": "Announcement"
+    },
+    "delete_modal": {
+      "title": "Delete User",
+      "message": "Are you sure you want to delete user {username}? This action cannot be undone.",
+      "confirm": "Confirm Delete",
+      "cancel": "Cancel"
+    },
+    "review": {
+      "title": "Pending Users",
+      "no_pending": "No pending users",
+      "table": {
+        "username": "Username",
+        "email": "Email",
+        "register_time": "Register Time",
+        "actions": "Actions"
+      },
+      "actions": {
+        "approve": "Approve",
+        "reject": "Reject"
+      },
+      "reject_modal": {
+        "title": "Reject Application",
+        "reason_label": "Rejection Reason",
+        "reason_placeholder": "Enter rejection reason (optional)",
+        "confirm": "Confirm Reject",
+        "cancel": "Cancel"
+      },
+      "messages": {
+        "approve_success": "User approved successfully",
+        "reject_success": "User application rejected",
+        "error": "Operation failed, please try again later"
+      }
+    },
+    "users": {
+      "title": "User Management",
+      "no_users": "No users",
+      "no_search_results": "No matching users found",
+      "search_placeholder": "Search by username or email...",
+      "table": {
+        "username": "Username",
+        "email": "Email",
+        "status": "Status",
+        "register_time": "Register Time",
+        "actions": "Actions"
+      },
+      "status": {
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "banned": "Banned"
+      },
+      "actions": {
+        "delete": "Delete",
+        "ban": "Ban",
+        "unban": "Unban"
+      },
+      "delete_modal": {
+        "title": "Delete User",
+        "message": "Are you sure you want to delete user {username}? This action cannot be undone.",
+        "confirm": "Confirm Delete",
+        "cancel": "Cancel"
+      },
+      "ban_modal": {
+        "title": "Ban User",
+        "message": "Are you sure you want to ban user {username}? This action cannot be undone.",
+        "confirm": "Confirm Ban",
+        "cancel": "Cancel"
+      },
+      "messages": {
+        "delete_success": "User deleted successfully",
+        "ban_success": "User banned successfully",
+        "error": "Operation failed, please try again later"
+      }
+    },
+    "announcement": {
+      "title": "Announcement Management",
+      "form": {
+        "content": "Announcement Content",
+        "content_placeholder": "Enter announcement content",
+        "submit": "Update Announcement"
+      },
+      "messages": {
+        "update_success": "Announcement updated successfully",
+        "error": "Update failed, please try again later"
+      }
+    },
+    "unban": "Unban"
+  },
+  "user_status": {
+    "title": "Application Status",
+    "status": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    },
+    "messages": {
+      "pending": "Your application is under review, please wait patiently",
+      "approved": "Congratulations! Your application has been approved, you can join the server now",
+      "rejected": "Sorry, your application has been rejected"
+    },
+    "reason": "Rejection Reason"
+  },
+  "errors": {
+    "404": {
+      "title": "Page Not Found",
+      "message": "Sorry, the page you are looking for does not exist",
+      "back_home": "Back to Home"
+    },
+    "500": {
+      "title": "Server Error",
+      "message": "The server encountered some problems, please try again later",
+      "back_home": "Back to Home"
+    },
+    "network": "Network connection failed, please check network settings",
+    "timeout": "Request timeout, please try again later",
+    "unknown": "Unknown error, please try again later"
+  },
+  "nav": {
+    "home": "Home",
+    "register": "Register",
+    "login": "Login",
+    "admin": "Admin"
+  },
+  "language": {
+    "switch": "Switch Language",
+    "zh": "中文",
+    "en": "English"
+  }
+}

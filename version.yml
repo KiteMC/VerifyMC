@@ -1,0 +1,91 @@
+release: true
+version: 1.0.0
+release_notes: |
+  🎉 **VerifyMC 1.0.0 — First Official Release!**
+  
+  [简体中文](https://github.com/KiteMC/VerifyMC/release_notes_zh.md) | English | [📚 Official Documentation](https://kitemc.com/docs/verifymc/)
+  
+  ---
+  
+  🧩 **All-in-one**
+  - Bukkit plugin + Web admin + Email verification + WebSocket real-time push
+  
+  ---
+  
+  📨 **Registration**
+  - Email + username registration, anti-spam verification code, max accounts per email
+  - Supports email domain whitelist (mainstream domains by default, customizable/switchable) and alias limit (switchable)
+  - Registration form validation to prevent malicious/duplicate/case-conflicting usernames
+  - Auto/manual review after registration, supports auto-approve or pending
+  
+  ---
+  
+  🛡️ **Review & Management**
+  - Admin panel login (Token authentication), secure and reliable
+  - Pending user list, one-click approve/reject/ban/unban/delete
+  - Full user management, status switching, batch operations
+  - Real-time WebSocket push for operation results, frontend auto-refresh
+  
+  ---
+  
+  🔄 **Whitelist Sync**
+  - Supports Bukkit native whitelist and plugin custom whitelist
+  - whitelist.json auto sync, hot reload supported
+  - Mutual sync between plugin and server whitelist, no omissions
+  
+  ---
+  
+  🎨 **Frontend & Themes**
+  - Multiple themes (default/glassx), responsive design, mobile-friendly
+  - Complete pages: registration, login, admin, user status, etc.
+  - Global Toast notifications, instant feedback
+  - One-click language switch, i18n support
+  
+  ---
+  
+  🔗 **Rich API**
+  - RESTful APIs for registration, verification code, user status, review, management
+  - Supports frontend-backend separation and secondary development
+  
+  ---
+  
+  ♻️ **Hot Update & Backup**
+  - Auto-detect and hot-update config, i18n, static resources, email templates
+  - Auto backup on plugin start, prevent data loss
+  
+  ---
+  
+  📨 **Email Service**
+  - Custom SMTP supported, built-in/custom bilingual email templates
+  - Email verification code sending and validation, anti-abuse
+  
+  ---
+  
+  📝 **Logging & Debug**
+  - Detailed log output, debug mode supported
+  - Easy troubleshooting and secondary development
+  
+  ---
+  
+  🔒 **Permissions & Security**
+  - Admin actions require login, Token authentication
+  - Multi-level validation for registration/review/management, anti-spam and anti-misoperation
+  
+  ---
+  
+  ⚙️ **Extensibility**
+  - Clean code structure, easy for secondary development and customization
+  - Custom logo, announcement, theme, email template, etc. supported
+  
+  ---
+  
+  🚀 **Use Cases**
+  - For Minecraft servers requiring real-name/email verification, registration review, and cross-platform management
+  
+    ---
+  
+  ⭐ **Plugin Highlights**
+  - Ultra-simple deployment, out-of-the-box
+  - Full-process automation, top-level security
+  - Beautiful themes, modern experience
+  - Open source code, easy to extend

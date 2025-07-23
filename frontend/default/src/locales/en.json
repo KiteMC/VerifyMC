@@ -1,0 +1,129 @@
+{
+  "welcome": "Welcome to VerifyMC Whitelist System!",
+  "main.intro": "Web-based whitelist registration and review, supports Email authentication.",
+  "main.register": "Register",
+  "main.admin": "Admin Panel",
+  "register.title": "Whitelist Registration",
+  "register.email": "Email",
+  "register.code": "Verification Code",
+  "register.username": "Username",
+  "register.send_code": "Send Code",
+  "register.submit": "Submit",
+  "admin.title": "Review Panel",
+  "admin.username": "Username",
+  "admin.email": "Email",
+  "admin.action": "Action",
+  "admin.approve": "Approve",
+  "admin.reject": "Reject",
+  "404.title": "Page Not Found",
+  "404.desc": "The page you are looking for does not exist.",
+  "404.back": "Back to Home",
+  "500.title": "Server Error",
+  "500.desc": "Sorry, something went wrong on our end.",
+  "500.back": "Back to Home",
+  "nav": {
+    "register": "Register",
+    "admin": "Admin"
+  },
+  "home": {
+    "title": "Welcome to VerifyMC",
+    "desc": "This is a whitelist verification system for Minecraft.",
+    "registerBtn": "Register Now",
+    "welcome": "Welcome to"
+  },
+  "error": {
+    "404": {
+      "title": "Page Not Found",
+      "desc": "The page you are looking for does not exist."
+    },
+    "500": {
+      "title": "Server Error",
+      "desc": "Sorry, something went wrong on our end."
+    },
+    "backHome": "Back to Home"
+
+  },
+  "register": {
+    "username": "Username",
+    "usernamePlaceholder": "Enter your Minecraft username",
+    "email": "Email",
+    "emailPlaceholder": "Enter your email",
+    "code": "Verification Code",
+    "codePlaceholder": "Enter the code",
+    "sendCode": "Send Code",
+    "sending": "Sending...",
+    "submit": "Submit Registration",
+    "emailRequired": "Please enter your email",
+    "codeSent": "Code sent! Please check your inbox.",
+    "sendFailed": "Failed to send code. Please try again.",
+    "success": "Registration successful! Please wait for review.",
+    "failed": "Registration failed. Please try again.",
+    "usernameRequired": "Please enter your username",
+    "codeRequired": "Please enter the code",
+    "invalid_email": "Invalid email format",
+    "invalid_uuid": "Invalid UUID format",
+    "invalid_username": "Username cannot be empty"
+  },
+  "admin": {
+    "pendingList": "Pending User List",
+    "refresh": "Refresh",
+    "loading": "Loading...",
+    "empty": "No pending users",
+    "username": "Username",
+    "email": "Email",
+    "time": "Apply Time",
+    "action": "Action",
+    "approve": "Approve",
+    "reject": "Reject",
+    "reviewSuccess": "Review operation successful!",
+    "reviewFailed": "Review operation failed. Please try again.",
+    "loadFailed": "Failed to load. Please try again.",
+    "loginTitle": "Enter admin password",
+    "passwordPlaceholder": "Admin password",
+    "loginBtn": "Login",
+    "passwordRequired": "Please enter the password",
+    "loginFailed": "Wrong password or network error",
+    "allUsers": "All Users",
+    "status": "Status",
+    "status_pending": "Pending",
+    "status_approved": "Approved",
+    "status_rejected": "Rejected",
+    "status_banned": "Banned",
+    "pending": "Pending",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "noUsers": "No users",
+    "delete": "Delete",
+    "ban": "Ban",
+    "confirmDelete": "Are you sure you want to delete this user? This action cannot be undone.",
+    "confirmBan": "Are you sure you want to ban this user? This action cannot be undone.",
+    "deleteSuccess": "User deleted successfully",
+    "deleteFailed": "Failed to delete user",
+    "banSuccess": "User banned successfully",
+    "banFailed": "Failed to ban user",
+    "unban": "Unban",
+    "unbanSuccess": "User unbanned successfully",
+    "unbanFailed": "Failed to unban user",
+    "confirmUnban": "Are you sure you want to unban this user?",
+    "setPasswordTip": "Please set password in",
+    "setPasswordTip2": "",
+    "codeLinesTip": "# Nearby lines",
+    "loginSuccessFallback": "Login successful",
+    "loginSuccess": "Admin login successful, redirecting..."
+  },
+  "email": {
+    "invalid_format": "Invalid email format"
+  },
+  "verify": {
+    "wrong_code": "Wrong verification code"
+  },
+  "review": {
+    "approve_success": "Review approved successfully",
+    "reject_success": "Review rejected successfully",
+    "failed": "Review operation failed"
+  },
+  "common": {
+    "loading": "Loading...",
+    "cancel": "Cancel"
+  }
+} 

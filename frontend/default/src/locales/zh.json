@@ -1,0 +1,133 @@
+{
+  "welcome": "欢迎使用 VerifyMC 白名单系统！",
+  "main.intro": "基于 Web 的白名单注册与审核，支持邮箱认证。",
+  "main.register": "注册白名单",
+  "main.admin": "管理员面板",
+  "register.title": "白名单注册",
+  "register.email": "邮箱",
+  "register.code": "验证码",
+  "register.username": "游戏昵称",
+  "register.send_code": "发送验证码",
+  "register.submit": "提交注册",
+  "admin.title": "审核面板",
+  "admin.username": "昵称",
+  "admin.email": "邮箱",
+  "admin.action": "操作",
+  "admin.approve": "通过",
+  "admin.reject": "拒绝",
+  "404.title": "页面未找到",
+  "404.desc": "您访问的页面不存在，或已被删除。",
+  "404.back": "返回首页",
+  "500.title": "服务器错误",
+  "500.desc": "服务器遇到错误，请稍后重试。",
+  "500.back": "返回首页",
+  "nav": {
+    "register": "注册",
+    "admin": "管理"
+  },
+  "home": {
+    "title": "欢迎使用 VerifyMC",
+    "desc": "这是一个用于 Minecraft 白名单验证的系统。",
+    "registerBtn": "立即注册",
+    "welcome": "欢迎加入"
+  },
+  "error": {
+    "404": {
+      "title": "页面未找到",
+      "desc": "您访问的页面不存在，或已被删除。"
+    },
+    "500": {
+      "title": "服务器错误",
+      "desc": "服务器遇到错误，请稍后重试。"
+    },
+    "backHome": "返回首页"
+  },
+  "register": {
+    "username": "游戏昵称",
+    "usernamePlaceholder": "请输入你的游戏昵称",
+    "email": "邮箱",
+    "emailPlaceholder": "请输入你的邮箱",
+    "code": "验证码",
+    "codePlaceholder": "请输入验证码",
+    "sendCode": "发送验证码",
+    "sending": "发送中...",
+    "submit": "提交注册",
+    "emailRequired": "请输入邮箱",
+    "codeSent": "验证码已发送，请查收！",
+    "sendFailed": "验证码发送失败，请重试。",
+    "success": "注册成功！请等待审核。",
+    "failed": "注册失败，请重试。",
+    "usernameRequired": "请输入游戏昵称",
+    "codeRequired": "请输入验证码",
+    "invalid_email": "邮箱格式不正确",
+    "invalid_uuid": "UUID格式不正确",
+    "invalid_username": "用户名不能为空"
+  },
+  "admin": {
+    "pendingList": "待审核用户列表",
+    "refresh": "刷新",
+    "loading": "加载中...",
+    "empty": "暂无待审核用户",
+    "username": "昵称",
+    "email": "邮箱",
+    "time": "申请时间",
+    "action": "操作",
+    "approve": "通过",
+    "reject": "拒绝",
+    "reviewSuccess": "审核操作成功！",
+    "reviewFailed": "审核操作失败，请重试。",
+    "loadFailed": "加载失败，请重试。",
+    "loginTitle": "请输入管理员密码",
+    "passwordPlaceholder": "管理员密码",
+    "loginBtn": "登录",
+    "passwordRequired": "请输入密码",
+    "loginFailed": "密码错误或网络异常",
+    "allUsers": "全部玩家管理",
+    "status": "状态",
+    "status_pending": "待审核",
+    "status_approved": "已通过",
+    "status_rejected": "已拒绝",
+    "status_banned": "已封禁",
+    "pending": "待审核",
+    "approved": "已通过",
+    "rejected": "已拒绝",
+    "noUsers": "暂无玩家",
+    "delete": "删除",
+    "ban": "封禁",
+    "confirmDelete": "确定要删除此用户吗？此操作不可撤销。",
+    "confirmBan": "确定要封禁此用户吗？此操作不可撤销。",
+    "deleteSuccess": "用户删除成功",
+    "deleteFailed": "用户删除失败",
+    "banSuccess": "用户封禁成功",
+    "banFailed": "用户封禁失败",
+    "unban": "解封",
+    "unbanSuccess": "用户解封成功",
+    "unbanFailed": "用户解封失败",
+    "confirmUnban": "确定要解封此用户吗？",
+    "setPasswordTip": "请在",
+    "setPasswordTip2": "中设置密码",
+    "codeLinesTip": "# 附近行",
+    "loginSuccessFallback": "登录成功",
+    "loginSuccess": "管理员登录成功，正在跳转..."
+  },
+  "email": {
+    "invalid_format": "邮箱格式不正确"
+  },
+  "verify": {
+    "wrong_code": "验证码错误"
+  },
+  "review": {
+    "approve_success": "审核通过成功",
+    "reject_success": "审核拒绝成功",
+    "failed": "审核操作失败"
+  },
+  "common": {
+    "loading": "加载中...",
+    "cancel": "取消"
+  },
+  "notification": {
+    "register_success": "注册成功！您的申请已提交审核。",
+    "register_failed": "注册失败，请稍后再试。",
+    "username_exists": "用户名已存在"
+  }
+} 

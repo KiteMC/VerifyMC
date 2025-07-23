@@ -1,0 +1,257 @@
+{
+  "common": {
+    "loading": "加载中...",
+    "submit": "提交",
+    "cancel": "取消",
+    "confirm": "确认",
+    "delete": "删除",
+    "edit": "编辑",
+    "save": "保存",
+    "back": "返回",
+    "next": "下一步",
+    "previous": "上一步",
+    "close": "关闭",
+    "search": "搜索",
+    "filter": "筛选",
+    "refresh": "刷新",
+    "export": "导出",
+    "import": "导入",
+    "success": "成功",
+    "error": "错误",
+    "warning": "警告",
+    "info": "信息",
+    "back_home": "返回首页"
+  },
+  "nav": {
+    "home": "首页",
+    "register": "注册",
+    "login": "登录",
+    "admin": "管理",
+    "logout": "退出登录"
+  },
+  "home": {
+    "title": "VerifyMC 白名单系统",
+    "subtitle": "现代化的 Minecraft 服务器白名单管理平台",
+    "description": "安全、高效、美观的白名单注册与管理解决方案",
+    "welcome": "欢迎加入",
+    "features": {
+      "title": "核心特性",
+      "security": {
+        "title": "安全可靠",
+        "description": "多重验证机制，确保服务器安全"
+      },
+      "modern": {
+        "title": "现代设计",
+        "description": "Glassmorphism 设计风格，视觉体验出众"
+      },
+      "efficient": {
+        "title": "高效管理",
+        "description": "智能化审核流程，提升管理效率"
+      }
+    },
+    "cta": {
+      "register": "立即注册",
+      "learn_more": "了解更多"
+    },
+    "announcement": {
+      "title": "系统公告",
+      "no_announcement": "暂无公告"
+    }
+  },
+  "register": {
+    "title": "白名单注册",
+    "subtitle": "申请加入我们的 Minecraft 服务器白名单",
+    "form": {
+      "username": "用户名",
+      "username_placeholder": "请输入您的游戏用户名",
+      "email": "邮箱地址",
+      "email_placeholder": "请输入您的邮箱地址",
+      "code": "验证码",
+      "code_placeholder": "请输入验证码",
+      "submit": "提交白名单申请"
+    },
+    "validation": {
+      "username_required": "请输入用户名",
+      "username_length": "用户名长度应在3-16个字符之间",
+      "username_format": "用户名只能包含字母、数字和下划线",
+      "email_required": "请输入邮箱地址",
+      "email_format": "请输入有效的邮箱地址",
+      "code_required": "请输入验证码"
+    },
+    "messages": {
+      "success": "白名单申请已提交，请等待管理员审核",
+      "error": "申请提交失败，请稍后重试",
+      "user_exists": "用户名或邮箱已存在"
+    },
+    "send_code": "发送验证码",
+    "sending": "发送中...",
+    "code_sent": "验证码已发送，请查收！",
+    "send_failed": "验证码发送失败，请重试。",
+    "success": "注册成功！请等待审核。",
+    "failed": "注册失败，请重试。"
+  },
+  "login": {
+    "title": "管理员登录",
+    "subtitle": "请输入管理员账户信息",
+    "form": {
+      "email": "管理员密码",
+      "email_placeholder": "请输入管理员密码",
+      "submit": "登录"
+    },
+    "validation": {
+      "email_required": "请输入管理员密码",
+      "email_format": "请输入有效的管理员密码"
+    },
+    "messages": {
+      "success": "登录成功，正在跳转到管理页面...",
+      "error": "登录失败，请稍后重试",
+      "invalid_credentials": "管理员账户信息错误，请重试"
+    }
+  },
+  "admin": {
+    "login_success": "管理员登录成功，正在跳转...",
+    "title": "管理面板",
+    "tabs": {
+      "review": "待审核",
+      "users": "用户管理",
+      "announcement": "公告管理"
+    },
+    "delete_modal": {
+      "title": "删除用户",
+      "message": "确定要删除用户 {username} 吗？此操作不可撤销。",
+      "confirm": "确认删除",
+      "cancel": "取消"
+    },
+    "review": {
+      "title": "待审核用户",
+      "no_pending": "暂无待审核用户",
+      "table": {
+        "username": "用户名",
+        "email": "邮箱",
+        "register_time": "注册时间",
+        "actions": "操作"
+      },
+      "actions": {
+        "approve": "通过",
+        "reject": "拒绝"
+      },
+      "reject_modal": {
+        "title": "拒绝申请",
+        "reason_label": "拒绝原因",
+        "reason_placeholder": "请输入拒绝原因（可选）",
+        "confirm": "确认拒绝",
+        "cancel": "取消"
+      },
+      "messages": {
+        "approve_success": "用户审核通过",
+        "reject_success": "用户申请已拒绝",
+        "error": "操作失败，请稍后重试"
+      }
+    },
+    "users": {
+      "title": "用户管理",
+      "no_users": "暂无用户",
+      "no_search_results": "未找到匹配的用户",
+      "search_placeholder": "搜索用户名或邮箱...",
+      "table": {
+        "username": "用户名",
+        "email": "邮箱",
+        "status": "状态",
+        "register_time": "注册时间",
+        "actions": "操作"
+      },
+      "status": {
+        "pending": "待审核",
+        "approved": "已通过",
+        "rejected": "已拒绝",
+        "banned": "已封禁"
+      },
+      "actions": {
+        "delete": "删除",
+        "ban": "封禁",
+        "unban": "解封"
+      },
+      "delete_modal": {
+        "title": "删除用户",
+        "message": "确定要删除用户 {username} 吗？此操作不可撤销。",
+        "confirm": "确认删除",
+        "cancel": "取消"
+      },
+      "ban_modal": {
+        "title": "封禁用户",
+        "message": "确定要封禁用户 {username} 吗？此操作不可撤销。",
+        "confirm": "确认封禁",
+        "cancel": "取消"
+      },
+      "unban_modal": {
+        "title": "解封用户",
+        "message": "确定要解封用户 {username} 吗？",
+        "confirm": "确认解封",
+        "cancel": "取消"
+      },
+      "messages": {
+        "delete_success": "用户删除成功",
+        "ban_success": "用户封禁成功",
+        "unban_success": "用户解封成功",
+        "error": "操作失败，请稍后重试"
+      }
+    },
+    "announcement": {
+      "title": "公告管理",
+      "form": {
+        "content": "公告内容",
+        "content_placeholder": "请输入公告内容",
+        "submit": "更新公告"
+      },
+      "messages": {
+        "update_success": "公告更新成功",
+        "error": "更新失败，请稍后重试"
+      }
+    }
+  },
+  "user_status": {
+    "title": "申请状态",
+    "status": {
+      "pending": "待审核",
+      "approved": "已通过",
+      "rejected": "已拒绝"
+    },
+    "messages": {
+      "pending": "您的申请正在审核中，请耐心等待",
+      "approved": "恭喜！您的申请已通过，可以加入服务器了",
+      "rejected": "很抱歉，您的申请被拒绝"
+    },
+    "reason": "拒绝原因"
+  },
+  "errors": {
+    "404": {
+      "title": "页面未找到",
+      "message": "抱歉，您访问的页面不存在",
+      "back_home": "返回首页"
+    },
+    "500": {
+      "title": "服务器错误",
+      "message": "服务器出现了一些问题，请稍后重试",
+      "back_home": "返回首页"
+    },
+    "network": "网络连接失败，请检查网络设置",
+    "timeout": "请求超时，请稍后重试",
+    "unknown": "未知错误，请稍后重试"
+  },
+  "nav": {
+    "home": "首页",
+    "register": "注册",
+    "login": "登录",
+    "admin": "管理"
+  },
+  "language": {
+    "switch": "切换语言",
+    "zh": "中文",
+    "en": "English"
+  },
+  "notification": {
+    "register_success": "注册成功！您的申请已提交审核。",
+    "register_failed": "注册失败，请稍后再试。",
+    "username_exists": "用户名已存在"
+  }
+}

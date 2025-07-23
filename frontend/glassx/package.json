@@ -1,0 +1,39 @@
+{
+  "name": "verifymc-glassx",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
+    "format": "prettier --write src/"
+  },
+  "dependencies": {
+    "vue": "^3.4.0",
+    "vue-router": "^4.2.5",
+    "vue-i18n": "^9.8.0",
+    "axios": "^1.6.2",
+    "lucide-vue-next": "^0.294.0",
+    "framer-motion": "^11.0.0",
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^2.5.5"
+  },
+  "funding": "https://afdian.com/a/kitemc",
+  "devDependencies": {
+    "@types/node": "^20.10.4",
+    "@vitejs/plugin-vue": "^4.5.2",
+    "typescript": "^5.1.6",
+    "vite": "^5.0.8",
+    "tailwindcss": "^3.3.6",
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.32",
+    "@typescript-eslint/eslint-plugin": "^6.14.0",
+    "@typescript-eslint/parser": "^6.14.0",
+    "eslint": "^8.55.0",
+    "eslint-plugin-vue": "^9.19.2",
+    "prettier": "^3.1.1",
+    "terser": "^5.0.0"
+  }
+}

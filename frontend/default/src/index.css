@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+ 
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+} 
+
+html, body {
+  min-height: 100vh;
+  background: transparent !important;
+}
+
+body {
+  min-height: 100vh;
+  background: linear-gradient(to bottom right, #dbeafe, #ffffff, #fce7f3) !important;
+}
+
+/* 如有全局灰色背景，务必注释或删除 */
+/* body {
+  @apply bg-gray-50;
+} */
+/* body {
+  background-color: #f9fafb;
+} */ 

@@ -1,0 +1,118 @@
+name: Build VerifyMC Plugin
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  RELEASE: false
+  VERSION: '0.0.0'
+  RELEASE_NOTES: ''
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # ========== Initialization ==========
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Read version config
+        id: version
+        run: |
+          echo "RELEASE=$(awk '/release:/ {print $2}' version.yml)" >> $GITHUB_ENV
+          echo "VERSION=$(awk '/version:/ {print $2}' version.yml)" >> $GITHUB_ENV
+          echo "RELEASE_NOTES<<EOF" >> $GITHUB_ENV
+          awk '/release_notes:/,0' version.yml | sed '1d' >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      # ========== Frontend Build ==========
+      - name: Cache Node modules
+        uses: actions/cache@v3
+        with:
+          path: |
+            frontend/default/node_modules
+            frontend/glassx/node_modules
+          key: node-modules-${{ hashFiles('**/package-lock.json') }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Build Default theme
+        working-directory: ./frontend/default
+        run: |
+          npm ci
+          npm run build
+          mkdir -p ../../dist/default
+          cp -r dist/* ../../dist/default/
+
+      - name: Build GlassX theme
+        working-directory: ./frontend/glassx
+        run: |
+          npm ci
+          npm run build
+          mkdir -p ../../dist/glassx
+          cp -r dist/* ../../dist/glassx/
+
+      # ========== Backend Build ==========
+      - name: Clean plugin target
+        run: rm -rf plugin/target
+      - name: Copy themes to plugin resources
+        run: |
+          mkdir -p plugin/src/main/resources/static/default
+          mkdir -p plugin/src/main/resources/static/glassx
+          rm -rf plugin/src/main/resources/static/default/*
+          rm -rf plugin/src/main/resources/static/glassx/*
+          cp -r dist/default/* plugin/src/main/resources/static/default/
+          cp -r dist/glassx/* plugin/src/main/resources/static/glassx/
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Build plugin jar
+        working-directory: ./plugin
+        run: mvn clean package -U -DskipTests
+
+      # ========== Artifact Processing ==========
+      - name: Rename plugin jar
+        run: |
+          cd plugin/target
+          for jar in *.jar; do
+            if [[ "$jar" == *"original-"* ]] && [[ "$jar" != "original-verifymc-${{ env.VERSION }}.jar" ]]; then
+              mv "$jar" "original-verifymc-${{ env.VERSION }}.jar"
+            elif [[ "$jar" != "verifymc-${{ env.VERSION }}.jar" ]] && [[ "$jar" != "original-verifymc-${{ env.VERSION }}.jar" ]]; then
+              mv "$jar" "verifymc-${{ env.VERSION }}.jar"
+            fi
+          done
+
+      - name: Upload plugin jar
+        uses: actions/upload-artifact@v4
+        with:
+          name: verifymc-plugin
+          path: |
+            plugin/target/verifymc-*.jar
+            plugin/target/original-verifymc-*.jar
+
+      # ========== Release ==========
+      - name: Extract release notes from version.yml
+        run: |
+          python3 -c "import yaml; d=yaml.safe_load(open('version.yml', encoding='utf-8')); open('release_notes.md','w',encoding='utf-8').write(d['release_notes'])"
+
+      - name: Create GitHub Release
+        if: env.RELEASE == 'true'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ env.VERSION }}
+          name: v${{ env.VERSION }}
+          body_path: ${{ github.workspace }}/release_notes.md
+          files: |
+            plugin/target/verifymc-*.jar
+            plugin/target/original-verifymc-*.jar

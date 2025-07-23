@@ -1,0 +1,18 @@
+name: VerifyMC
+main: team.kitemc.verifymc.VerifyMC
+version: 1.0.0
+author: KiteMC
+# api-version: 1.20  # 移除以兼容 1.12~1.21.8
+folia-supported: true
+commands:
+  vmc:
+    description: Main command for the whitelist verification system
+    usage: /vmc [help|reload|add|remove|port|sync]
+    permission: verifymc.use
+permissions:
+  verifymc.use:
+    description: Permission to use the VerifyMC plugin
+    default: true
+  verifymc.admin:
+    description: Admin permission
+    default: op 
