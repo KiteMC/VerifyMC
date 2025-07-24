@@ -1,13 +1,11 @@
 release: true
-version: 1.0.1
+version: 1.0.2
 release_notes: |
-  [简体中文](https://github.com/KiteMC/VerifyMC/blob/v1.0.1/release_notes_zh.md) | English | [📚 Official Documentation](https://kitemc.com/docs/verifymc/)
+  [简体中文](https://github.com/KiteMC/VerifyMC/blob/v1.0.2/release_notes_zh.md) | English | [📚 Official Documentation](https://kitemc.com/docs/verifymc/)
 
-  ---
+  ## 1.0.2 Release Notes
 
-  ## 1.0.1 Release Notes
-
-  🔄 **Refactor & Cleanup**
-  - Migrated to a local Metrics class under the package `team.kitemc.verifymc` to avoid conflicts with bStats dependencies.
-
-  ---
+  🛡️ **Whitelist Logic Fix**
+  - Reapplied: In plugin whitelist mode, the check is now based on player name (id) instead of UUID.
+  - This improves compatibility for offline servers and avoids UUID mismatch issues.
+  - Note: Ensure player names are unique and case-insensitive. If a player changes their name, the whitelist must be updated manually.

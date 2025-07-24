@@ -368,7 +368,10 @@ public class VerifyMC extends JavaPlugin implements Listener {
         String ip = player.getAddress() != null ? player.getAddress().getAddress().getHostAddress() : "";
         java.util.List<String> bypassIps = getConfig().getStringList("whitelist_bypass_ips");
         if (bypassIps.contains(ip)) return; // 免验证
-        Map<String, Object> user = userDao != null ? userDao.getAllUsers().stream().filter(u -> player.getUniqueId().toString().equals(u.get("uuid")) && "approved".equals(u.get("status"))).findFirst().orElse(null) : null;
+        // 改为检测玩家名（id）
+        Map<String, Object> user = userDao != null ? userDao.getAllUsers().stream()
+            .filter(u -> player.getName().equalsIgnoreCase((String)u.get("username")) && "approved".equals(u.get("status")))
+            .findFirst().orElse(null) : null;
         if (user == null) {
             String language = getConfigLanguage();
             String url = webRegisterUrl;
