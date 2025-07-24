@@ -2,9 +2,9 @@ name: Build VerifyMC Plugin
 
 on:
   push:
-    branches: [main, beta]
+    branches: [master]
   pull_request:
-    branches: [main, beta]
+    branches: [master]
 
 env:
   RELEASE: false
