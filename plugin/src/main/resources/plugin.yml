@@ -1,6 +1,6 @@
 name: VerifyMC
 main: team.kitemc.verifymc.VerifyMC
-version: 1.0.0
+version: 1.0.1
 author: KiteMC
 # api-version: 1.20  # 移除以兼容 1.12~1.21.8
 folia-supported: true
