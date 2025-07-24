@@ -36,7 +36,7 @@ import java.util.Map;
 import java.util.List;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import org.bstats.bukkit.Metrics;
+import team.kitemc.verifymc.Metrics;
 
 public class VerifyMC extends JavaPlugin implements Listener {
     private ResourceBundle messagesZh;
@@ -162,8 +162,7 @@ public class VerifyMC extends JavaPlugin implements Listener {
             getLogger().info("[VerifyMC] Unknown server type, attempting to run in compatibility mode.");
         }
         getLogger().info(getMessage("plugin.enabled"));
-        // bStats 统计（兼容 Folia/Bukkit/Spigot/Paper）
-        int pluginId = 26628; // bStats 插件ID
+        int pluginId = 26637;
         Metrics metrics = new Metrics(this, pluginId);
     }
 
