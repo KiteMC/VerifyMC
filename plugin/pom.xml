@@ -65,6 +65,7 @@
             <artifactId>commons-io</artifactId>
             <version>2.15.1</version>
         </dependency>
+        <!-- 移除 bStats 依赖 -->
     </dependencies>
     <repositories>
         <repository>

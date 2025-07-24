@@ -36,6 +36,7 @@ import java.util.Map;
 import java.util.List;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import team.kitemc.verifymc.Metrics;
 
 public class VerifyMC extends JavaPlugin implements Listener {
     private ResourceBundle messagesZh;

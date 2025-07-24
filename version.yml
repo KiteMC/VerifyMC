@@ -1,13 +1,15 @@
 release: true
-version: 1.0.2
+version: 1.0.1
 release_notes: |
-  [简体中文](https://github.com/KiteMC/VerifyMC/blob/v1.0.0/release_notes_zh.md) | English | [📚 Official Documentation](https://kitemc.com/docs/verifymc/)
+  [简体中文](https://github.com/KiteMC/VerifyMC/blob/v1.0.1/release_notes_zh.md) | English | [📚 Official Documentation](https://kitemc.com/docs/verifymc/)
 
   ---
 
   ## 1.0.1 Release Notes
 
-  🐛 **Bug Fixes**
-  - Fixed an issue where bStats-related code caused plugin unload or startup failures.
+  🔄 **Refactor & Cleanup**
+  - Migrated to a local Metrics class under the package `team.kitemc.verifymc` to avoid conflicts with bStats dependencies.
+  - Removed all bStats dependencies from the project.
+  - Now Metrics can be used safely without any external dependency or classpath conflict.
 
   ---

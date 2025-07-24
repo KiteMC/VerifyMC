@@ -12,7 +12,7 @@
  *
  * Violations will result in a ban of your plugin and account from bStats.
  */
-package org.bstats.bukkit;
+package team.kitemc.verifymc;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -57,7 +57,7 @@ public class Metrics {
    *
    * @param plugin Your plugin instance.
    * @param serviceId The id of the service. It can be found at <a
-   *     href="https://bstats.org/what-is-my-plugin-id">What is my plugin id?</a>
+   *     href="https://bStats.org/what-is-my-plugin-id">What is my plugin id?</a>
    */
   public Metrics(Plugin plugin, int serviceId) {
     this.plugin = plugin;
