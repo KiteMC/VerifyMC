@@ -37,14 +37,21 @@ import java.util.List;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import team.kitemc.verifymc.Metrics;
+import team.kitemc.verifymc.db.MysqlUserDao;
+import java.util.Properties;
+import java.util.MissingResourceException;
+import team.kitemc.verifymc.db.UserDao;
+import team.kitemc.verifymc.db.AuditDao;
+import team.kitemc.verifymc.db.MysqlAuditDao;
 
 public class VerifyMC extends JavaPlugin implements Listener {
     private ResourceBundle messagesZh;
     private ResourceBundle messagesEn;
     private WebServer webServer;
     private ReviewWebSocketServer wsServer;
-    private FileUserDao userDao;
-    private FileAuditDao auditDao;
+    // 字段类型改为接口
+    private UserDao userDao;
+    private AuditDao auditDao;
     private VerifyCodeService codeService;
     private MailService mailService;
     private ResourceManager resourceManager;
@@ -100,13 +107,44 @@ public class VerifyMC extends JavaPlugin implements Listener {
         // 初始化服务
         codeService = new VerifyCodeService(this);
         mailService = new MailService(this, this::getMessage);
+        String storageType = getConfig().getString("storage.type", "data");
+        String lang = getConfig().getString("language", "zh");
+        ResourceBundle messages;
+        try {
+            messages = ResourceBundle.getBundle("i18n/messages_" + lang);
+        } catch (MissingResourceException e) {
+            messages = ResourceBundle.getBundle("i18n/messages_en");
+            getLogger().warning("No messages_" + lang + ".properties found, fallback to English.");
+        }
+
+        if ("mysql".equalsIgnoreCase(storageType)) {
+            Properties mysqlConfig = new Properties();
+            mysqlConfig.setProperty("host", getConfig().getString("storage.mysql.host"));
+            mysqlConfig.setProperty("port", String.valueOf(getConfig().getInt("storage.mysql.port")));
+            mysqlConfig.setProperty("database", getConfig().getString("storage.mysql.database"));
+            mysqlConfig.setProperty("user", getConfig().getString("storage.mysql.user"));
+            mysqlConfig.setProperty("password", getConfig().getString("storage.mysql.password"));
+            try {
+                userDao = new MysqlUserDao(mysqlConfig, messages, this);
+                auditDao = new MysqlAuditDao(mysqlConfig);
+                getLogger().info(messages.getString("storage.mysql.enabled"));
+            } catch (Exception e) {
+                getLogger().severe(messages.getString("storage.migrate.fail").replace("{0}", e.getMessage()));
+                getServer().getPluginManager().disablePlugin(this);
+                return;
+            }
+        } else {
+            File userFile = new File(getDataFolder(), "data/users.json");
+            File auditFile = new File(getDataFolder(), "data/audits.json");
+            userFile.getParentFile().mkdirs();
+            auditFile.getParentFile().mkdirs();
+            userDao = new FileUserDao(userFile, this);
+            auditDao = new FileAuditDao(auditFile);
+            getLogger().info(messages.getString("storage.file.enabled"));
+        }
+        autoMigrateIfNeeded(messages);
         // 初始化文件存储
-        File userFile = new File(getDataFolder(), "data/users.json");
-        File auditFile = new File(getDataFolder(), "data/audits.json");
-        userFile.getParentFile().mkdirs();
-        auditFile.getParentFile().mkdirs();
-        userDao = new FileUserDao(userFile, this);
-        auditDao = new FileAuditDao(auditFile, this);
+        // 删除后续 userDao/auditDao 的重复赋值
         // 启动WebSocket服务（必须先于webServer）
         int port = config.getInt("web_port", 8080);
         int wsPort = config.getInt("ws_port", port + 1);
@@ -481,5 +519,56 @@ public class VerifyMC extends JavaPlugin implements Listener {
                 p.setWhitelisted(false);
             }
         }
+    }
+
+    public void autoMigrateIfNeeded(ResourceBundle messages) {
+        boolean autoMigrateOnSwitch = getConfig().getBoolean("storage.auto_migrate_on_switch", false);
+        String storageType = getConfig().getString("storage.type", "data");
+        if (autoMigrateOnSwitch) {
+            if ("mysql".equalsIgnoreCase(storageType) && userDao instanceof MysqlUserDao) {
+                // data -> mysql
+                List<Map<String, Object>> fileUsers = new FileUserDao(new File(getDataFolder(), "data/users.json"), this).getAllUsers();
+                List<Map<String, Object>> mysqlUsers = userDao.getAllUsers();
+                if (!fileUsers.equals(mysqlUsers)) {
+                    for (Map<String, Object> user : fileUsers) {
+                        userDao.registerUser(
+                            (String) user.get("uuid"),
+                            (String) user.get("username"),
+                            (String) user.get("email"),
+                            (String) user.get("status")
+                        );
+                    }
+                    getLogger().info(messages.getString("storage.migrate.success"));
+                }
+            } else if ("data".equalsIgnoreCase(storageType) && userDao instanceof FileUserDao) {
+                // mysql -> data
+                try {
+                    List<Map<String, Object>> mysqlUsers = new MysqlUserDao(getMysqlConfig(), messages, this).getAllUsers();
+                    List<Map<String, Object>> fileUsers = userDao.getAllUsers();
+                    if (!mysqlUsers.equals(fileUsers)) {
+                        for (Map<String, Object> user : mysqlUsers) {
+                            userDao.registerUser(
+                                (String) user.get("uuid"),
+                                (String) user.get("username"),
+                                (String) user.get("email"),
+                                (String) user.get("status")
+                            );
+                        }
+                        getLogger().info(messages.getString("storage.migrate.success"));
+                    }
+                } catch (Exception e) {
+                    getLogger().severe(messages.getString("storage.migrate.fail").replace("{0}", e.getMessage()));
+                }
+            }
+        }
+    }
+    private Properties getMysqlConfig() {
+        Properties mysqlConfig = new Properties();
+        mysqlConfig.setProperty("host", getConfig().getString("storage.mysql.host"));
+        mysqlConfig.setProperty("port", String.valueOf(getConfig().getInt("storage.mysql.port")));
+        mysqlConfig.setProperty("database", getConfig().getString("storage.mysql.database"));
+        mysqlConfig.setProperty("user", getConfig().getString("storage.mysql.user"));
+        mysqlConfig.setProperty("password", getConfig().getString("storage.mysql.password"));
+        return mysqlConfig;
     }
 } 

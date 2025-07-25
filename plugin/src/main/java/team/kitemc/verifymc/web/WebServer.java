@@ -11,8 +11,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import team.kitemc.verifymc.service.VerifyCodeService;
 import team.kitemc.verifymc.mail.MailService;
-import team.kitemc.verifymc.db.FileUserDao;
-import team.kitemc.verifymc.db.FileAuditDao;
+import team.kitemc.verifymc.db.UserDao;
+import team.kitemc.verifymc.db.AuditDao;
 import org.bukkit.plugin.Plugin;
 import org.json.JSONObject;
 import java.util.ResourceBundle;
@@ -32,8 +32,8 @@ public class WebServer {
     private final Plugin plugin;
     private final VerifyCodeService codeService;
     private final MailService mailService;
-    private final FileUserDao userDao;
-    private final FileAuditDao auditDao;
+    private final UserDao userDao;
+    private final AuditDao auditDao;
     private final ReviewWebSocketServer wsServer;
     private final ResourceBundle messagesZh;
     private final ResourceBundle messagesEn;
@@ -52,7 +52,7 @@ public class WebServer {
         "protonmail.com", "zoho.com"
     );
 
-    public WebServer(int port, String staticDir, Plugin plugin, VerifyCodeService codeService, MailService mailService, FileUserDao userDao, FileAuditDao auditDao, ReviewWebSocketServer wsServer, ResourceBundle messagesZh, ResourceBundle messagesEn) {
+    public WebServer(int port, String staticDir, Plugin plugin, VerifyCodeService codeService, MailService mailService, UserDao userDao, AuditDao auditDao, ReviewWebSocketServer wsServer, ResourceBundle messagesZh, ResourceBundle messagesEn) {
         this.port = port;
         this.staticDir = staticDir;
         this.plugin = plugin;

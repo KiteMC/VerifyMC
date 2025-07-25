@@ -1,9 +1,12 @@
-[English](https://github.com/KiteMC/VerifyMC/releases/tag/v1.0.2) | 简体中文 | [📚 官方文档](https://kitemc.com/docs/verifymc/)
+[English](https://github.com/KiteMC/VerifyMC/releases/tag/v1.1.0) | 简体中文 | [📚 官方文档](https://kitemc.com/docs/verifymc/)
 
-## 1.0.2 更新日志
+## 1.1.0 更新日志
 
-🛡️ **白名单逻辑修复**
-- 重新修复：plugin 模式下，白名单校验由 uuid 改为玩家名（id），更适合离线服和兼容性场景。
-- 注意：玩家名需唯一且不区分大小写，如玩家改名需手动同步白名单。
+✨ **新功能与优化**
+- 支持外部 MySQL 数据存储，可在配置中切换 data 文件或 MySQL，满足多服/大服/跨服需求。
+- 支持自动迁移 data <-> MySQL，数据变更或不一致时自动同步，保障数据安全。
+- 审核日志（Audit）支持本地文件和 MySQL 多存储实现。
+- 国际化多语言支持自动加载，用户可自定义 messages_xx.properties 文件，支持任意语言。
+- 配置与帮助文档同步更新，便于理解和使用。
 
 ---

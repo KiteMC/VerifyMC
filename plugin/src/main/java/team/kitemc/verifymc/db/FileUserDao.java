@@ -6,7 +6,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.Gson;
 
-public class FileUserDao {
+public class FileUserDao implements UserDao {
     private final File file;
     private final Map<String, Map<String, Object>> users = new ConcurrentHashMap<>();
     private final Gson gson = new Gson();
@@ -20,16 +20,15 @@ public class FileUserDao {
         load();
     }
 
-    private void debugLog(String msg) {
-        if (debug) plugin.getLogger().info("[DEBUG] FileUserDao: " + msg);
-    }
-
-    // 兼容旧构造函数
     public FileUserDao(File dataFile) {
         this.file = dataFile;
         this.plugin = null;
         this.debug = false;
         load();
+    }
+
+    private void debugLog(String msg) {
+        if (debug && plugin != null) plugin.getLogger().info("[DEBUG] FileUserDao: " + msg);
     }
 
     public synchronized void load() {
@@ -51,6 +50,7 @@ public class FileUserDao {
         }
     }
 
+    @Override
     public synchronized void save() {
         debugLog("Saving " + users.size() + " users to: " + file.getAbsolutePath());
         try (Writer writer = new FileWriter(file)) {
@@ -61,6 +61,7 @@ public class FileUserDao {
         }
     }
 
+    @Override
     public boolean registerUser(String uuid, String username, String email, String status) {
         debugLog("registerUser called: uuid=" + uuid + ", username=" + username + ", email=" + email + ", status=" + status);
         try {
@@ -81,16 +82,13 @@ public class FileUserDao {
         }
     }
 
-    public List<Map<String, Object>> getPendingUsers() {
-        debugLog("Getting pending users");
-        List<Map<String, Object>> result = new ArrayList<>();
-        for (Map<String, Object> user : users.values()) {
-            if ("pending".equals(user.get("status"))) result.add(user);
-        }
-        debugLog("Found " + result.size() + " pending users");
-        return result;
+    @Override
+    public List<Map<String, Object>> getAllUsers() {
+        debugLog("Getting all users, total: " + users.size());
+        return new ArrayList<>(users.values());
     }
 
+    @Override
     public boolean updateUserStatus(String uuid, String status) {
         debugLog("updateUserStatus called: uuid=" + uuid + ", status=" + status);
         Map<String, Object> user = users.get(uuid);
@@ -105,21 +103,7 @@ public class FileUserDao {
         return true;
     }
 
-    public List<Map<String, Object>> getAllUsers() {
-        debugLog("Getting all users, total: " + users.size());
-        return new ArrayList<>(users.values());
-    }
-
-    public List<Map<String, Object>> getApprovedUsers() {
-        debugLog("Getting approved users");
-        List<Map<String, Object>> result = new ArrayList<>();
-        for (Map<String, Object> user : users.values()) {
-            if ("approved".equals(user.get("status"))) result.add(user);
-        }
-        debugLog("Found " + result.size() + " approved users");
-        return result;
-    }
-
+    @Override
     public Map<String, Object> getUserByUuid(String uuid) {
         debugLog("Getting user by UUID: " + uuid);
         Map<String, Object> user = users.get(uuid);
@@ -131,6 +115,7 @@ public class FileUserDao {
         return user;
     }
 
+    @Override
     public Map<String, Object> getUserByUsername(String username) {
         debugLog("Getting user by username: " + username);
         for (Map<String, Object> user : users.values()) {
@@ -143,18 +128,7 @@ public class FileUserDao {
         return null;
     }
 
-    public int countUsersByEmail(String email) {
-        debugLog("Counting users by email: " + email);
-        int count = 0;
-        for (Map<String, Object> user : users.values()) {
-            if (user.get("email") != null && user.get("email").toString().equalsIgnoreCase(email)) {
-                count++;
-            }
-        }
-        debugLog("Found " + count + " users with email: " + email);
-        return count;
-    }
-
+    @Override
     public boolean deleteUser(String uuid) {
         debugLog("deleteUser called: uuid=" + uuid);
         try {
@@ -173,5 +147,27 @@ public class FileUserDao {
         }
     }
 
-    // 可扩展更多方法
+    @Override
+    public int countUsersByEmail(String email) {
+        debugLog("Counting users by email: " + email);
+        int count = 0;
+        for (Map<String, Object> user : users.values()) {
+            if (user.get("email") != null && user.get("email").toString().equalsIgnoreCase(email)) {
+                count++;
+            }
+        }
+        debugLog("Found " + count + " users with email: " + email);
+        return count;
+    }
+
+    @Override
+    public List<Map<String, Object>> getPendingUsers() {
+        debugLog("Getting pending users");
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (Map<String, Object> user : users.values()) {
+            if ("pending".equals(user.get("status"))) result.add(user);
+        }
+        debugLog("Found " + result.size() + " pending users");
+        return result;
+    }
 } 

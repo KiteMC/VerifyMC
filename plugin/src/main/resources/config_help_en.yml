@@ -112,3 +112,18 @@ email_domain_whitelist:
   - icloud.com
   - yahoo.com
   - foxmail.com 
+
+# ----------------------------------------
+# Storage & Data Migration
+# ----------------------------------------
+storage:
+  # Storage type, options: data (local file), mysql (external database)
+  type: data
+  # Whether to automatically migrate data from the original storage to the new storage when switching storage.type (e.g., data→mysql or mysql→data)
+  auto_migrate_on_switch: false
+  mysql:
+    host: localhost
+    port: 3306
+    database: verifymc
+    user: root
+    password: yourpassword 

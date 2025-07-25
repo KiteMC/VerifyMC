@@ -36,7 +36,10 @@
 7. ⚙️ **Highly Customizable**: Set max accounts per email, player ID regex, whitelist bypass IPs, and more.
 8. 🪶 **Lightweight**: Plugin jar is under 6MB, integrates multiple features, and runs efficiently.
 9. 🔄 **Auto Update & Backup**: Config files auto-upgrade, with full backup before each update.
-10. 🧩 **Flexible Whitelist Modes**: Supports Bukkit native whitelist sync and plugin self-management modes.
+10. 🧩 **Flexible Whitelist Modes**: Supports Bukkit native whitelist sync, plugin self-management, and now external MySQL storage with auto-migration.
+11. 💾 **MySQL & Data File Storage**: Easily switch between local file and MySQL storage; supports automatic migration and sync.
+12. 📝 **Audit Log Multi-Storage**: Audit logs can be stored in file or MySQL.
+13. 🌍 **Custom Internationalization**: Auto-loads any messages_xx.properties file; users can add any language.
 
 ---
 

@@ -46,3 +46,12 @@ email_domain_whitelist:
   - icloud.com
   - yahoo.com
   - foxmail.com 
+storage:
+  type: data   # 可选: data, mysql
+  auto_migrate_on_switch: false  # 切换 storage.type 时自动将原存储的数据迁移到新存储
+  mysql:
+    host: localhost
+    port: 3306
+    database: verifymc
+    user: root
+    password: yourpassword 
