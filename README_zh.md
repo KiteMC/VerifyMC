@@ -174,5 +174,20 @@ email_domain_whitelist:
   - icloud.com
   - yahoo.com
   - foxmail.com
+  
+# ----------------------------------------
+# 存储与数据迁移
+# ----------------------------------------
+storage:
+  # 存储类型，可选: data（本地文件）, mysql（外部数据库）
+  type: data
+  # 是否在 storage.type 切换时自动将原存储的数据迁移到新存储（如 data→mysql 或 mysql→data）
+  auto_migrate_on_switch: false
+  mysql:
+    host: localhost
+    port: 3306
+    database: verifymc
+    user: root
+    password: yourpassword 
 ```
 > ❤️ 如果你喜欢本项目，欢迎 Star、分享与反馈！ 

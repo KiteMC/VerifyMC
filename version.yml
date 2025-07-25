@@ -1,4 +1,4 @@
-release: true
+release: false
 version: 1.1.0
 release_notes: |
   [简体中文](https://github.com/KiteMC/VerifyMC/blob/v1.1.0/release_notes_zh.md) | English | [📚 Official Documentation](https://kitemc.com/docs/verifymc/)
