@@ -40,8 +40,41 @@ public class FileUserDao implements UserDao {
         try (Reader reader = new FileReader(file)) {
             Map<String, Map<String, Object>> loaded = gson.fromJson(reader, new TypeToken<Map<String, Map<String, Object>>>(){}.getType());
             if (loaded != null) {
+                // 兼容性处理：升级旧版本数据格式
+                boolean hasUpgraded = false;
+                for (Map.Entry<String, Map<String, Object>> entry : loaded.entrySet()) {
+                    Map<String, Object> user = entry.getValue();
+                    if (user != null) {
+                        // 检查并添加缺失的字段
+                        if (!user.containsKey("password")) {
+                            user.put("password", null);
+                            hasUpgraded = true;
+                            debugLog("Added missing password field for user: " + user.get("username"));
+                        }
+                        
+                        // 确保所有必需字段都存在
+                        if (!user.containsKey("uuid")) {
+                            user.put("uuid", entry.getKey());
+                            hasUpgraded = true;
+                            debugLog("Added missing uuid field for user: " + user.get("username"));
+                        }
+                        
+                        if (!user.containsKey("regTime")) {
+                            user.put("regTime", System.currentTimeMillis());
+                            hasUpgraded = true;
+                            debugLog("Added missing regTime field for user: " + user.get("username"));
+                        }
+                    }
+                }
+                
                 users.putAll(loaded);
                 debugLog("Loaded " + loaded.size() + " users from database");
+                
+                // 如果有数据升级，立即保存
+                if (hasUpgraded) {
+                    debugLog("Data format upgraded, saving updated data");
+                    save();
+                }
             } else {
                 debugLog("No users found in database");
             }
@@ -65,6 +98,12 @@ public class FileUserDao implements UserDao {
     public boolean registerUser(String uuid, String username, String email, String status) {
         debugLog("registerUser called: uuid=" + uuid + ", username=" + username + ", email=" + email + ", status=" + status);
         try {
+            // 检查用户是否已存在
+            if (users.containsKey(uuid)) {
+                debugLog("User already exists with UUID: " + uuid + ", skipping registration");
+                return false;
+            }
+            
             Map<String, Object> user = new HashMap<>();
             user.put("uuid", uuid);
             user.put("username", username);
@@ -78,6 +117,34 @@ public class FileUserDao implements UserDao {
             return true;
         } catch (Exception e) {
             debugLog("Exception in registerUser: " + e.getMessage());
+            return false;
+        }
+    }
+
+    @Override
+    public boolean registerUser(String uuid, String username, String email, String status, String password) {
+        debugLog("registerUser with password called: uuid=" + uuid + ", username=" + username + ", email=" + email + ", status=" + status);
+        try {
+            // 检查用户是否已存在
+            if (users.containsKey(uuid)) {
+                debugLog("User already exists with UUID: " + uuid + ", skipping registration");
+                return false;
+            }
+            
+            Map<String, Object> user = new HashMap<>();
+            user.put("uuid", uuid);
+            user.put("username", username);
+            user.put("email", email);
+            user.put("status", status);
+            user.put("password", password);
+            user.put("regTime", System.currentTimeMillis());
+            debugLog("Adding user with password to map: " + user);
+            users.put(uuid, user);
+            save();
+            debugLog("User registration with password successful");
+            return true;
+        } catch (Exception e) {
+            debugLog("Exception in registerUser with password: " + e.getMessage());
             return false;
         }
     }
@@ -100,6 +167,35 @@ public class FileUserDao implements UserDao {
         user.put("status", status);
         save();
         debugLog("User status updated: " + uuid + " from " + oldStatus + " to " + status);
+        return true;
+    }
+
+    @Override
+    public boolean updateUserPassword(String uuidOrName, String password) {
+        debugLog("updateUserPassword called: uuidOrName=" + uuidOrName);
+        Map<String, Object> user = null;
+        
+        // 先尝试作为UUID查找
+        user = users.get(uuidOrName);
+        
+        // 如果没找到，尝试作为用户名查找
+        if (user == null) {
+            for (Map<String, Object> u : users.values()) {
+                if (u.get("username") != null && u.get("username").toString().equalsIgnoreCase(uuidOrName)) {
+                    user = u;
+                    break;
+                }
+            }
+        }
+        
+        if (user == null) {
+            debugLog("User not found: " + uuidOrName);
+            return false;
+        }
+        
+        user.put("password", password);
+        save();
+        debugLog("User password updated: " + user.get("username"));
         return true;
     }
 

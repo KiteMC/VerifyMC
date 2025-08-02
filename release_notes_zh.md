@@ -1,12 +1,16 @@
-[English](https://github.com/KiteMC/VerifyMC/releases/tag/v1.1.0) | 简体中文 | [📚 官方文档](https://kitemc.com/docs/verifymc/)
+[English](https://github.com/KiteMC/VerifyMC/releases/tag/v1.2.0) | 简体中文 | [📚 官方文档](https://kitemc.com/docs/verifymc/)
 
-## 1.1.0 更新日志
+## 1.2.0 更新日志
 
-✨ **新功能与优化**
-- 支持外部 MySQL 数据存储，可在配置中切换 data 文件或 MySQL，满足多服/大服/跨服需求。
-- 支持自动迁移 data <-> MySQL，数据变更或不一致时自动同步，保障数据安全。
-- 审核日志（Audit）支持本地文件和 MySQL 多存储实现。
-- 国际化多语言支持自动加载，用户可自定义 messages_xx.properties 文件，支持任意语言。
-- 配置与帮助文档同步更新，便于理解和使用。
+### 🎉 新功能
 
----
+#### AuthMe 集成支持
+- **密码管理**: 支持在Web注册时设置密码，与AuthMe插件无缝集成
+- **自动注册**: 审核通过的用户可自动注册到AuthMe系统
+- **自动注销**: 删除用户时可自动从AuthMe系统注销
+- **密码修改**: 管理员可在管理面板中修改用户密码
+- **密码验证**: 支持自定义密码正则表达式验证规则
+
+### 🐛 问题修复
+
+- 修复了通过`/vmc add`添加的用户状态被覆盖的问题

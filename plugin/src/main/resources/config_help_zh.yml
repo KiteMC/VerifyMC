@@ -127,3 +127,18 @@ storage:
     database: verifymc
     user: root
     password: yourpassword 
+
+# ----------------------------------------
+# Authme集成配置
+# ----------------------------------------
+authme:
+  # 是否启用Authme集成功能
+  enabled: true
+  # 是否强制在Web注册时要求输入密码
+  require_password: true
+  # 是否在通过审核时自动注册至Authme
+  auto_register: false
+  # 是否在删除用户时自动从Authme注销
+  auto_unregister: false
+  # 密码正则表达式，默认至少6个字符
+  password_regex: "^.{6,}$" 

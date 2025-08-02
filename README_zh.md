@@ -153,17 +153,16 @@ auto_update_email: true
 # 如果为 true，将自动更新主题文件。
 auto_update_static: true
 # 如果为 true，将在自动更新前完整备份插件数据文件夹。
-backup_on_update: true
+backup_on_update: true 
 
 # ----------------------------------------
 # 邮箱注册限制
 # ----------------------------------------
-# 邮箱域名白名单与别名限制
-# 是否启用邮箱域名白名单（默认 true）
+# 是否启用邮箱域名白名单
 enable_email_domain_whitelist: true
-# 是否限制邮箱别名（如禁止 user+xxx@gmail.com，默认 false）
+# 是否限制邮箱别名（如禁止 user+xxx@gmail.com）
 enable_email_alias_limit: false
-# 邮箱域名白名单，留空则使用主流邮箱域
+# 邮箱域名白名单，留空则使用默认主流邮箱域
 email_domain_whitelist:
   - gmail.com
   - 163.com
@@ -173,8 +172,8 @@ email_domain_whitelist:
   - hotmail.com
   - icloud.com
   - yahoo.com
-  - foxmail.com
-  
+  - foxmail.com 
+
 # ----------------------------------------
 # 存储与数据迁移
 # ----------------------------------------
@@ -189,5 +188,20 @@ storage:
     database: verifymc
     user: root
     password: yourpassword 
+
+# ----------------------------------------
+# Authme集成配置
+# ----------------------------------------
+authme:
+  # 是否启用Authme集成功能
+  enabled: true
+  # 是否强制在Web注册时要求输入密码
+  require_password: true
+  # 是否在通过审核时自动注册至Authme
+  auto_register: false
+  # 是否在删除用户时自动从Authme注销
+  auto_unregister: false
+  # 密码正则表达式，默认至少6个字符
+  password_regex: "^.{6,}$" 
 ```
 > ❤️ 如果你喜欢本项目，欢迎 Star、分享与反馈！ 

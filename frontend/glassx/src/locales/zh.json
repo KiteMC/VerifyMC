@@ -68,15 +68,20 @@
       "email_placeholder": "请输入您的邮箱地址",
       "code": "验证码",
       "code_placeholder": "请输入验证码",
+      "password": "密码",
+      "password_placeholder": "请输入密码",
+      "password_hint": "密码应符合正则表达式：{regex}",
       "submit": "提交白名单申请"
     },
     "validation": {
       "username_required": "请输入用户名",
-      "username_length": "用户名长度应在3-16个字符之间",
-      "username_format": "用户名只能包含字母、数字和下划线",
+      "username_length": "用户名格式不正确，应符合正则表达式：{regex}",
+      "username_format": "用户名格式不正确，应符合正则表达式：{regex}",
       "email_required": "请输入邮箱地址",
       "email_format": "请输入有效的邮箱地址",
-      "code_required": "请输入验证码"
+      "code_required": "请输入验证码",
+      "password_required": "请输入密码",
+      "password_format": "密码格式不正确，应符合正则表达式：{regex}"
     },
     "messages": {
       "success": "白名单申请已提交，请等待管理员审核",
@@ -84,6 +89,7 @@
       "user_exists": "用户名或邮箱已存在"
     },
     "send_code": "发送验证码",
+    "sendCode": "发送验证码",
     "sending": "发送中...",
     "code_sent": "验证码已发送，请查收！",
     "send_failed": "验证码发送失败，请重试。",
@@ -109,22 +115,14 @@
     }
   },
   "admin": {
-    "login_success": "管理员登录成功，正在跳转...",
     "title": "管理面板",
+    "login_success": "管理员登录成功，正在跳转...",
     "tabs": {
       "review": "待审核",
-      "users": "用户管理",
-      "announcement": "公告管理"
-    },
-    "delete_modal": {
-      "title": "删除用户",
-      "message": "确定要删除用户 {username} 吗？此操作不可撤销。",
-      "confirm": "确认删除",
-      "cancel": "取消"
+      "users": "用户管理"
     },
     "review": {
-      "title": "待审核用户",
-      "no_pending": "暂无待审核用户",
+      "title": "审核面板",
       "table": {
         "username": "用户名",
         "email": "邮箱",
@@ -135,23 +133,25 @@
         "approve": "通过",
         "reject": "拒绝"
       },
+      "no_pending": "暂无待审核用户",
       "reject_modal": {
         "title": "拒绝申请",
         "reason_label": "拒绝原因",
         "reason_placeholder": "请输入拒绝原因（可选）",
-        "confirm": "确认拒绝",
-        "cancel": "取消"
+        "cancel": "取消",
+        "confirm": "拒绝"
       },
       "messages": {
-        "approve_success": "用户审核通过",
-        "reject_success": "用户申请已拒绝",
-        "error": "操作失败，请稍后重试"
+        "error": "加载失败",
+        "approve_success": "审核通过成功",
+        "reject_success": "审核拒绝成功",
+        "approve_failed": "审核通过失败",
+        "reject_failed": "审核拒绝失败",
+        "failed": "操作失败"
       }
     },
     "users": {
       "title": "用户管理",
-      "no_users": "暂无用户",
-      "no_search_results": "未找到匹配的用户",
       "search_placeholder": "搜索用户名或邮箱...",
       "table": {
         "username": "用户名",
@@ -167,46 +167,48 @@
         "banned": "已封禁"
       },
       "actions": {
+        "change_password": "修改密码",
         "delete": "删除",
         "ban": "封禁",
         "unban": "解封"
       },
+      "change_password_modal": {
+        "title": "修改密码",
+        "new_password": "新密码",
+        "password_placeholder": "请输入新密码"
+      },
       "delete_modal": {
-        "title": "删除用户",
+        "title": "确认删除",
         "message": "确定要删除用户 {username} 吗？此操作不可撤销。",
-        "confirm": "确认删除",
+        "confirm": "删除",
         "cancel": "取消"
       },
       "ban_modal": {
-        "title": "封禁用户",
-        "message": "确定要封禁用户 {username} 吗？此操作不可撤销。",
-        "confirm": "确认封禁",
+        "title": "确认封禁",
+        "message": "确定要封禁用户 {username} 吗？",
+        "confirm": "封禁",
         "cancel": "取消"
       },
       "unban_modal": {
-        "title": "解封用户",
+        "title": "确认解封",
         "message": "确定要解封用户 {username} 吗？",
-        "confirm": "确认解封",
+        "confirm": "解封",
         "cancel": "取消"
       },
       "messages": {
-        "delete_success": "用户删除成功",
-        "ban_success": "用户封禁成功",
-        "unban_success": "用户解封成功",
-        "error": "操作失败，请稍后重试"
-      }
-    },
-    "announcement": {
-      "title": "公告管理",
-      "form": {
-        "content": "公告内容",
-        "content_placeholder": "请输入公告内容",
-        "submit": "更新公告"
+        "load_error": "加载失败",
+        "delete_success": "删除成功",
+        "delete_failed": "删除失败",
+        "ban_success": "封禁成功",
+        "ban_failed": "封禁失败",
+        "unban_success": "解封成功",
+        "unban_failed": "解封失败",
+        "password_change_success": "密码修改成功",
+        "password_change_failed": "密码修改失败",
+        "error": "操作失败"
       },
-      "messages": {
-        "update_success": "公告更新成功",
-        "error": "更新失败，请稍后重试"
-      }
+      "no_users": "暂无用户",
+      "no_search_results": "未找到匹配的用户"
     }
   },
   "user_status": {

@@ -13,6 +13,7 @@ import team.kitemc.verifymc.service.VerifyCodeService;
 import team.kitemc.verifymc.mail.MailService;
 import team.kitemc.verifymc.db.UserDao;
 import team.kitemc.verifymc.db.AuditDao;
+import team.kitemc.verifymc.service.AuthmeService;
 import org.bukkit.plugin.Plugin;
 import org.json.JSONObject;
 import java.util.ResourceBundle;
@@ -34,6 +35,7 @@ public class WebServer {
     private final MailService mailService;
     private final UserDao userDao;
     private final AuditDao auditDao;
+    private final AuthmeService authmeService;
     private final ReviewWebSocketServer wsServer;
     private final ResourceBundle messagesZh;
     private final ResourceBundle messagesEn;
@@ -52,7 +54,7 @@ public class WebServer {
         "protonmail.com", "zoho.com"
     );
 
-    public WebServer(int port, String staticDir, Plugin plugin, VerifyCodeService codeService, MailService mailService, UserDao userDao, AuditDao auditDao, ReviewWebSocketServer wsServer, ResourceBundle messagesZh, ResourceBundle messagesEn) {
+    public WebServer(int port, String staticDir, Plugin plugin, VerifyCodeService codeService, MailService mailService, UserDao userDao, AuditDao auditDao, AuthmeService authmeService, ReviewWebSocketServer wsServer, ResourceBundle messagesZh, ResourceBundle messagesEn) {
         this.port = port;
         this.staticDir = staticDir;
         this.plugin = plugin;
@@ -60,6 +62,7 @@ public class WebServer {
         this.mailService = mailService;
         this.userDao = userDao;
         this.auditDao = auditDao;
+        this.authmeService = authmeService;
         this.wsServer = wsServer;
         this.messagesZh = messagesZh;
         this.messagesEn = messagesEn;
@@ -127,7 +130,11 @@ public class WebServer {
     }
     
     private boolean isValidUsername(String username) {
-        return ((team.kitemc.verifymc.VerifyMC)plugin).isValidUsername(username);
+        if (username == null || username.trim().isEmpty()) {
+            return false;
+        }
+        String regex = plugin.getConfig().getString("username_regex", "^[a-zA-Z0-9_-]{3,16}$");
+        return username.matches(regex);
     }
     private boolean isUsernameCaseConflict(String username) {
         return ((team.kitemc.verifymc.VerifyMC)plugin).isUsernameCaseConflict(username);
@@ -217,9 +224,20 @@ public class WebServer {
             frontend.put("announcement", config.getString("frontend.announcement", ""));
             frontend.put("web_server_prefix", config.getString("web_server_prefix", "[VerifyMC]"));
             frontend.put("current_theme", config.getString("frontend.theme", "default"));
+            // authme 配置
+            JSONObject authme = new JSONObject();
+            authme.put("enabled", config.getBoolean("authme.enabled", false));
+            authme.put("require_password", config.getBoolean("authme.require_password", false));
+            authme.put("auto_register", config.getBoolean("authme.auto_register", false));
+            authme.put("auto_unregister", config.getBoolean("authme.auto_unregister", false));
+            authme.put("password_regex", config.getString("authme.password_regex", "^.{6,}$"));
+            // 用户名正则表达式
+            frontend.put("username_regex", config.getString("username_regex", "^[a-zA-Z0-9_-]{3,16}$"));
+            
             resp.put("login", login);
             resp.put("admin", admin);
             resp.put("frontend", frontend);
+            resp.put("authme", authme);
             sendJson(exchange, resp);
         });
         
@@ -332,8 +350,30 @@ public class WebServer {
             String code = req.optString("code");
             String uuid = req.optString("uuid");
             String username = req.optString("username");
+            String password = req.optString("password", ""); // 新增密码参数
             String language = req.optString("language", "zh");
-            debugLog("register params: email=" + email + ", code=" + code + ", uuid=" + uuid + ", username=" + username);
+            debugLog("register params: email=" + email + ", code=" + code + ", uuid=" + uuid + ", username=" + username + ", hasPassword=" + !password.isEmpty());
+
+            // 检查是否需要密码
+            if (authmeService.isAuthmeEnabled() && authmeService.isPasswordRequired()) {
+                if (password == null || password.trim().isEmpty()) {
+                    JSONObject resp = new JSONObject();
+                    resp.put("success", false);
+                    resp.put("msg", getMsg("register.password_required", language));
+                    sendJson(exchange, resp);
+                    return;
+                }
+                
+                // 验证密码格式
+                if (!authmeService.isValidPassword(password)) {
+                    JSONObject resp = new JSONObject();
+                    resp.put("success", false);
+                    String passwordRegex = plugin.getConfig().getString("authme.password_regex", "^.{6,}$");
+                    resp.put("msg", getMsg("register.invalid_password", language).replace("{regex}", passwordRegex));
+                    sendJson(exchange, resp);
+                    return;
+                }
+            }
 
             // 邮箱别名限制
             if (isEmailAliasLimitEnabled() && email.contains("+")) {
@@ -369,7 +409,8 @@ public class WebServer {
             if (!isValidUsername(username)) {
                 JSONObject resp = new JSONObject();
                 resp.put("success", false);
-                resp.put("msg", getMsg("username.invalid", language));
+                String usernameRegex = plugin.getConfig().getString("username_regex", "^[a-zA-Z0-9_-]{3,16}$");
+                resp.put("msg", getMsg("username.invalid", language).replace("{regex}", usernameRegex));
                 sendJson(exchange, resp);
                 return;
             }
@@ -423,7 +464,15 @@ public class WebServer {
                 debugLog("Verification code passed, registering user");
                 boolean autoApprove = plugin.getConfig().getBoolean("register.auto_approve", false);
                 String status = autoApprove ? "approved" : "pending";
-                boolean ok = userDao.registerUser(uuid, username, email, status);
+                boolean ok;
+                
+                // 根据是否有密码选择注册方法
+                if (password != null && !password.trim().isEmpty()) {
+                    ok = userDao.registerUser(uuid, username, email, status, password);
+                } else {
+                    ok = userDao.registerUser(uuid, username, email, status);
+                }
+                
                 debugLog("registerUser result: " + ok);
                 if (ok) {
                     // 注册成功，自动添加白名单
@@ -431,6 +480,12 @@ public class WebServer {
                     org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
                         org.bukkit.Bukkit.dispatchCommand(org.bukkit.Bukkit.getConsoleSender(), "whitelist add " + username);
                     });
+                    
+                    // 如果启用了Authme集成且自动注册，注册到Authme
+                    if (authmeService.isAuthmeEnabled() && authmeService.isAutoRegisterEnabled() && 
+                        password != null && !password.trim().isEmpty()) {
+                        authmeService.registerToAuthme(username, password);
+                    }
                 }
                 if (!ok) {
                     plugin.getLogger().warning("[VerifyMC] Registration failed: userDao.registerUser returned false, uuid=" + uuid + ", username=" + username + ", email=" + email);
@@ -543,8 +598,35 @@ public class WebServer {
             
             JSONObject resp = new JSONObject();
             try {
+                // 获取用户信息
+                Map<String, Object> user = userDao.getUserByUuid(uuid);
+                if (user == null) {
+                    resp.put("success", false);
+                    resp.put("msg", getMsg("admin.user_not_found", language));
+                    sendJson(exchange, resp);
+                    return;
+                }
+                
+                String username = (String) user.get("username");
+                String password = (String) user.get("password");
+                
                 String status = "approve".equals(action) ? "approved" : "rejected";
                 boolean success = userDao.updateUserStatus(uuid, status);
+                
+                if (success && "approve".equals(action) && username != null) {
+                    // 审核通过，添加到白名单
+                    debugLog("Execute: whitelist add " + username);
+                    org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
+                        org.bukkit.Bukkit.dispatchCommand(org.bukkit.Bukkit.getConsoleSender(), "whitelist add " + username);
+                    });
+                    
+                    // 如果启用了Authme集成且自动注册，且有密码，注册到Authme
+                    if (authmeService.isAuthmeEnabled() && authmeService.isAutoRegisterEnabled() && 
+                        password != null && !password.trim().isEmpty()) {
+                        authmeService.registerToAuthme(username, password);
+                    }
+                }
+                
                 resp.put("success", success);
                 resp.put("msg", success ? 
                     ("approve".equals(action) ? getMsg("review.approve_success", language) : getMsg("review.reject_success", language)) :
@@ -649,6 +731,11 @@ public class WebServer {
                     org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
                         org.bukkit.Bukkit.dispatchCommand(org.bukkit.Bukkit.getConsoleSender(), "whitelist remove " + username);
                     });
+                    
+                    // 如果启用了Authme集成且配置了自动注销，从Authme注销用户
+                    if (authmeService.isAuthmeEnabled() && authmeService.isAutoUnregisterEnabled()) {
+                        authmeService.unregisterFromAuthme(username);
+                    }
                 }
                 
                 resp.put("success", success);
@@ -783,6 +870,98 @@ public class WebServer {
                 debugLog("Unban user error: " + e.getMessage());
                 resp.put("success", false);
                 resp.put("msg", getMsg("admin.unban_failed", language));
+            }
+            
+            sendJson(exchange, resp);
+        });
+        
+        // 修改用户密码
+        server.createContext("/api/change-password", exchange -> {
+            if (!"POST".equals(exchange.getRequestMethod())) { 
+                exchange.sendResponseHeaders(405, 0); 
+                exchange.close(); 
+                return; 
+            }
+            
+            // 验证认证
+            if (!isAuthenticated(exchange)) {
+                JSONObject resp = new JSONObject();
+                resp.put("success", false);
+                resp.put("message", "Authentication required");
+                sendJson(exchange, resp);
+                return;
+            }
+            
+            JSONObject req = new JSONObject(new String(exchange.getRequestBody().readAllBytes()));
+            String uuid = req.optString("uuid");
+            String username = req.optString("username");
+            String newPassword = req.optString("newPassword");
+            String language = req.optString("language", "zh");
+            
+            JSONObject resp = new JSONObject();
+            
+            // 验证输入
+            if ((uuid == null || uuid.trim().isEmpty()) && (username == null || username.trim().isEmpty())) {
+                resp.put("success", false);
+                resp.put("msg", getMsg("admin.missing_user_identifier", language));
+                sendJson(exchange, resp);
+                return;
+            }
+            
+            if (newPassword == null || newPassword.trim().isEmpty()) {
+                resp.put("success", false);
+                resp.put("msg", getMsg("admin.password_required", language));
+                sendJson(exchange, resp);
+                return;
+            }
+            
+            // 验证密码格式
+            if (!authmeService.isValidPassword(newPassword)) {
+                resp.put("success", false);
+                String passwordRegex = plugin.getConfig().getString("authme.password_regex", "^.{6,}$");
+                resp.put("msg", getMsg("admin.invalid_password", language).replace("{regex}", passwordRegex));
+                sendJson(exchange, resp);
+                return;
+            }
+            
+            try {
+                // 查找用户
+                Map<String, Object> user = null;
+                if (uuid != null && !uuid.trim().isEmpty()) {
+                    user = userDao.getUserByUuid(uuid);
+                } else if (username != null && !username.trim().isEmpty()) {
+                    user = userDao.getUserByUsername(username);
+                }
+                
+                if (user == null) {
+                    resp.put("success", false);
+                    resp.put("msg", getMsg("admin.user_not_found", language));
+                    sendJson(exchange, resp);
+                    return;
+                }
+                
+                String targetUsername = (String) user.get("username");
+                String targetUuid = (String) user.get("uuid");
+                
+                // 更新密码
+                boolean success = userDao.updateUserPassword(targetUuid, newPassword);
+                
+                if (success) {
+                    // 如果启用了Authme集成，同步更新Authme密码
+                    if (authmeService.isAuthmeEnabled()) {
+                        authmeService.changePasswordInAuthme(targetUsername, newPassword);
+                    }
+                    
+                    resp.put("success", true);
+                    resp.put("msg", getMsg("admin.password_change_success", language));
+                } else {
+                    resp.put("success", false);
+                    resp.put("msg", getMsg("admin.password_change_failed", language));
+                }
+            } catch (Exception e) {
+                debugLog("Change password error: " + e.getMessage());
+                resp.put("success", false);
+                resp.put("msg", getMsg("admin.password_change_failed", language));
             }
             
             sendJson(exchange, resp);

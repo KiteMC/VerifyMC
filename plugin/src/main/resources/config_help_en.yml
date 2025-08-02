@@ -127,3 +127,18 @@ storage:
     database: verifymc
     user: root
     password: yourpassword 
+
+# ----------------------------------------
+# Authme Integration Configuration
+# ----------------------------------------
+authme:
+  # Whether to enable Authme integration functionality
+  enabled: true
+  # Whether to require password input during web registration
+  require_password: true
+  # Whether to automatically register to Authme when approval is granted
+  auto_register: false
+  # Whether to automatically unregister from Authme when user is deleted
+  auto_unregister: false
+  # Password regex pattern, default requires at least 6 characters
+  password_regex: "^.{6,}$" 

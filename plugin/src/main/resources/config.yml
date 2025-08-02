@@ -47,11 +47,17 @@ email_domain_whitelist:
   - yahoo.com
   - foxmail.com 
 storage:
-  type: data   # 可选: data, mysql
-  auto_migrate_on_switch: false  # 切换 storage.type 时自动将原存储的数据迁移到新存储
+  type: data
+  auto_migrate_on_switch: false
   mysql:
     host: localhost
     port: 3306
     database: verifymc
     user: root
     password: yourpassword 
+authme:
+  enabled: true
+  require_password: true
+  auto_register: false
+  auto_unregister: false
+  password_regex: "^[a-zA-Z0-9_]{3,16}$"

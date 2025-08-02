@@ -19,6 +19,14 @@ export interface ConfigResponse {
     logo_url: string
     announcement: string
     web_server_prefix: string
+    username_regex: string
+  }
+  authme: {
+    enabled: boolean
+    require_password: boolean
+    auto_register: boolean
+    auto_unregister: boolean
+    password_regex: string
   }
 }
 
@@ -37,6 +45,7 @@ export interface RegisterRequest {
   code: string
   uuid: string
   username: string
+  password?: string
   language: string
 }
 
@@ -80,6 +89,13 @@ export interface ReviewRequest {
 export interface ReviewResponse {
   success: boolean
   msg: string
+}
+
+export interface ChangePasswordRequest {
+  uuid?: string
+  username?: string
+  newPassword: string
+  language: string
 }
 
 class ApiService {
@@ -217,6 +233,14 @@ class ApiService {
   // 获取用户状态
   async getUserStatus(): Promise<{ success: boolean; data: { status: string; reason?: string }; message?: string }> {
     return this.request<{ success: boolean; data: { status: string; reason?: string }; message?: string }>('/user-status')
+  }
+
+  // 修改用户密码
+  async changePassword(data: ChangePasswordRequest): Promise<ReviewResponse> {
+    return this.request<ReviewResponse>('/change-password', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
   }
 
   // 检查认证状态

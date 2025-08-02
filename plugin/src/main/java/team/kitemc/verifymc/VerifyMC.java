@@ -5,8 +5,6 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-import java.util.Locale;
-import java.util.ResourceBundle;
 import team.kitemc.verifymc.web.WebServer;
 import java.io.File;
 import team.kitemc.verifymc.web.ReviewWebSocketServer;
@@ -14,10 +12,17 @@ import team.kitemc.verifymc.db.FileUserDao;
 import team.kitemc.verifymc.db.FileAuditDao;
 import team.kitemc.verifymc.mail.MailService;
 import team.kitemc.verifymc.service.VerifyCodeService;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
-import java.util.PropertyResourceBundle;
+import java.util.Properties;
+import java.util.MissingResourceException;
+import team.kitemc.verifymc.db.UserDao;
+import team.kitemc.verifymc.db.AuditDao;
+import team.kitemc.verifymc.db.MysqlAuditDao;
+import team.kitemc.verifymc.db.MysqlUserDao;
+import team.kitemc.verifymc.service.AuthmeService;
+
+import java.util.List;
+import java.util.Map;
+import java.util.ResourceBundle;
 import org.bukkit.event.Listener;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -26,23 +31,8 @@ import org.bukkit.scheduler.BukkitRunnable;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.nio.file.WatchKey;
-import java.nio.file.WatchService;
-import java.nio.file.WatchEvent;
-import java.nio.file.FileSystems;
-import java.nio.file.StandardWatchEventKinds;
-import java.util.Map;
-import java.util.List;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import team.kitemc.verifymc.Metrics;
-import team.kitemc.verifymc.db.MysqlUserDao;
-import java.util.Properties;
-import java.util.MissingResourceException;
-import team.kitemc.verifymc.db.UserDao;
-import team.kitemc.verifymc.db.AuditDao;
-import team.kitemc.verifymc.db.MysqlAuditDao;
 
 public class VerifyMC extends JavaPlugin implements Listener {
     private ResourceBundle messagesZh;
@@ -54,6 +44,7 @@ public class VerifyMC extends JavaPlugin implements Listener {
     private AuditDao auditDao;
     private VerifyCodeService codeService;
     private MailService mailService;
+    private AuthmeService authmeService;
     private ResourceManager resourceManager;
     private String whitelistMode;
     private boolean whitelistJsonSync;
@@ -107,6 +98,7 @@ public class VerifyMC extends JavaPlugin implements Listener {
         // 初始化服务
         codeService = new VerifyCodeService(this);
         mailService = new MailService(this, this::getMessage);
+        authmeService = new AuthmeService(this);
         String storageType = getConfig().getString("storage.type", "data");
         String lang = getConfig().getString("language", "zh");
         ResourceBundle messages;
@@ -158,7 +150,7 @@ public class VerifyMC extends JavaPlugin implements Listener {
         // 启动Web服务
         String theme = config.getString("frontend.theme", "default");
         String staticDir = resourceManager.getThemeStaticDir(theme);
-        webServer = new WebServer(port, staticDir, this, codeService, mailService, userDao, auditDao, wsServer, messagesZh, messagesEn);
+        webServer = new WebServer(port, staticDir, this, codeService, mailService, userDao, auditDao, authmeService, wsServer, messagesZh, messagesEn);
         try {
             webServer.start();
             getLogger().info(getMessage("web.start_success") + ": " + port);
@@ -346,19 +338,77 @@ public class VerifyMC extends JavaPlugin implements Listener {
 
     // 新增: 支持邮箱的addWhitelist
     private void addWhitelist(CommandSender sender, String targetName, String email, String language) {
+        addWhitelist(sender, targetName, email, null, language);
+    }
+    
+    /**
+     * 添加用户到白名单（支持密码）
+     * @param sender 命令发送者
+     * @param targetName 目标用户名
+     * @param email 邮箱
+     * @param password 密码（可选）
+     * @param language 语言
+     */
+    private void addWhitelist(CommandSender sender, String targetName, String email, String password, String language) {
         try {
+            // 验证密码格式（如果提供了密码）
+            if (password != null && !password.isEmpty() && authmeService.isAuthmeEnabled()) {
+                if (!authmeService.isValidPassword(password)) {
+                    String passwordRegex = getConfig().getString("authme.password_regex", "^.{6,}$");
+                    sender.sendMessage("§c" + getMessage("command.invalid_password", language).replace("{regex}", passwordRegex));
+                    return;
+                }
+            }
+            
+            // 设置玩家为白名单
             Bukkit.getOfflinePlayer(targetName).setWhitelisted(true);
             String uuid = Bukkit.getOfflinePlayer(targetName).getUniqueId().toString();
             Map<String, Object> user = userDao.getUserByUuid(uuid);
             boolean ok;
+            
             if (user != null) {
+                // 用户已存在，更新状态为approved
                 ok = userDao.updateUserStatus(uuid, "approved");
+                // 如果提供了密码，更新密码
+                if (password != null && !password.isEmpty()) {
+                    userDao.updateUserPassword(uuid, password);
+                    // 如果启用了Authme集成，注册到Authme
+                    if (authmeService.isAuthmeEnabled()) {
+                        authmeService.registerToAuthme(targetName, password);
+                        sender.sendMessage("§a已将用户 " + targetName + " 注册到Authme");
+                    }
+                }
             } else {
-                ok = userDao.registerUser(uuid, targetName, email, "approved");
+                // 用户不存在，注册新用户（状态为approved）
+                if (password != null && !password.isEmpty()) {
+                    ok = userDao.registerUser(uuid, targetName, email, "approved", password);
+                    // 如果启用了Authme集成，注册到Authme
+                    if (authmeService.isAuthmeEnabled()) {
+                        authmeService.registerToAuthme(targetName, password);
+                        sender.sendMessage("§a已将用户 " + targetName + " 注册到Authme");
+                    }
+                } else {
+                    ok = userDao.registerUser(uuid, targetName, email, "approved");
+                }
             }
+            
             userDao.save();
+            
+            // 立即同步到whitelist.json（如果启用）
+            if ("bukkit".equalsIgnoreCase(whitelistMode) && whitelistJsonSync) {
+                syncPluginToWhitelistJson();
+            }
+            
+            // 同步到服务器白名单
+            syncWhitelistToServer();
+            
+            // WebSocket通知
+            if (wsServer != null) {
+                wsServer.broadcastMessage("{\"type\":\"user_update\"}");
+            }
+            
             if (ok) {
-            sender.sendMessage("§a" + getMessage("command.add_success", language).replace("{player}", targetName));
+                sender.sendMessage("§a" + getMessage("command.add_success", language).replace("{player}", targetName));
             } else {
                 sender.sendMessage("§c" + getMessage("command.add_failed", language));
             }
@@ -366,7 +416,7 @@ public class VerifyMC extends JavaPlugin implements Listener {
             sender.sendMessage("§c" + getMessage("command.add_failed", language) + ": " + e.getMessage());
         }
     }
-
+    
     // 修改: removeWhitelist时同步删除userDao
     private void removeWhitelist(CommandSender sender, String targetName, String language) {
         try {
@@ -380,6 +430,12 @@ public class VerifyMC extends JavaPlugin implements Listener {
                 // 兼容老数据或uuid算法差异
                 uuid = Bukkit.getOfflinePlayer(targetName).getUniqueId().toString();
             }
+            
+            // 如果启用了Authme集成且配置了自动注销，从Authme注销用户
+            if (authmeService.isAuthmeEnabled() && authmeService.isAutoUnregisterEnabled()) {
+                authmeService.unregisterFromAuthme(targetName);
+            }
+            
             boolean ok = userDao.deleteUser(uuid);
             userDao.save();
             if (ok) {
@@ -454,7 +510,15 @@ public class VerifyMC extends JavaPlugin implements Listener {
                     Map<String, Object> user = userDao.getAllUsers().stream().filter(u -> uuid.equals(u.get("uuid"))).findFirst().orElse(null);
                     if (user != null) {
                         Object whitelisted = entry.get("whitelisted");
-                        user.put("status", Boolean.TRUE.equals(whitelisted) ? "approved" : "pending");
+                        // Only update status if user is currently pending and whitelist.json shows approved
+                        // This prevents overriding manually set statuses
+                        String currentStatus = (String) user.get("status");
+                        if ("pending".equals(currentStatus) && Boolean.TRUE.equals(whitelisted)) {
+                            user.put("status", "approved");
+                        } else if (!"approved".equals(currentStatus) && !"banned".equals(currentStatus) && !Boolean.TRUE.equals(whitelisted)) {
+                            // Only set to pending if not already explicitly set
+                            user.put("status", "pending");
+                        }
                     }
                 }
             }

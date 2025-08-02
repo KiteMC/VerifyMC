@@ -153,15 +153,14 @@ auto_update_email: true
 # If true, automatically updates theme files.
 auto_update_static: true
 # If true, creates a full backup of the plugin data folder before any auto-updates.
-backup_on_update: true
+backup_on_update: true 
 
 # ----------------------------------------
 # Email Registration Restrictions
 # ----------------------------------------
-# Email domain whitelist and alias limit
-# Enable email domain whitelist (default: true)
+# Enable email domain whitelist
 enable_email_domain_whitelist: true
-# Enable email alias limit (forbid user+xxx@gmail.com, default: false)
+# Enable email alias limit (e.g. forbid user+xxx@gmail.com)
 enable_email_alias_limit: false
 # Email domain whitelist. Leave empty to use default mainstream domains
 email_domain_whitelist:
@@ -173,7 +172,7 @@ email_domain_whitelist:
   - hotmail.com
   - icloud.com
   - yahoo.com
-  - foxmail.com
+  - foxmail.com 
 
 # ----------------------------------------
 # Storage & Data Migration
@@ -189,5 +188,20 @@ storage:
     database: verifymc
     user: root
     password: yourpassword 
+
+# ----------------------------------------
+# Authme Integration Configuration
+# ----------------------------------------
+authme:
+  # Whether to enable Authme integration functionality
+  enabled: true
+  # Whether to require password input during web registration
+  require_password: true
+  # Whether to automatically register to Authme when approval is granted
+  auto_register: false
+  # Whether to automatically unregister from Authme when user is deleted
+  auto_unregister: false
+  # Password regex pattern, default requires at least 6 characters
+  password_regex: "^.{6,}$" 
 ```
 > ❤️ If you like this project, please Star, share, and give us feedback!

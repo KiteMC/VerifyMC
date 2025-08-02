@@ -41,7 +41,7 @@
         </div>
       </div>
     </nav>
-    <main class="flex-1 flex flex-col items-center justify-center p-2 sm:p-4 pt-16">
+    <main class="flex-1 flex flex-col items-center p-2 sm:p-4 pt-16">
       <router-view />
     </main>
     <footer class="bg-white text-center text-gray-400 py-2 text-xs sm:text-sm border-t">VerifyMC © 2025</footer>
@@ -53,7 +53,7 @@
 import { inject, provide, ref, h, getCurrentInstance, watch } from 'vue'
 import LanguageSwitcher from './components/LanguageSwitcher.vue'
 import Toast from './components/Toast.vue'
-const config = inject('config', { value: {} })
+const config = inject('config', ref({}))
 const toastRef = ref()
 const mobileMenuOpen = ref(false)
 

@@ -92,6 +92,15 @@
                   <TableCell>{{ formatDate(user.regTime) }}</TableCell>
                   <TableCell>
                     <div class="flex flex-col sm:flex-row gap-2 sm:space-x-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        @click="showPasswordDialog = true; selectedUser = user; newPassword = ''"
+                        :disabled="loading"
+                        class="text-blue-400 border-blue-400 hover:bg-blue-400/10"
+                      >
+                        {{ $t('admin.users.actions.change_password') }}
+                      </Button>
                     <Button 
                       variant="outline" 
                       size="sm"
@@ -102,6 +111,7 @@
                       {{ $t('admin.users.actions.delete') }}
                     </Button>
                       <Button 
+                        v-if="user.status !== 'banned'"
                         variant="outline" 
                         size="sm"
                         @click="showBanConfirm(user)"
@@ -168,6 +178,33 @@
       @confirm="confirmUnban"
       @cancel="showUnbanDialog = false"
     />
+
+    <!-- 修改密码对话框 -->
+    <div v-if="showPasswordDialog" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+      <div class="bg-white/10 backdrop-blur-md rounded-2xl p-8 w-full max-w-md mx-4 border border-white/20 shadow-2xl">
+        <h3 class="text-xl font-semibold text-white mb-6 text-center">{{ $t('admin.users.change_password_modal.title') }}</h3>
+        <div class="space-y-6">
+          <div>
+            <Label for="newPassword" class="text-white text-sm font-medium mb-2 block">{{ $t('admin.users.change_password_modal.new_password') }}</Label>
+            <input
+              id="newPassword"
+              v-model="newPassword"
+              type="password"
+              class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm"
+              :placeholder="$t('admin.users.change_password_modal.password_placeholder')"
+            />
+          </div>
+          <div class="flex justify-end space-x-3">
+            <Button variant="outline" @click="showPasswordDialog = false" class="bg-white/10 border-white/20 text-white hover:bg-white/20">
+              {{ $t('common.cancel') }}
+            </Button>
+            <Button @click="confirmChangePassword" :disabled="!newPassword" class="bg-blue-500 hover:bg-blue-600 text-white">
+              {{ $t('common.save') }}
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -220,7 +257,9 @@ const filteredUsers = computed(() => {
 const showDeleteDialog = ref(false)
 const showBanDialog = ref(false)
 const showUnbanDialog = ref(false)
+const showPasswordDialog = ref(false)
 const selectedUser = ref<any>(null)
+const newPassword = ref('')
 
 // 修复 tabs 多语言切换
 const tabs = computed(() => [
@@ -401,6 +440,33 @@ const confirmUnban = async () => {
   } finally {
     loading.value = false
     selectedUser.value = null
+  }
+}
+
+const confirmChangePassword = async () => {
+  if (!selectedUser.value || !newPassword.value) return
+  
+  loading.value = true
+  
+  try {
+    const response = await apiService.changePassword({
+      uuid: selectedUser.value.uuid,
+      newPassword: newPassword.value,
+      language: locale.value
+    })
+    
+    if (response.success) {
+      notification.success(t('admin.users.messages.password_change_success'), response.msg && response.msg !== t('admin.users.messages.password_change_success') ? response.msg : '')
+      showPasswordDialog.value = false
+      newPassword.value = ''
+      selectedUser.value = null
+    } else {
+      notification.error(t('admin.users.messages.error'), response.msg && response.msg !== t('admin.users.messages.error') ? response.msg : '')
+    }
+  } catch (error) {
+    notification.error(t('admin.users.messages.error'), t('admin.users.messages.error'))
+  } finally {
+    loading.value = false
   }
 }
 

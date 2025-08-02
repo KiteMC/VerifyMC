@@ -1,13 +1,19 @@
-release: false
-version: 1.1.0
+release: true
+version: 1.2.0
 release_notes: |
-  [简体中文](https://github.com/KiteMC/VerifyMC/blob/v1.1.0/release_notes_zh.md) | English | [📚 Official Documentation](https://kitemc.com/docs/verifymc/)
+  [简体中文](https://github.com/KiteMC/VerifyMC/blob/v1.2.0/release_notes_zh.md) | English | [📚 Official Documentation](https://kitemc.com/docs/verifymc/)
 
-  ## 1.1.0 Release Notes
+  ## 1.2.0 Release Notes
 
-  ✨ **New Features & Improvements**
-  - Support for external MySQL data storage, switchable with data file in config for multi-server/large server scenarios.
-  - Automatic migration and sync between data file and MySQL, triggered on data changes or inconsistency.
-  - Audit log now supports both file and MySQL storage.
-  - Internationalization now auto-loads any messages_xx.properties file, allowing user-defined languages.
-  - Config and help docs updated for clarity and ease of use.
+  ### 🎉 New Features
+
+  #### AuthMe Integration Support
+  - **Password Management**: Support setting passwords during web registration, seamlessly integrated with AuthMe plugin
+  - **Auto Registration**: Automatically register approved users to AuthMe system
+  - **Auto Unregistration**: Automatically unregister users from AuthMe system when deleted
+  - **Password Modification**: Administrators can modify user passwords in the admin panel
+  - **Password Validation**: Support custom password regex validation rules
+
+  ### 🐛 Bug Fixes
+
+  - Fixed issue where user status added via `/vmc add` was being overwritten

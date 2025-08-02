@@ -10,6 +10,8 @@ const app = createApp({
     provide('config', config);
     fetch('/api/config').then(res => res.json()).then(data => {
       config.value = data;
+    }).catch(err => {
+      console.error('Failed to load config:', err);
     });
   },
   render: () => h(App)

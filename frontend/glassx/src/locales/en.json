@@ -68,15 +68,20 @@
       "email_placeholder": "Enter your email address",
       "code": "Verification Code",
       "code_placeholder": "Enter verification code",
+      "password": "Password",
+      "password_placeholder": "Enter your password",
+      "password_hint": "Password must match regex: {regex}",
       "submit": "Submit Whitelist Application"
     },
     "validation": {
       "username_required": "Please enter username",
-      "username_length": "Username should be 3-16 characters long",
-      "username_format": "Username can only contain letters, numbers and underscores",
+      "username_length": "Invalid username format. Must match regex: {regex}",
+      "username_format": "Invalid username format. Must match regex: {regex}",
       "email_required": "Please enter email address",
       "email_format": "Please enter a valid email address",
-      "code_required": "Please enter verification code"
+      "code_required": "Please enter verification code",
+      "password_required": "Please enter password",
+      "password_format": "Invalid password format. Must match regex: {regex}"
     },
     "messages": {
       "success": "Whitelist application submitted successfully, please wait for admin review",
@@ -84,6 +89,7 @@
       "user_exists": "Username or email already exists"
     },
     "send_code": "Send Code",
+    "sendCode": "Send Code",
     "sending": "Sending...",
     "code_sent": "Code sent! Please check your inbox.",
     "send_failed": "Failed to send code. Please try again.",
@@ -109,22 +115,14 @@
     }
   },
   "admin": {
-    "login_success": "Admin login successful, redirecting...",
     "title": "Admin Panel",
+    "login_success": "Admin login successful, redirecting...",
     "tabs": {
       "review": "Pending Review",
-      "users": "User Management",
-      "announcement": "Announcement"
-    },
-    "delete_modal": {
-      "title": "Delete User",
-      "message": "Are you sure you want to delete user {username}? This action cannot be undone.",
-      "confirm": "Confirm Delete",
-      "cancel": "Cancel"
+      "users": "User Management"
     },
     "review": {
-      "title": "Pending Users",
-      "no_pending": "No pending users",
+      "title": "Review Panel",
       "table": {
         "username": "Username",
         "email": "Email",
@@ -135,24 +133,24 @@
         "approve": "Approve",
         "reject": "Reject"
       },
+      "no_pending": "No pending users",
       "reject_modal": {
         "title": "Reject Application",
         "reason_label": "Rejection Reason",
-        "reason_placeholder": "Enter rejection reason (optional)",
-        "confirm": "Confirm Reject",
-        "cancel": "Cancel"
+        "reason_placeholder": "Please enter the reason for rejection (optional)",
+        "cancel": "Cancel",
+        "confirm": "Reject"
       },
       "messages": {
-        "approve_success": "User approved successfully",
-        "reject_success": "User application rejected",
-        "error": "Operation failed, please try again later"
+        "error": "Load failed",
+        "approve_success": "Approval successful",
+        "reject_success": "Rejection successful",
+        "failed": "Operation failed"
       }
     },
     "users": {
       "title": "User Management",
-      "no_users": "No users",
-      "no_search_results": "No matching users found",
-      "search_placeholder": "Search by username or email...",
+      "search_placeholder": "Search username or email...",
       "table": {
         "username": "Username",
         "email": "Email",
@@ -167,27 +165,48 @@
         "banned": "Banned"
       },
       "actions": {
+        "change_password": "Change Password",
         "delete": "Delete",
         "ban": "Ban",
         "unban": "Unban"
       },
+      "change_password_modal": {
+        "title": "Change Password",
+        "new_password": "New Password",
+        "password_placeholder": "Enter new password"
+      },
       "delete_modal": {
-        "title": "Delete User",
+        "title": "Confirm Delete",
         "message": "Are you sure you want to delete user {username}? This action cannot be undone.",
-        "confirm": "Confirm Delete",
+        "confirm": "Delete",
         "cancel": "Cancel"
       },
       "ban_modal": {
-        "title": "Ban User",
-        "message": "Are you sure you want to ban user {username}? This action cannot be undone.",
-        "confirm": "Confirm Ban",
+        "title": "Confirm Ban",
+        "message": "Are you sure you want to ban user {username}?",
+        "confirm": "Ban",
+        "cancel": "Cancel"
+      },
+      "unban_modal": {
+        "title": "Confirm Unban",
+        "message": "Are you sure you want to unban user {username}?",
+        "confirm": "Unban",
         "cancel": "Cancel"
       },
       "messages": {
-        "delete_success": "User deleted successfully",
-        "ban_success": "User banned successfully",
-        "error": "Operation failed, please try again later"
-      }
+        "load_error": "Load failed",
+        "delete_success": "Delete successful",
+        "delete_failed": "Delete failed",
+        "ban_success": "Ban successful",
+        "ban_failed": "Ban failed",
+        "unban_success": "Unban successful",
+        "unban_failed": "Unban failed",
+        "password_change_success": "Password changed successfully",
+        "password_change_failed": "Password change failed",
+        "error": "Operation failed"
+      },
+      "no_users": "No users",
+      "no_search_results": "No matching users found"
     },
     "announcement": {
       "title": "Announcement Management",

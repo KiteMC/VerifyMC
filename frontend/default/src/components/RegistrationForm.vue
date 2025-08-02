@@ -1,6 +1,6 @@
 <template>
   <div class="w-full max-w-md mx-auto">
-    <div class="bg-white rounded-lg shadow-lg p-6">
+    <div class="bg-white rounded-lg shadow-lg p-6 w-full">
       <h2 class="text-2xl font-bold mb-6 text-center text-blue-600">{{ $t('register.title') }}</h2>
       
       <!-- 邮箱注册表单 -->
@@ -29,6 +29,21 @@
             @blur="validateUsername"
           />
           <p v-if="errors.username" class="mt-1 text-sm text-red-600">{{ errors.username }}</p>
+        </div>
+
+        <!-- 密码输入框 -->
+        <div v-if="config.authme?.enabled && config.authme?.require_password">
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('register.password') }}</label>
+          <input 
+            v-model="form.password" 
+            type="password" 
+            :placeholder="$t('register.passwordPlaceholder')"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            :class="{ 'border-red-500': errors.password }"
+            @blur="validatePassword"
+          />
+          <p v-if="errors.password" class="mt-1 text-sm text-red-600">{{ errors.password }}</p>
+          <p v-if="config.authme?.password_regex" class="mt-1 text-xs text-gray-500">{{ $t('register.passwordHint', { regex: config.authme.password_regex }) }}</p>
         </div>
 
         <div>
@@ -71,7 +86,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted, computed, inject } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
@@ -79,33 +94,28 @@ const { t } = useI18n()
 const form = reactive({
   email: '',
   username: '',
-  code: ''
+  code: '',
+  password: '' // Added password field
 })
 
 const errors = reactive({
   email: '',
   username: '',
-  code: ''
+  code: '',
+  password: '' // Added password error
 })
 
 const loading = ref(false)
 const sending = ref(false)
 const message = ref('')
 const messageType = ref<'success' | 'error'>('success')
-const config = ref<any>({})
+const config = inject('config', ref({}))
 
 const isFormValid = computed(() => {
   return form.email && form.username && form.code && !errors.email && !errors.username && !errors.code
 })
 
-onMounted(async () => {
-  try {
-    const res = await fetch('/api/config')
-    config.value = await res.json()
-  } catch (e) {
-    console.error('Failed to load config:', e)
-  }
-})
+// 配置已经在main.ts中加载，这里不需要重复加载
 
 const validateEmail = () => {
   errors.email = ''
@@ -130,6 +140,21 @@ const validateUsername = () => {
   if (form.username.length < 2) {
     errors.username = t('register.invalid_username')
     return false
+  }
+  return true
+}
+
+const validatePassword = () => {
+  errors.password = ''
+  if (config.authme?.require_password) {
+    if (!form.password) {
+      errors.password = t('register.passwordRequired')
+      return false
+    }
+    if (config.authme?.password_regex && !new RegExp(config.authme.password_regex).test(form.password)) {
+      errors.password = t('register.invalid_password', { regex: config.authme.password_regex })
+      return false
+    }
   }
   return true
 }
@@ -186,6 +211,13 @@ const submitForm = async () => {
     return
   }
   
+  // 如果启用了密码要求，验证密码
+  if (config.authme?.require_password) {
+    if (!validatePassword()) {
+      return
+    }
+  }
+  
   loading.value = true
   message.value = ''
   
@@ -205,6 +237,7 @@ const submitForm = async () => {
         code: form.code,
         uuid: uuid,
         username: form.username,
+        password: form.password, // 添加密码字段
         language: t('lang')
       })
     })
