@@ -354,7 +354,7 @@ public class VerifyMC extends JavaPlugin implements Listener {
             // 验证密码格式（如果提供了密码）
             if (password != null && !password.isEmpty() && authmeService.isAuthmeEnabled()) {
                 if (!authmeService.isValidPassword(password)) {
-                    String passwordRegex = getConfig().getString("authme.password_regex", "^.{6,}$");
+                    String passwordRegex = getConfig().getString("authme.password_regex", "^[a-zA-Z0-9_]{3,16}$");
                     sender.sendMessage("§c" + getMessage("command.invalid_password", language).replace("{regex}", passwordRegex));
                     return;
                 }

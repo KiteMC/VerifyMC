@@ -141,4 +141,4 @@ authme:
   # 是否在删除用户时自动从Authme注销
   auto_unregister: false
   # 密码正则表达式，默认至少6个字符
-  password_regex: "^.{6,}$" 
+  password_regex: "^[a-zA-Z0-9_]{3,16}$" 

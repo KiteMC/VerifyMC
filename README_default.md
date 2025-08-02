@@ -1,12 +1,12 @@
-# 🖼️ Screenshots (Default Theme)
+# 🖼️ Screenshot Preview (Default Theme)
 
-### Home / Registration Page
+### Home Page
 ![Home Default](docs/screenshot-home-default.png)
+
+### Registration Page
+![Registration Default](docs/screenshot-register-default.png)
 
 ### Admin Panel
 ![Admin Default](docs/screenshot-admin-default.png)
 
-### Mobile / Responsive
-![Mobile Default](docs/screenshot-mobile-default.png)
-
-[Back to main README](./README.md)
+[Back to Main Documentation](./README_zh.md) 

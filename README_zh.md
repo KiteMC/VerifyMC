@@ -1,27 +1,12 @@
 # 🛡️ VerifyMC
 
-[English](README.md) | 简体中文 | [📚 官方文档](https://kitemc.com/docs/zh/VerifyMC/)
-
----
-
-## 🖼️ 截图预览（Glassx 主题）
-
-### 首页 / 注册页
-![首页 Glassx](docs/zh/screenshot-home-glassx.png)
-
-### 管理后台
-![后台 Glassx](docs/zh/screenshot-admin-glassx.png)
-
-### 移动端 / 响应式
-![移动端 Glassx](docs/zh/screenshot-mobile-glassx.png)
-
-> 想看 Default 主题？[点此查看 Default 主题截图](./README_default_zh.md)
+[English](README.md) | 简体中文 | [📚 官方文档](https://kitemc.com/zh/docs/verifymc/)
 
 ---
 
 ## 🚀 项目简介
 
-**VerifyMC** 是一款极致轻量、功能强大的 Minecraft 服务器白名单管理插件，支持网页注册、自动/手动审核、封禁、主题切换与高度自定义，助力服务器安全与社区管理。
+**VerifyMC** 是一款极致轻量、功能强大的 Minecraft 服务器白名单管理插件，支持网页注册、自动/手动审核、封禁、主题切换、AuthMe 集成与高度自定义，助力服务器安全与社区管理。
 
 ---
 
@@ -40,6 +25,22 @@
 11. 💾 **MySQL 与本地文件存储**：可在配置中自由切换本地文件和 MySQL 存储，支持自动迁移与同步。
 12. 📝 **审核日志多存储**：审核日志可存储于本地文件或 MySQL。
 13. 🌍 **自定义多语言国际化**：自动加载任意 messages_xx.properties 文件，用户可自定义任意语言。
+14. 🔐 **AuthMe 集成**：与 AuthMe 插件无缝集成，支持密码管理、自动注册和用户认证。
+
+---
+
+## 🖼️ 截图预览（Glassx 主题）
+
+### 首页
+![首页 Glassx](docs/zh/screenshot-home-glassx.png)
+
+### 注册页
+![注册页 Glassx](docs/zh/screenshot-register-glassx.png)
+
+### 管理后台
+![后台 Glassx](docs/zh/screenshot-admin-glassx.png)
+
+> 想看 Default 主题？[点此查看 Default 主题截图](./README_default_zh.md)
 
 ---
 
@@ -49,6 +50,11 @@
 - 前端：Vue3 + Tailwind CSS（支持自定义主题）
 - WebSocket 实时通信
 - 邮件服务：SMTP
+
+---
+
+## 📊 Bstats
+![Bstats](https://bstats.org/signatures/bukkit/verifymc.svg)
 
 ---
 
@@ -202,6 +208,6 @@ authme:
   # 是否在删除用户时自动从Authme注销
   auto_unregister: false
   # 密码正则表达式，默认至少6个字符
-  password_regex: "^.{6,}$" 
+  password_regex: "^[a-zA-Z0-9_]{3,16}$" 
 ```
 > ❤️ 如果你喜欢本项目，欢迎 Star、分享与反馈！ 

@@ -4,24 +4,9 @@
 
 ---
 
-## 🖼️ Screenshots (Glassx Theme)
-
-### Home / Registration Page
-![Home Glassx](docs/screenshot-home-glassx.png)
-
-### Admin Panel
-![Admin Glassx](docs/screenshot-admin-glassx.png)
-
-### Mobile / Responsive
-![Mobile Glassx](docs/screenshot-mobile-glassx.png)
-
-> Want to see Default theme? [Click here for Default theme screenshots.](./README_default.md)
-
----
-
 ## 🚀 Introduction
 
-**VerifyMC** is an ultra-lightweight, powerful whitelist management plugin for Minecraft servers. It supports web-based registration, auto/manual review, banning, theme switching, and high customizability, helping you secure and manage your server community with ease.
+**VerifyMC** is an ultra-lightweight, powerful whitelist management plugin for Minecraft servers. It supports web-based registration, auto/manual review, banning, theme switching, AuthMe integration, and high customizability, helping you secure and manage your server community with ease.
 
 ---
 
@@ -40,6 +25,22 @@
 11. 💾 **MySQL & Data File Storage**: Easily switch between local file and MySQL storage; supports automatic migration and sync.
 12. 📝 **Audit Log Multi-Storage**: Audit logs can be stored in file or MySQL.
 13. 🌍 **Custom Internationalization**: Auto-loads any messages_xx.properties file; users can add any language.
+14. 🔐 **AuthMe Integration**: Seamless integration with AuthMe plugin for password management, auto-registration, and user authentication.
+
+---
+
+## 🖼️ Screenshots (Glassx Theme)
+
+### Home Page
+![Home Glassx](docs/screenshot-home-glassx.png)
+
+### Registration Page
+![Registration Glassx](docs/screenshot-register-glassx.png)
+
+### Admin Panel
+![Admin Glassx](docs/screenshot-admin-glassx.png)
+
+> Want to see Default theme? [Click here for Default theme screenshots.](./README_default.md)
 
 ---
 
@@ -202,6 +203,6 @@ authme:
   # Whether to automatically unregister from Authme when user is deleted
   auto_unregister: false
   # Password regex pattern, default requires at least 6 characters
-  password_regex: "^.{6,}$" 
+  password_regex: "^[a-zA-Z0-9_]{3,16}$" 
 ```
 > ❤️ If you like this project, please Star, share, and give us feedback!

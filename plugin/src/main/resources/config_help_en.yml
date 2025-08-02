@@ -141,4 +141,4 @@ authme:
   # Whether to automatically unregister from Authme when user is deleted
   auto_unregister: false
   # Password regex pattern, default requires at least 6 characters
-  password_regex: "^.{6,}$" 
+  password_regex: "^[a-zA-Z0-9_]{3,16}$" 
