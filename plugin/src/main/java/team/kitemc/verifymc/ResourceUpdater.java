@@ -24,22 +24,22 @@ public class ResourceUpdater {
     }
 
     /**
-     * 检查并更新所有资源文件
+     * Check and update all resource files
      */
     public void checkAndUpdateResources() {
         debugLog("Checking for resource updates...");
         
         try {
-            // 检查配置文件更新
+            // Check configuration file updates
             checkConfigUpdate();
             
-            // 检查i18n文件更新
+            // Check i18n file updates
             checkI18nUpdate();
             
-            // 检查email模板更新
+            // Check email template updates
             checkEmailUpdate();
             
-            // 检查static文件更新
+            // Check static file updates
             checkStaticUpdate();
             
             debugLog("Resource update check completed");
@@ -50,7 +50,7 @@ public class ResourceUpdater {
     }
 
     /**
-     * 检查配置文件更新
+     * Check configuration file updates
      */
     private void checkConfigUpdate() {
         debugLog("Checking config.yml for updates...");
@@ -65,7 +65,7 @@ public class ResourceUpdater {
         try {
             String currentConfig = new String(Files.readAllBytes(configFile.toPath()), StandardCharsets.UTF_8);
             
-            // 检查是否包含新版本的关键配置项
+            // Check if it contains new version key configuration items
             String[] requiredKeys = {
                 "frontend.theme",
                 "frontend.announcement",
@@ -82,12 +82,12 @@ public class ResourceUpdater {
             }
             
             if (needsUpdate) {
-                // 备份当前配置
+                // Backup current configuration
                 File backupFile = new File(plugin.getDataFolder(), "config.yml.backup");
                 Files.copy(configFile.toPath(), backupFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
                 debugLog("Backed up config to: " + backupFile.getAbsolutePath());
                 
-                // 重新保存默认配置
+                // Re-save default configuration
                 plugin.saveDefaultConfig();
                 debugLog("Updated config.yml with new defaults");
             }
@@ -97,12 +97,12 @@ public class ResourceUpdater {
     }
 
     /**
-     * 检查i18n文件更新
+     * Check i18n file updates
      */
     private void checkI18nUpdate() {
         debugLog("Checking i18n files for updates...");
         File i18nDir = new File(plugin.getDataFolder(), "i18n");
-        // 扫描所有messages_*.properties文件
+        // Scan all messages_*.properties files
         File[] existingFiles = i18nDir.listFiles((dir, name) -> name.startsWith("messages_") && name.endsWith(".properties"));
         if (existingFiles != null) {
             for (File propFile : existingFiles) {
@@ -112,7 +112,7 @@ public class ResourceUpdater {
                 checkI18nFileUpdate(propFile, lang);
             }
         }
-        // 确保内置的zh和en文件存在
+        // Ensure built-in zh and en files exist
         String[] builtinLanguages = {"zh", "en"};
         for (String lang : builtinLanguages) {
             File propFile = new File(i18nDir, "messages_" + lang + ".properties");
@@ -137,7 +137,8 @@ public class ResourceUpdater {
     }
 
     /**
-     * 创建i18n文件
+     * Create i18n file
+     * @param lang Language code
      */
     private void createI18nFile(String lang) {
         try {
@@ -154,13 +155,15 @@ public class ResourceUpdater {
     }
 
     /**
-     * 检查i18n文件更新
+     * Check i18n file update
+     * @param propFile Properties file to check
+     * @param lang Language code
      */
     private void checkI18nFileUpdate(File propFile, String lang) {
         try {
             String currentContent = new String(Files.readAllBytes(propFile.toPath()), StandardCharsets.UTF_8);
             
-            // 检查是否包含新版本的关键消息
+            // Check if it contains new version key messages
             String[] requiredKeys = {
                 "command.restart_starting",
                 "command.restart_success", 
@@ -181,12 +184,12 @@ public class ResourceUpdater {
             }
             
             if (needsUpdate) {
-                // 备份当前文件
+                // Backup current file
                 File backupFile = new File(propFile.getParentFile(), propFile.getName() + ".backup");
                 Files.copy(propFile.toPath(), backupFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
                 debugLog("Backed up i18n file: " + backupFile.getName());
                 
-                // 重新保存默认文件
+                // Re-save default file
                 createI18nFile(lang);
                 debugLog("Updated i18n file: " + propFile.getName());
             }
@@ -196,7 +199,7 @@ public class ResourceUpdater {
     }
 
     /**
-     * 检查email模板更新
+     * Check email template updates
      */
     private void checkEmailUpdate() {
         File emailDir = new File(plugin.getDataFolder(), "email");
@@ -230,7 +233,8 @@ public class ResourceUpdater {
     }
 
     /**
-     * 创建email模板
+     * Create email template
+     * @param lang Language code
      */
     private void createEmailTemplate(String lang) {
         try {
@@ -247,7 +251,7 @@ public class ResourceUpdater {
     }
 
     /**
-     * 检查static文件更新
+     * Check static file updates
      */
     private void checkStaticUpdate() {
         debugLog("Checking static files for updates...");
@@ -262,7 +266,7 @@ public class ResourceUpdater {
                 debugLog("Created theme directory: " + theme);
             }
             
-            // 检查主题目录是否为空或需要更新
+            // Check if theme directory is empty or needs update
             if (shouldUpdateStaticFiles(themeDir, theme)) {
                 extractStaticFiles(themeDir, theme);
             }
@@ -270,7 +274,10 @@ public class ResourceUpdater {
     }
 
     /**
-     * 检查是否需要更新static文件
+     * Check if static files need to be updated
+     * @param themeDir Theme directory
+     * @param theme Theme name
+     * @return true if update is needed
      */
     private boolean shouldUpdateStaticFiles(File themeDir, String theme) {
         File[] files = themeDir.listFiles();
@@ -279,7 +286,7 @@ public class ResourceUpdater {
             return true;
         }
         
-        // 检查关键文件是否存在
+        // Check if key files exist
         String[] keyFiles = {"index.html", "assets/", "css/", "js/"};
         for (String keyFile : keyFiles) {
             File checkFile = new File(themeDir, keyFile);
@@ -293,7 +300,9 @@ public class ResourceUpdater {
     }
 
     /**
-     * 从jar包中提取static文件
+     * Extract static files from jar package
+     * @param themeDir Theme directory
+     * @param theme Theme name
      */
     private void extractStaticFiles(File themeDir, String theme) {
         debugLog("Extracting static files for theme: " + theme);
@@ -332,18 +341,20 @@ public class ResourceUpdater {
     }
 
     /**
-     * 获取资源版本信息
+     * Get resource version information
+     * @return Resource version
      */
     public String getResourceVersion() {
         return plugin.getDescription().getVersion();
     }
 
     /**
-     * 检查是否有资源更新
+     * Check if there are resource updates
+     * @return true if updates are available
      */
     public boolean hasResourceUpdates() {
-        // 这里可以实现更复杂的版本检查逻辑
-        // 目前简单返回false，表示没有更新
+        // More complex version checking logic can be implemented here
+        // Currently simply returns false, indicating no updates
         return false;
     }
 } 

@@ -66,7 +66,7 @@ public class ResourceManager {
     }
 
     /**
-     * 初始化所有资源目录和文件
+     * Initialize all resource directories and files
      */
     public void initializeResources() {
         debugLog("Initializing resources...");
@@ -75,23 +75,23 @@ public class ResourceManager {
         backupPluginDataFolder();
         
         try {
-            // 创建基础目录
+            // Create base directories
             createDirectories();
 
             // Save help files
             plugin.saveResource("config_help_en.yml", false);
             plugin.saveResource("config_help_zh.yml", false);
             
-            // 更新配置文件
+            // Update configuration file
             upgradeConfigFile();
             
-            // 更新i18n文件
+            // Update i18n files
             updateI18nFiles();
             
-            // 更新email模板
+            // Update email templates
             patchEmailTemplates();
             
-            // 更新static文件
+            // Update static files
             updateStaticThemes();
             
             debugLog("Resource initialization completed");
@@ -102,7 +102,7 @@ public class ResourceManager {
     }
 
     /**
-     * 创建必要的目录结构
+     * Create necessary directory structure
      */
     private void createDirectories() {
         debugLog("Creating directories...");
@@ -128,7 +128,7 @@ public class ResourceManager {
     }
 
     /**
-     * 更新配置文件
+     * Update configuration file
      */
     private void upgradeConfigFile() {
         boolean autoUpdateConfig = plugin.getConfig().getBoolean("auto_update_config", false);
@@ -155,14 +155,14 @@ public class ResourceManager {
     }
 
     /**
-     * 更新i18n文件
+     * Update i18n files
      */
     private void updateI18nFiles() {
         boolean autoUpdateI18n = plugin.getConfig().getBoolean("auto_update_i18n", true);
         if (!autoUpdateI18n) return;
         debugLog("Updating i18n files...");
         File i18nDir = new File(plugin.getDataFolder(), "i18n");
-        // 扫描所有messages_*.properties文件
+        // Scan all messages_*.properties files
         File[] existingFiles = i18nDir.listFiles((dir, name) -> name.startsWith("messages_") && name.endsWith(".properties"));
         if (existingFiles != null) {
             for (File propFile : existingFiles) {
@@ -172,7 +172,7 @@ public class ResourceManager {
                 updateI18nFileIfNeeded(propFile, lang);
             }
         }
-        // 确保内置的zh和en文件存在
+        // Ensure built-in zh and en files exist
         String[] builtinLanguages = {"zh", "en"};
         for (String lang : builtinLanguages) {
             File propFile = new File(i18nDir, "messages_" + lang + ".properties");
@@ -194,21 +194,23 @@ public class ResourceManager {
                 }
             }
         }
-        // 备份并更新内置文件
+        // Backup and update built-in files
         plugin.saveResource("i18n/messages_zh.properties", true);
         plugin.saveResource("i18n/messages_en.properties", true);
         plugin.getLogger().info(getMessage("update.i18n", getConfigLanguage()));
     }
 
     /**
-     * 检查并更新i18n文件（如果需要）
+     * Check and update i18n file if needed
+     * @param propFile Properties file to check
+     * @param lang Language code
      */
     private void updateI18nFileIfNeeded(File propFile, String lang) {
         try {
             debugLog("Checking i18n file: " + propFile.getName() + " (language: " + lang + ")");
             String currentContent = new String(Files.readAllBytes(propFile.toPath()), StandardCharsets.UTF_8);
             
-            // 检查是否包含新版本的关键消息
+            // Check if it contains new version key messages
             String[] requiredKeys = {
                 "command.restart_starting",
                 "command.restart_success", 
@@ -232,9 +234,9 @@ public class ResourceManager {
             
             if (needsUpdate) {
                 debugLog("i18n file needs update, starting update process...");
-                // 单独备份当前文件的逻辑已被移除，由启动时的全局备份替代。
+                // Individual backup logic for current file has been removed, replaced by global backup at startup.
                 
-                // 重新保存默认文件
+                // Re-save default file
                 debugLog("Updating i18n file with new keys...");
                 plugin.saveResource("i18n/messages_" + lang + ".properties", false);
                 File tempFile = new File(plugin.getDataFolder(), "i18n/messages_" + lang + ".properties");
@@ -251,7 +253,7 @@ public class ResourceManager {
     }
 
     /**
-     * 更新email模板
+     * Update email templates
      */
     private void patchEmailTemplates() {
         boolean autoUpdateEmail = plugin.getConfig().getBoolean("auto_update_email", true);
@@ -285,7 +287,7 @@ public class ResourceManager {
         } else {
             debugLog("Email templates already exist, skipping auto-completion.");
         }
-        // 备份并更新内置文件
+        // Backup and update built-in files
         File zh = new File(emailDir, "verify_code_zh.html");
         File en = new File(emailDir, "verify_code_en.html");
         if (!zh.exists()) {
@@ -299,7 +301,7 @@ public class ResourceManager {
     }
 
     /**
-     * 更新static文件
+     * Update static files
      */
     private void updateStaticThemes() {
         boolean autoUpdateStatic = plugin.getConfig().getBoolean("auto_update_static", true);
@@ -318,25 +320,28 @@ public class ResourceManager {
                 debugLog("Theme directory exists: " + theme);
             }
             
-            // 检查主题目录是否为空
+            // Check if theme directory is empty
             File[] files = themeDir.listFiles();
             if (files == null || files.length == 0) {
                 debugLog("Theme directory is empty, extracting files: " + theme);
-                extractStaticFiles(themeDir, theme, true); // true=覆盖
+                extractStaticFiles(themeDir, theme, true); // true=overwrite
             } else {
                 debugLog("Theme directory has " + files.length + " files: " + theme);
             }
         }
-        // 备份并更新内置文件
+        // Backup and update built-in files
         File defaultTheme = new File(staticDir, "default");
         File glassxTheme = new File(staticDir, "glassx");
-        extractStaticFiles(defaultTheme, "default", true); // true=覆盖
+        extractStaticFiles(defaultTheme, "default", true); // true=overwrite
         extractStaticFiles(glassxTheme, "glassx", true);
         plugin.getLogger().info(getMessage("update.static", getConfigLanguage()));
     }
 
     /**
-     * 从jar包中提取static文件
+     * Extract static files from jar package
+     * @param themeDir Theme directory
+     * @param theme Theme name
+     * @param overwrite Whether to overwrite existing files
      */
     private void extractStaticFiles(File themeDir, String theme, boolean overwrite) {
         debugLog("Extracting static files for theme: " + theme);
@@ -379,7 +384,8 @@ public class ResourceManager {
     }
 
     /**
-     * 加载i18n资源包
+     * Load i18n resource bundles
+     * @return Array containing Chinese and English resource bundles
      */
     public ResourceBundle[] loadI18nBundles() {
         debugLog("Loading i18n bundles...");
@@ -394,7 +400,7 @@ public class ResourceManager {
             File zhProp = new File(i18nDir, "messages_zh.properties");
             File enProp = new File(i18nDir, "messages_en.properties");
             
-            // 加载中文资源包
+            // Load Chinese resource bundle
             if (zhProp.exists()) {
                 debugLog("Loading external Chinese i18n bundle: " + zhProp.getAbsolutePath());
                 try (InputStreamReader reader = new InputStreamReader(new FileInputStream(zhProp), StandardCharsets.UTF_8)) {
@@ -407,7 +413,7 @@ public class ResourceManager {
                 debugLog("Loaded internal Chinese i18n bundle");
             }
             
-            // 加载英文资源包
+            // Load English resource bundle
             if (enProp.exists()) {
                 debugLog("Loading external English i18n bundle: " + enProp.getAbsolutePath());
                 try (InputStreamReader reader = new InputStreamReader(new FileInputStream(enProp), StandardCharsets.UTF_8)) {
@@ -424,7 +430,7 @@ public class ResourceManager {
             plugin.getLogger().warning("Failed to load i18n bundles: " + e.getMessage());
             debugLog("Failed to load i18n bundles: " + e.getMessage());
             
-            // 使用内部资源包作为后备
+            // Use internal resource bundles as fallback
             debugLog("Falling back to internal i18n bundles");
             messagesZh = ResourceBundle.getBundle("i18n.messages", Locale.CHINESE);
             messagesEn = ResourceBundle.getBundle("i18n.messages", Locale.ENGLISH);
@@ -435,7 +441,9 @@ public class ResourceManager {
     }
 
     /**
-     * 获取主题的静态文件目录
+     * Get theme static file directory
+     * @param theme Theme name
+     * @return Theme static directory path
      */
     public String getThemeStaticDir(String theme) {
         File themeDir = new File(plugin.getDataFolder(), "static/" + theme);
@@ -443,7 +451,9 @@ public class ResourceManager {
     }
 
     /**
-     * 检查主题是否存在
+     * Check if theme exists
+     * @param theme Theme name
+     * @return true if theme exists
      */
     public boolean themeExists(String theme) {
         File themeDir = new File(plugin.getDataFolder(), "static/" + theme);

@@ -91,8 +91,12 @@
     "send_code": "发送验证码",
     "sendCode": "发送验证码",
     "sending": "发送中...",
+    "codeSent": "验证码已发送，请查收！",
     "code_sent": "验证码已发送，请查收！",
     "send_failed": "验证码发送失败，请重试。",
+    "sendFailed": "验证码发送失败，请重试。",
+    "rateLimited": "发送验证码过于频繁，请等待 {seconds} 秒后再试",
+    "rate_limited": "发送验证码过于频繁，请等待 {seconds} 秒后再试",
     "success": "注册成功！请等待审核。",
     "failed": "注册失败，请重试。"
   },
@@ -255,5 +259,22 @@
     "register_success": "注册成功！您的申请已提交审核。",
     "register_failed": "注册失败，请稍后再试。",
     "username_exists": "用户名已存在"
+  },
+  "pagination": {
+    "showing": "显示",
+    "of": "共",
+    "items": "条记录",
+    "previous": "上一页",
+    "next": "下一页",
+    "per_page": "每页显示"
+  },
+  "version": {
+    "update_available": "发现新版本",
+    "current_version": "当前版本",
+    "latest_version": "最新版本",
+    "update_description": "建议更新到最新版本以获得更好的功能和安全性。",
+    "remind_later": "稍后提醒",
+    "download_now": "立即下载",
+    "check_failed": "版本检查失败"
   }
 }

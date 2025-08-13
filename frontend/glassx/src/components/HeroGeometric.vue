@@ -2,9 +2,9 @@
   <div class="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-[#030303]">
     <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/[0.05] via-transparent to-rose-500/[0.05] blur-3xl" />
 
-    <div class="absolute inset-0 overflow-hidden">
+    <div v-if="shouldRenderShapes" class="absolute inset-0 overflow-hidden">
       <ElegantShape
-        :delay="0.3"
+        :delay="getShapeDelay(0.3)"
         :width="600"
         :height="140"
         :rotate="12"
@@ -13,7 +13,7 @@
       />
 
       <ElegantShape
-        :delay="0.5"
+        :delay="getShapeDelay(0.5)"
         :width="500"
         :height="120"
         :rotate="-15"
@@ -22,7 +22,7 @@
       />
 
       <ElegantShape
-        :delay="0.4"
+        :delay="getShapeDelay(0.4)"
         :width="300"
         :height="80"
         :rotate="-8"
@@ -30,23 +30,26 @@
         class="left-[5%] md:left-[10%] bottom-[5%] md:bottom-[10%]"
       />
 
-      <ElegantShape
-        :delay="0.6"
-        :width="200"
-        :height="60"
-        :rotate="20"
-        gradient="from-amber-500/[0.15]"
-        class="right-[15%] md:right-[20%] top-[10%] md:top-[15%]"
-      />
+      <!-- Render fewer shapes on low-performance devices -->
+      <template v-if="!isLowPerformance">
+        <ElegantShape
+          :delay="getShapeDelay(0.6)"
+          :width="200"
+          :height="60"
+          :rotate="20"
+          gradient="from-amber-500/[0.15]"
+          class="right-[15%] md:right-[20%] top-[10%] md:top-[15%]"
+        />
 
-      <ElegantShape
-        :delay="0.7"
-        :width="150"
-        :height="40"
-        :rotate="-25"
-        gradient="from-cyan-500/[0.15]"
-        class="left-[20%] md:left-[25%] top-[5%] md:top-[10%]"
-      />
+        <ElegantShape
+          :delay="getShapeDelay(0.7)"
+          :width="150"
+          :height="40"
+          :rotate="-25"
+          gradient="from-cyan-500/[0.15]"
+          class="left-[20%] md:left-[25%] top-[5%] md:top-[10%]"
+        />
+      </template>
     </div>
 
     <div class="relative z-10 container mx-auto px-4 md:px-6">
@@ -101,10 +104,12 @@
 <script setup lang="ts">
 import { ref, onMounted, inject, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { usePerformance } from '@/composables/usePerformance'
 import ElegantShape from './ElegantShape.vue'
 
 const { t } = useI18n()
 const config = inject('config', { value: {} as any })
+const { isReducedMotion, isLowPerformance, getOptimalDuration } = usePerformance()
 
 interface Props {
   badge?: string
@@ -132,9 +137,20 @@ const announcement = computed(() => {
   return config.value?.frontend?.announcement || ''
 })
 
+// Performance-aware shape rendering
+const shouldRenderShapes = computed(() => {
+  return !isLowPerformance.value || !isReducedMotion.value
+})
+
+// Optimized animation delays
+const getShapeDelay = (baseDelay: number) => {
+  return getOptimalDuration(baseDelay * 1000) / 1000
+}
+
 // 监听配置变化
 watch(() => config.value?.frontend?.web_server_prefix, (newPrefix) => {
   if (newPrefix) {
+    // Optimized: removed empty block
   }
 }, { immediate: true })
 </script>

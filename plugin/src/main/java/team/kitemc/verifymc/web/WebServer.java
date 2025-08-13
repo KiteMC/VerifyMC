@@ -41,13 +41,13 @@ public class WebServer {
     private final ResourceBundle messagesEn;
     private final boolean debug;
     
-    // 认证相关
+    // Authentication related
     private final ConcurrentHashMap<String, Long> validTokens = new ConcurrentHashMap<>();
     private final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@(.+)$");
     private final Pattern UUID_PATTERN = Pattern.compile("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$");
-    private static final long TOKEN_EXPIRY_TIME = 3600000; // 1小时
+    private static final long TOKEN_EXPIRY_TIME = 3600000; // 1 hour
 
-    // 默认主流邮箱域名白名单
+    // Default mainstream email domain whitelist
     private static final java.util.List<String> DEFAULT_EMAIL_DOMAIN_WHITELIST = Arrays.asList(
         "gmail.com", "qq.com", "163.com", "126.com", "outlook.com", "hotmail.com", "yahoo.com",
         "sina.com", "aliyun.com", "foxmail.com", "icloud.com", "yeah.net", "live.com", "mail.com",
@@ -73,7 +73,11 @@ public class WebServer {
         if (debug) plugin.getLogger().info("[DEBUG] " + msg);
     }
 
-    // 认证验证方法
+    /**
+     * Authentication verification method
+     * @param exchange HTTP exchange
+     * @return true if authenticated
+     */
     private boolean isAuthenticated(HttpExchange exchange) {
         String authHeader = exchange.getRequestHeaders().getFirst("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
@@ -83,7 +87,11 @@ public class WebServer {
         return validateToken(token);
     }
     
-    // Token验证
+    /**
+     * Token validation
+     * @param token Token to validate
+     * @return true if token is valid
+     */
     private boolean validateToken(String token) {
         Long expiryTime = validTokens.get(token);
         if (expiryTime == null) {
@@ -96,7 +104,10 @@ public class WebServer {
         return true;
     }
     
-    // 生成安全Token
+    /**
+     * Generate secure token
+     * @return Generated secure token
+     */
     private String generateSecureToken() {
         try {
             String timestamp = String.valueOf(System.currentTimeMillis());
@@ -108,19 +119,21 @@ public class WebServer {
             byte[] hash = md.digest(combined.getBytes());
             String token = Base64.getEncoder().encodeToString(hash);
             
-            // 存储token和过期时间
+            // Store token and expiry time
             validTokens.put(token, System.currentTimeMillis() + TOKEN_EXPIRY_TIME);
             
             return token;
         } catch (NoSuchAlgorithmException e) {
-            // 降级到简单token
+            // Fallback to simple token
             String token = "admin_token_" + System.currentTimeMillis() + "_" + Math.random();
             validTokens.put(token, System.currentTimeMillis() + TOKEN_EXPIRY_TIME);
             return token;
         }
     }
     
-    // 输入验证方法
+    /**
+     * Input validation methods
+     */
     private boolean isValidEmail(String email) {
         return email != null && EMAIL_PATTERN.matcher(email).matches();
     }
@@ -140,12 +153,14 @@ public class WebServer {
         return ((team.kitemc.verifymc.VerifyMC)plugin).isUsernameCaseConflict(username);
     }
     
-    // 清理过期token的定时任务
+    /**
+     * Scheduled task to clean up expired tokens
+     */
     private void startTokenCleanupTask() {
         new Thread(() -> {
             while (true) {
                 try {
-                    Thread.sleep(300000); // 每5分钟清理一次
+                    Thread.sleep(300000); // Clean up every 5 minutes
                     long currentTime = System.currentTimeMillis();
                     validTokens.entrySet().removeIf(entry -> entry.getValue() < currentTime);
                 } catch (InterruptedException e) {
@@ -155,7 +170,10 @@ public class WebServer {
         }).start();
     }
 
-    // 获取邮箱域名白名单
+    /**
+     * Get email domain whitelist
+     * @return List of whitelisted email domains
+     */
     private java.util.List<String> getEmailDomainWhitelist() {
         java.util.List<String> list = null;
         try {
@@ -167,14 +185,20 @@ public class WebServer {
         return list;
     }
 
-    // 获取是否启用邮箱域名白名单
+    /**
+     * Check if email domain whitelist is enabled
+     * @return true if email domain whitelist is enabled
+     */
     private boolean isEmailDomainWhitelistEnabled() {
         try {
             return plugin.getConfig().getBoolean("enable_email_domain_whitelist", true);
         } catch (Exception ignored) {}
         return true;
     }
-    // 获取是否启用邮箱别名限制
+    /**
+     * Check if email alias limit is enabled
+     * @return true if email alias limit is enabled
+     */
     private boolean isEmailAliasLimitEnabled() {
         try {
             return plugin.getConfig().getBoolean("enable_email_alias_limit", false);
@@ -182,7 +206,11 @@ public class WebServer {
         return false;
     }
 
-    // 工具方法：在 JSON 响应中添加版权字段
+    /**
+     * Utility method: Add copyright field to JSON response
+     * @param obj JSON object to add copyright to
+     * @return JSON object with copyright
+     */
     private JSONObject withCopyright(JSONObject obj) {
         obj.put("copyright", "Powered by VerifyMC (GPLv3)");
         return obj;
@@ -191,13 +219,13 @@ public class WebServer {
     public void start() throws IOException {
         server = HttpServer.create(new InetSocketAddress(port), 0);
         
-        // 启动token清理任务
+        // Start token cleanup task
         startTokenCleanupTask();
         
-        // 静态资源
+        // Static resources
         server.createContext("/", new StaticHandler(staticDir));
         
-        // API 示例
+        // API examples
         server.createContext("/api/ping", exchange -> {
             String resp = "{\"msg\":\"pong\"}";
             exchange.getResponseHeaders().add("Content-Type", "application/json; charset=utf-8");
@@ -207,31 +235,31 @@ public class WebServer {
             os.close();
         });
         
-        // /api/config 配置接口
+        // /api/config configuration interface
         server.createContext("/api/config", exchange -> {
             JSONObject resp = new JSONObject();
             org.bukkit.configuration.file.FileConfiguration config = plugin.getConfig();
-            // login 配置
+            // login configuration
             JSONObject login = new JSONObject();
             login.put("enable_email", config.getStringList("auth_methods").contains("email"));
             login.put("email_smtp", config.getString("smtp.host", ""));
-            // admin 配置
+            // admin configuration
             JSONObject admin = new JSONObject();
-            // frontend 配置
+            // frontend configuration
             JSONObject frontend = new JSONObject();
             frontend.put("theme", config.getString("frontend.theme", "default"));
             frontend.put("logo_url", config.getString("frontend.logo_url", ""));
             frontend.put("announcement", config.getString("frontend.announcement", ""));
             frontend.put("web_server_prefix", config.getString("web_server_prefix", "[VerifyMC]"));
             frontend.put("current_theme", config.getString("frontend.theme", "default"));
-            // authme 配置
+            // authme configuration
             JSONObject authme = new JSONObject();
             authme.put("enabled", config.getBoolean("authme.enabled", false));
             authme.put("require_password", config.getBoolean("authme.require_password", false));
             authme.put("auto_register", config.getBoolean("authme.auto_register", false));
             authme.put("auto_unregister", config.getBoolean("authme.auto_unregister", false));
             authme.put("password_regex", config.getString("authme.password_regex", "^[a-zA-Z0-9_]{3,16}$"));
-            // 用户名正则表达式
+            // Username regex pattern
             frontend.put("username_regex", config.getString("username_regex", "^[a-zA-Z0-9_-]{3,16}$"));
             
             resp.put("login", login);
@@ -241,7 +269,7 @@ public class WebServer {
             sendJson(exchange, resp);
         });
         
-        // /api/reload-config 重载配置接口 - 需要认证
+        // /api/reload-config reload configuration interface - requires authentication
         server.createContext("/api/reload-config", exchange -> {
             if (!"POST".equals(exchange.getRequestMethod())) { 
                 exchange.sendResponseHeaders(405, 0); 
@@ -249,7 +277,7 @@ public class WebServer {
                 return; 
             }
             
-            // 验证认证
+            // Verify authentication
             if (!isAuthenticated(exchange)) {
                 JSONObject resp = new JSONObject();
                 resp.put("success", false);
@@ -261,10 +289,10 @@ public class WebServer {
             JSONObject resp = new JSONObject();
             try {
                 plugin.reloadConfig();
-                // 更新静态文件目录以支持主题切换
+                // Update static file directory to support theme switching
                 String theme = plugin.getConfig().getString("frontend.theme", "default");
                 
-                // 使用ResourceManager检查主题
+                // Use ResourceManager to check theme
                 team.kitemc.verifymc.ResourceManager resourceManager = new team.kitemc.verifymc.ResourceManager((org.bukkit.plugin.java.JavaPlugin) plugin);
                 if (!resourceManager.themeExists(theme)) {
                     resp.put("success", false);
@@ -275,11 +303,11 @@ public class WebServer {
                 
                 String newStaticDir = resourceManager.getThemeStaticDir(theme);
                 
-                // 更新静态文件目录
+                // Update static file directory
                 debugLog("Switching theme from " + this.staticDir + " to " + newStaticDir);
                 this.staticDir = newStaticDir;
                 
-                // 重新创建静态文件处理器
+                // Recreate static file handler
                 server.removeContext("/");
                 server.createContext("/", new StaticHandler(staticDir));
                 debugLog("Static handler updated for theme: " + theme);
@@ -293,15 +321,41 @@ public class WebServer {
             sendJson(exchange, resp);
         });
         
-        // /api/send_code 发送验证码接口
+        // /api/send_code send verification code interface with rate limiting and authentication
         server.createContext("/api/send_code", exchange -> {
             debugLog("/api/send_code called");
-            if (!"POST".equals(exchange.getRequestMethod())) { exchange.sendResponseHeaders(405, 0); exchange.close(); return; }
+            if (!"POST".equals(exchange.getRequestMethod())) { 
+                exchange.sendResponseHeaders(405, 0); 
+                exchange.close(); 
+                return; 
+            }
+            
             JSONObject req = new JSONObject(new String(exchange.getRequestBody().readAllBytes()));
             String email = req.optString("email", "").trim().toLowerCase();
             String language = req.optString("language", "zh");
 
-            // 邮箱别名限制
+            // Basic input validation - Email format check
+            if (!isValidEmail(email)) {
+                JSONObject resp = new JSONObject();
+                resp.put("success", false);
+                resp.put("msg", getMsg("email.invalid_format", language));
+                sendJson(exchange, resp);
+                return;
+            }
+
+            // Rate limiting check - Prevent spam and abuse
+            if (!codeService.canSendCode(email)) {
+                long remainingSeconds = codeService.getRemainingCooldownSeconds(email);
+                JSONObject resp = new JSONObject();
+                resp.put("success", false);
+                resp.put("msg", getMsg("email.rate_limited", language).replace("{seconds}", String.valueOf(remainingSeconds)));
+                resp.put("remaining_seconds", remainingSeconds);
+                debugLog("Rate limit exceeded for email: " + email + ", remaining: " + remainingSeconds + "s");
+                sendJson(exchange, resp);
+                return;
+            }
+
+            // Email alias restriction check
             if (isEmailAliasLimitEnabled() && email.contains("+")) {
                 JSONObject resp = new JSONObject();
                 resp.put("success", false);
@@ -310,7 +364,7 @@ public class WebServer {
                 return;
             }
 
-            // 邮箱域名白名单
+            // Email domain whitelist check
             if (isEmailDomainWhitelistEnabled()) {
                 String domain = email.contains("@") ? email.substring(email.indexOf('@') + 1) : "";
                 java.util.List<String> allowedDomains = getEmailDomainWhitelist();
@@ -323,25 +377,25 @@ public class WebServer {
                 }
             }
             
-            // 验证邮箱格式
-            if (!isValidEmail(email)) {
-                JSONObject resp = new JSONObject();
-                resp.put("success", false);
-                resp.put("msg", getMsg("email.invalid_format", language));
-                sendJson(exchange, resp);
-                return;
-            }
-            
+            // Generate verification code and send email
             String code = codeService.generateCode(email);
-            debugLog("generateCode for email: " + email + ", code: " + code);
+            debugLog("Generated verification code for email: " + email + ", code: " + code);
+            
             boolean sent = mailService.sendCode(email, getMsg("email.subject", language), code);
             JSONObject resp = new JSONObject();
             resp.put("success", sent);
             resp.put("msg", sent ? getMsg("email.sent", language) : getMsg("email.failed", language));
+            
+            if (sent) {
+                debugLog("Verification code sent successfully to: " + email);
+            } else {
+                debugLog("Failed to send verification code to: " + email);
+            }
+            
             sendJson(exchange, resp);
         });
         
-        // /api/register 注册接口
+        // /api/register registration interface
         server.createContext("/api/register", exchange -> {
             debugLog("/api/register called");
             if (!"POST".equals(exchange.getRequestMethod())) { exchange.sendResponseHeaders(405, 0); exchange.close(); return; }
@@ -350,11 +404,11 @@ public class WebServer {
             String code = req.optString("code");
             String uuid = req.optString("uuid");
             String username = req.optString("username");
-            String password = req.optString("password", ""); // 新增密码参数
+            String password = req.optString("password", ""); // New password parameter
             String language = req.optString("language", "zh");
             debugLog("register params: email=" + email + ", code=" + code + ", uuid=" + uuid + ", username=" + username + ", hasPassword=" + !password.isEmpty());
 
-            // 检查是否需要密码
+            // Check if password is required
             if (authmeService.isAuthmeEnabled() && authmeService.isPasswordRequired()) {
                 if (password == null || password.trim().isEmpty()) {
                     JSONObject resp = new JSONObject();
@@ -364,7 +418,7 @@ public class WebServer {
                     return;
                 }
                 
-                // 验证密码格式
+                // Validate password format
                 if (!authmeService.isValidPassword(password)) {
                     JSONObject resp = new JSONObject();
                     resp.put("success", false);
@@ -375,7 +429,7 @@ public class WebServer {
                 }
             }
 
-            // 邮箱别名限制
+            // Email alias restriction
             if (isEmailAliasLimitEnabled() && email.contains("+")) {
                 JSONObject resp = new JSONObject();
                 resp.put("success", false);
@@ -384,7 +438,7 @@ public class WebServer {
                 return;
             }
 
-            // 邮箱域名白名单
+            // Email domain whitelist
             if (isEmailDomainWhitelistEnabled()) {
                 String domain = email.contains("@") ? email.substring(email.indexOf('@') + 1) : "";
                 java.util.List<String> allowedDomains = getEmailDomainWhitelist();
@@ -396,7 +450,7 @@ public class WebServer {
                     return;
                 }
             }
-            // 用户名唯一性检查
+            // Username uniqueness check
             if (userDao.getUserByUsername(username) != null) {
                 debugLog("Username already exists: " + username);
                 JSONObject resp = new JSONObject();
@@ -405,7 +459,7 @@ public class WebServer {
                 sendJson(exchange, resp);
                 return;
             }
-            // 注册前校验用户名规则和大小写冲突
+            // Pre-registration username rule validation and case conflict check
             if (!isValidUsername(username)) {
                 JSONObject resp = new JSONObject();
                 resp.put("success", false);
@@ -421,7 +475,7 @@ public class WebServer {
                 sendJson(exchange, resp);
                 return;
             }
-            // 邮箱注册数限制
+            // Email registration count limit
             int maxAccounts = plugin.getConfig().getInt("max_accounts_per_email", 2);
             int emailCount = userDao.countUsersByEmail(email);
             if (emailCount >= maxAccounts) {
@@ -432,7 +486,7 @@ public class WebServer {
                 sendJson(exchange, resp);
                 return;
             }
-            // 输入验证
+            // Input validation
             if (!isValidEmail(email)) {
                 JSONObject resp = new JSONObject();
                 resp.put("success", false);
@@ -466,7 +520,7 @@ public class WebServer {
                 String status = autoApprove ? "approved" : "pending";
                 boolean ok;
                 
-                // 根据是否有密码选择注册方法
+                // Choose registration method based on whether password is provided
                 if (password != null && !password.trim().isEmpty()) {
                     ok = userDao.registerUser(uuid, username, email, status, password);
                 } else {
@@ -475,13 +529,13 @@ public class WebServer {
                 
                 debugLog("registerUser result: " + ok);
                 if (ok) {
-                    // 注册成功，自动添加白名单
+                    // Registration successful, automatically add to whitelist
                     debugLog("Execute: whitelist add " + username);
                     org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
                         org.bukkit.Bukkit.dispatchCommand(org.bukkit.Bukkit.getConsoleSender(), "whitelist add " + username);
                     });
                     
-                    // 如果启用了Authme集成且自动注册，注册到Authme
+                    // If Authme integration is enabled and auto registration is enabled, register to Authme
                     if (authmeService.isAuthmeEnabled() && authmeService.isAutoRegisterEnabled() && 
                         password != null && !password.trim().isEmpty()) {
                         authmeService.registerToAuthme(username, password);
@@ -496,7 +550,7 @@ public class WebServer {
             sendJson(exchange, resp);
         });
         
-        // 管理员登录
+        // Admin login
         server.createContext("/api/admin-login", exchange -> {
             if (!"POST".equals(exchange.getRequestMethod())) { 
                 exchange.sendResponseHeaders(405, 0); 
@@ -523,9 +577,30 @@ public class WebServer {
             sendJson(exchange, resp);
         });
         
-        // 获取待审核用户列表 - 需要认证
+        // Admin token verification
+        server.createContext("/api/admin-verify", exchange -> {
+            if (!"POST".equals(exchange.getRequestMethod())) { 
+                exchange.sendResponseHeaders(405, 0); 
+                exchange.close(); 
+                return; 
+            }
+            
+            JSONObject resp = new JSONObject();
+            
+            if (isAuthenticated(exchange)) {
+                resp.put("success", true);
+                resp.put("message", "Token is valid");
+            } else {
+                resp.put("success", false);
+                resp.put("message", "Invalid or expired token");
+            }
+            
+            sendJson(exchange, resp);
+        });
+        
+        // Get pending users list - requires authentication
         server.createContext("/api/pending-list", exchange -> {
-            // 验证认证
+            // Verify authentication
             if (!isAuthenticated(exchange)) {
                 JSONObject resp = new JSONObject();
                 resp.put("success", false);
@@ -541,9 +616,9 @@ public class WebServer {
             }
             JSONObject resp = new JSONObject();
             try {
-                // 从数据库获取待审核用户列表
+                // Get pending users list from database
                 List<Map<String, Object>> users = userDao.getPendingUsers();
-                // 确保每个用户都包含 email 和 regTime 字段
+                // Ensure each user contains email and regTime fields
                 for (Map<String, Object> user : users) {
                     if (!user.containsKey("regTime")) user.put("regTime", null);
                     if (!user.containsKey("email")) user.put("email", "");
@@ -557,7 +632,7 @@ public class WebServer {
             sendJson(exchange, resp);
         });
         
-        // 统一审核用户接口 - 需要认证
+        // Unified user review interface - requires authentication
         server.createContext("/api/review", exchange -> {
             if (!"POST".equals(exchange.getRequestMethod())) { 
                 exchange.sendResponseHeaders(405, 0); 
@@ -565,7 +640,7 @@ public class WebServer {
                 return; 
             }
             
-            // 验证认证
+            // Verify authentication
             if (!isAuthenticated(exchange)) {
                 JSONObject resp = new JSONObject();
                 resp.put("success", false);
@@ -579,7 +654,7 @@ public class WebServer {
             String action = req.optString("action");
             String language = req.optString("language", "zh");
             
-            // 输入验证
+            // Input validation
             if (!isValidUUID(uuid)) {
                 JSONObject resp = new JSONObject();
                 resp.put("success", false);
@@ -598,7 +673,7 @@ public class WebServer {
             
             JSONObject resp = new JSONObject();
             try {
-                // 获取用户信息
+                // Get user information
                 Map<String, Object> user = userDao.getUserByUuid(uuid);
                 if (user == null) {
                     resp.put("success", false);
@@ -614,13 +689,13 @@ public class WebServer {
                 boolean success = userDao.updateUserStatus(uuid, status);
                 
                 if (success && "approve".equals(action) && username != null) {
-                    // 审核通过，添加到白名单
+                    // Review approved, add to whitelist
                     debugLog("Execute: whitelist add " + username);
                     org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
                         org.bukkit.Bukkit.dispatchCommand(org.bukkit.Bukkit.getConsoleSender(), "whitelist add " + username);
                     });
                     
-                    // 如果启用了Authme集成且自动注册，且有密码，注册到Authme
+                    // If Authme integration is enabled and auto registration is enabled, and password exists, register to Authme
                     if (authmeService.isAuthmeEnabled() && authmeService.isAutoRegisterEnabled() && 
                         password != null && !password.trim().isEmpty()) {
                         authmeService.registerToAuthme(username, password);
@@ -632,7 +707,7 @@ public class WebServer {
                     ("approve".equals(action) ? getMsg("review.approve_success", language) : getMsg("review.reject_success", language)) :
                     getMsg("review.failed", language));
                 
-                // WebSocket推送
+                // WebSocket push
                 if (success) {
                     JSONObject wsMsg = new JSONObject();
                     wsMsg.put("type", action);
@@ -648,9 +723,9 @@ public class WebServer {
             sendJson(exchange, resp);
         });
         
-        // 获取所有用户 - 需要认证
+        // Get all users - requires authentication
         server.createContext("/api/all-users", exchange -> {
-            // 验证认证
+            // Verify authentication
             if (!isAuthenticated(exchange)) {
                 JSONObject resp = new JSONObject();
                 resp.put("success", false);
@@ -662,7 +737,7 @@ public class WebServer {
             String language = "zh";
             JSONObject resp = new JSONObject();
             try {
-                // 只返回非pending用户
+                // Only return non-pending users
                 List<Map<String, Object>> users = userDao.getAllUsers();
                 List<Map<String, Object>> filtered = new java.util.ArrayList<>();
                 for (Map<String, Object> user : users) {
@@ -681,7 +756,106 @@ public class WebServer {
             sendJson(exchange, resp);
         });
         
-        // 删除用户 - 需要认证
+        // Get users with pagination - requires authentication
+        server.createContext("/api/users-paginated", exchange -> {
+            // Verify authentication
+            if (!isAuthenticated(exchange)) {
+                JSONObject resp = new JSONObject();
+                resp.put("success", false);
+                resp.put("message", "Authentication required");
+                sendJson(exchange, resp);
+                return;
+            }
+
+            String query = exchange.getRequestURI().getQuery();
+            String language = "zh";
+            int page = 1;
+            int pageSize = 10;
+            String searchQuery = "";
+            
+            // Parse query parameters
+            if (query != null) {
+                String[] params = query.split("&");
+                for (String param : params) {
+                    String[] keyValue = param.split("=");
+                    if (keyValue.length == 2) {
+                        String key = keyValue[0];
+                        String value = keyValue[1];
+                        try {
+                            switch (key) {
+                                case "page":
+                                    page = Math.max(1, Integer.parseInt(value));
+                                    break;
+                                case "pageSize":
+                                    pageSize = Math.max(1, Math.min(100, Integer.parseInt(value))); // Limit max page size to 100
+                                    break;
+                                case "search":
+                                    searchQuery = java.net.URLDecoder.decode(value, "UTF-8");
+                                    break;
+                                case "language":
+                                    language = value;
+                                    break;
+                            }
+                        } catch (Exception e) {
+                            debugLog("Error parsing query parameter: " + param + ", error: " + e.getMessage());
+                        }
+                    }
+                }
+            }
+            
+            debugLog("Paginated users request: page=" + page + ", pageSize=" + pageSize + ", search=" + searchQuery);
+            
+            JSONObject resp = new JSONObject();
+            try {
+                List<Map<String, Object>> users;
+                int totalCount;
+                
+                // Get users with pagination and optional search
+                if (searchQuery != null && !searchQuery.trim().isEmpty()) {
+                    users = userDao.getUsersWithPaginationAndSearch(page, pageSize, searchQuery);
+                    totalCount = userDao.getTotalUserCountWithSearch(searchQuery);
+                } else {
+                    users = userDao.getUsersWithPagination(page, pageSize);
+                    totalCount = userDao.getTotalUserCount();
+                }
+                
+                // Filter out pending users and ensure required fields exist
+                List<Map<String, Object>> filtered = new java.util.ArrayList<>();
+                for (Map<String, Object> user : users) {
+                    if (!"pending".equalsIgnoreCase(String.valueOf(user.get("status")))) {
+                        if (!user.containsKey("regTime")) user.put("regTime", null);
+                        if (!user.containsKey("email")) user.put("email", "");
+                        filtered.add(user);
+                    }
+                }
+                
+                // Calculate pagination info
+                int totalPages = (int) Math.ceil((double) totalCount / pageSize);
+                boolean hasNext = page < totalPages;
+                boolean hasPrev = page > 1;
+                
+                resp.put("success", true);
+                resp.put("users", filtered);
+                resp.put("pagination", new JSONObject()
+                    .put("currentPage", page)
+                    .put("pageSize", pageSize)
+                    .put("totalCount", totalCount)
+                    .put("totalPages", totalPages)
+                    .put("hasNext", hasNext)
+                    .put("hasPrev", hasPrev)
+                );
+                
+                debugLog("Returning " + filtered.size() + " users for page " + page + "/" + totalPages);
+                
+            } catch (Exception e) {
+                debugLog("Error in paginated users API: " + e.getMessage());
+                resp.put("success", false);
+                resp.put("message", getMsg("admin.load_failed", language));
+            }
+            sendJson(exchange, resp);
+        });
+        
+        // Delete user - requires authentication
         server.createContext("/api/delete-user", exchange -> {
             if (!"POST".equals(exchange.getRequestMethod())) { 
                 exchange.sendResponseHeaders(405, 0); 
@@ -689,7 +863,7 @@ public class WebServer {
                 return; 
             }
             
-            // 验证认证
+            // Verify authentication
             if (!isAuthenticated(exchange)) {
                 JSONObject resp = new JSONObject();
                 resp.put("success", false);
@@ -702,7 +876,7 @@ public class WebServer {
             String uuid = req.optString("uuid");
             String language = req.optString("language", "zh");
             
-            // 输入验证
+            // Input validation
             if (!isValidUUID(uuid)) {
                 JSONObject resp = new JSONObject();
                 resp.put("success", false);
@@ -713,7 +887,7 @@ public class WebServer {
             
             JSONObject resp = new JSONObject();
             try {
-                // 获取用户信息用于白名单操作
+                // Get user information for whitelist operations
                 Map<String, Object> user = userDao.getUserByUuid(uuid);
                 if (user == null) {
                     resp.put("success", false);
@@ -726,13 +900,13 @@ public class WebServer {
                 boolean success = userDao.deleteUser(uuid);
                 
                 if (success && username != null) {
-                    // 从白名单中移除
+                    // Remove from whitelist
                     debugLog("Execute: whitelist remove " + username);
                     org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
                         org.bukkit.Bukkit.dispatchCommand(org.bukkit.Bukkit.getConsoleSender(), "whitelist remove " + username);
                     });
                     
-                    // 如果启用了Authme集成且配置了自动注销，从Authme注销用户
+                    // If Authme integration is enabled and auto unregister is configured, unregister user from Authme
                     if (authmeService.isAuthmeEnabled() && authmeService.isAutoUnregisterEnabled()) {
                         authmeService.unregisterFromAuthme(username);
                     }
@@ -749,7 +923,7 @@ public class WebServer {
             sendJson(exchange, resp);
         });
         
-        // 封禁用户 - 需要认证
+        // Ban user - requires authentication
         server.createContext("/api/ban-user", exchange -> {
             if (!"POST".equals(exchange.getRequestMethod())) { 
                 exchange.sendResponseHeaders(405, 0); 
@@ -757,7 +931,7 @@ public class WebServer {
                 return; 
             }
             
-            // 验证认证
+            // Verify authentication
             if (!isAuthenticated(exchange)) {
                 JSONObject resp = new JSONObject();
                 resp.put("success", false);
@@ -770,7 +944,7 @@ public class WebServer {
             String uuid = req.optString("uuid");
             String language = req.optString("language", "zh");
             
-            // 输入验证
+            // Input validation
             if (!isValidUUID(uuid)) {
                 JSONObject resp = new JSONObject();
                 resp.put("success", false);
@@ -781,7 +955,7 @@ public class WebServer {
             
             JSONObject resp = new JSONObject();
             try {
-                // 获取用户信息用于白名单操作
+                // Get user information for whitelist operations
                 Map<String, Object> user = userDao.getUserByUuid(uuid);
                 if (user == null) {
                     resp.put("success", false);
@@ -794,7 +968,7 @@ public class WebServer {
                 boolean success = userDao.updateUserStatus(uuid, "banned");
                 
                 if (success && username != null) {
-                    // 从白名单中移除
+                    // Remove from whitelist
                     debugLog("Execute: whitelist remove " + username);
                     org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
                         org.bukkit.Bukkit.dispatchCommand(org.bukkit.Bukkit.getConsoleSender(), "whitelist remove " + username);
@@ -812,7 +986,7 @@ public class WebServer {
             sendJson(exchange, resp);
         });
         
-        // 解封用户 - 需要认证
+        // Unban user - requires authentication
         server.createContext("/api/unban-user", exchange -> {
             if (!"POST".equals(exchange.getRequestMethod())) { 
                 exchange.sendResponseHeaders(405, 0); 
@@ -820,7 +994,7 @@ public class WebServer {
                 return; 
             }
             
-            // 验证认证
+            // Verify authentication
             if (!isAuthenticated(exchange)) {
                 JSONObject resp = new JSONObject();
                 resp.put("success", false);
@@ -833,7 +1007,7 @@ public class WebServer {
             String uuid = req.optString("uuid");
             String language = req.optString("language", "zh");
             
-            // 输入验证
+            // Input validation
             if (!isValidUUID(uuid)) {
                 JSONObject resp = new JSONObject();
                 resp.put("success", false);
@@ -844,7 +1018,7 @@ public class WebServer {
             
             JSONObject resp = new JSONObject();
             try {
-                // 获取用户信息用于白名单操作
+                // Get user information for whitelist operations
                 Map<String, Object> user = userDao.getUserByUuid(uuid);
                 if (user == null) {
                     resp.put("success", false);
@@ -857,7 +1031,7 @@ public class WebServer {
                 boolean success = userDao.updateUserStatus(uuid, "approved");
                 
                 if (success && username != null) {
-                    // 重新添加到白名单
+                    // Re-add to whitelist
                     debugLog("Execute: whitelist add " + username);
                     org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
                         org.bukkit.Bukkit.dispatchCommand(org.bukkit.Bukkit.getConsoleSender(), "whitelist add " + username);
@@ -875,7 +1049,7 @@ public class WebServer {
             sendJson(exchange, resp);
         });
         
-        // 修改用户密码
+        // Change user password
         server.createContext("/api/change-password", exchange -> {
             if (!"POST".equals(exchange.getRequestMethod())) { 
                 exchange.sendResponseHeaders(405, 0); 
@@ -883,7 +1057,7 @@ public class WebServer {
                 return; 
             }
             
-            // 验证认证
+            // Verify authentication
             if (!isAuthenticated(exchange)) {
                 JSONObject resp = new JSONObject();
                 resp.put("success", false);
@@ -900,7 +1074,7 @@ public class WebServer {
             
             JSONObject resp = new JSONObject();
             
-            // 验证输入
+            // Validate input
             if ((uuid == null || uuid.trim().isEmpty()) && (username == null || username.trim().isEmpty())) {
                 resp.put("success", false);
                 resp.put("msg", getMsg("admin.missing_user_identifier", language));
@@ -915,7 +1089,7 @@ public class WebServer {
                 return;
             }
             
-            // 验证密码格式
+            // Validate password format
             if (!authmeService.isValidPassword(newPassword)) {
                 resp.put("success", false);
                 String passwordRegex = plugin.getConfig().getString("authme.password_regex", "^[a-zA-Z0-9_]{3,16}$");
@@ -925,7 +1099,7 @@ public class WebServer {
             }
             
             try {
-                // 查找用户
+                // Find user
                 Map<String, Object> user = null;
                 if (uuid != null && !uuid.trim().isEmpty()) {
                     user = userDao.getUserByUuid(uuid);
@@ -943,11 +1117,11 @@ public class WebServer {
                 String targetUsername = (String) user.get("username");
                 String targetUuid = (String) user.get("uuid");
                 
-                // 更新密码
+                // Update password
                 boolean success = userDao.updateUserPassword(targetUuid, newPassword);
                 
                 if (success) {
-                    // 如果启用了Authme集成，同步更新Authme密码
+                    // If Authme integration is enabled, synchronize Authme password update
                     if (authmeService.isAuthmeEnabled()) {
                         authmeService.changePasswordInAuthme(targetUsername, newPassword);
                     }
@@ -967,7 +1141,7 @@ public class WebServer {
             sendJson(exchange, resp);
         });
         
-        // 获取用户状态
+        // Get user status
         server.createContext("/api/user-status", exchange -> {
             if (!"GET".equals(exchange.getRequestMethod())) { 
                 exchange.sendResponseHeaders(405, 0); 
@@ -982,7 +1156,7 @@ public class WebServer {
             
             JSONObject resp = new JSONObject();
             if (uuid != null) {
-                // 验证UUID格式
+                // Validate UUID format
                 if (!isValidUUID(uuid)) {
                     resp.put("success", false);
                     resp.put("message", "Invalid UUID format");
@@ -1013,6 +1187,62 @@ public class WebServer {
             sendJson(exchange, resp);
         });
         
+        // Version check API - requires authentication
+        server.createContext("/api/version-check", exchange -> {
+            // Verify authentication
+            if (!isAuthenticated(exchange)) {
+                JSONObject resp = new JSONObject();
+                resp.put("success", false);
+                resp.put("message", "Authentication required");
+                sendJson(exchange, resp);
+                return;
+            }
+            
+            if (!"GET".equals(exchange.getRequestMethod())) { 
+                exchange.sendResponseHeaders(405, 0); 
+                exchange.close(); 
+                return; 
+            }
+            
+            try {
+                // Get version check service from main plugin
+                team.kitemc.verifymc.VerifyMC mainPlugin = (team.kitemc.verifymc.VerifyMC) plugin;
+                team.kitemc.verifymc.service.VersionCheckService versionService = mainPlugin.getVersionCheckService();
+                
+                if (versionService != null) {
+                    // Perform async version check
+                    versionService.checkForUpdatesAsync().thenAccept(result -> {
+                        try {
+                            sendJson(exchange, result.toJson());
+                        } catch (Exception e) {
+                            debugLog("Error sending version check response: " + e.getMessage());
+                        }
+                    }).exceptionally(throwable -> {
+                        try {
+                            JSONObject errorResp = new JSONObject();
+                            errorResp.put("success", false);
+                            errorResp.put("error", "Version check failed: " + throwable.getMessage());
+                            sendJson(exchange, errorResp);
+                        } catch (Exception e) {
+                            debugLog("Error sending version check error response: " + e.getMessage());
+                        }
+                        return null;
+                    });
+                } else {
+                    JSONObject resp = new JSONObject();
+                    resp.put("success", false);
+                    resp.put("error", "Version check service not available");
+                    sendJson(exchange, resp);
+                }
+            } catch (Exception e) {
+                debugLog("Version check API error: " + e.getMessage());
+                JSONObject resp = new JSONObject();
+                resp.put("success", false);
+                resp.put("error", "Internal server error");
+                sendJson(exchange, resp);
+            }
+        });
+        
         server.setExecutor(null);
         server.start();
     }
@@ -1021,7 +1251,7 @@ public class WebServer {
         if (server != null) server.stop(0);
     }
 
-    // 静态资源处理器
+    // Static resource handler
     static class StaticHandler implements HttpHandler {
         private final String baseDir;
         public StaticHandler(String baseDir) {
@@ -1034,7 +1264,7 @@ public class WebServer {
             Path file = Paths.get(baseDir, uri);
             try {
                 if (!file.normalize().startsWith(Paths.get(baseDir).normalize()) || !Files.exists(file) || Files.isDirectory(file)) {
-                    // 只要不是 /api/ 路径，全部兜底返回 index.html
+                    // For all non-/api/ paths, fallback to index.html
                     if (!uri.startsWith("/api/")) {
                         Path index = Paths.get(baseDir, "index.html");
                         if (Files.exists(index)) {
@@ -1046,7 +1276,7 @@ public class WebServer {
                             return;
                         }
                     }
-                    // 兜底 404.html
+                    // Fallback to 404.html
                     Path notFound = Paths.get(baseDir, "404.html");
                     if (Files.exists(notFound)) {
                         byte[] data = Files.readAllBytes(notFound);

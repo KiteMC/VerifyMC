@@ -23,7 +23,7 @@ auth_methods:
 # 单个邮箱最多可以绑定的游戏账号数量。
 max_accounts_per_email: 2
 # 白名单模式: 'bukkit' (与服务器的 whitelist.json 同步) 或 'plugin' (使用插件内部数据库)。
-whitelist_mode: bukkit
+whitelist_mode: plugin
 # 在 'plugin' 模式下，向未在白名单中的玩家显示的注册URL。
 web_register_url: https://domain.com/
 
@@ -140,5 +140,5 @@ authme:
   auto_register: false
   # 是否在删除用户时自动从Authme注销
   auto_unregister: false
-  # 密码正则表达式，默认至少6个字符
+  # 密码正则表达式
   password_regex: "^[a-zA-Z0-9_]{3,16}$" 

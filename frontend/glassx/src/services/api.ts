@@ -220,6 +220,32 @@ class ApiService {
     return this.request<{ success: boolean; users: PendingUser[]; message?: string }>('/all-users')
   }
 
+  // 获取分页用户列表
+  async getUsersPaginated(page: number = 1, pageSize: number = 10, search: string = ''): Promise<{
+    success: boolean;
+    users: PendingUser[];
+    pagination: {
+      currentPage: number;
+      pageSize: number;
+      totalCount: number;
+      totalPages: number;
+      hasNext: boolean;
+      hasPrev: boolean;
+    };
+    message?: string;
+  }> {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      pageSize: pageSize.toString(),
+    });
+    
+    if (search.trim()) {
+      params.append('search', search.trim());
+    }
+    
+    return this.request(`/users-paginated?${params.toString()}`);
+  }
+
   // 获取待审核用户列表 (兼容方法)
   async getPendingUsers(): Promise<{ success: boolean; data: PendingUser[]; message?: string }> {
     const response = await this.getPendingList()
@@ -252,6 +278,18 @@ class ApiService {
   // 登出
   logout(): void {
     localStorage.removeItem('admin_token')
+  }
+
+  // 版本检查
+  async checkVersion(): Promise<{
+    success: boolean;
+    currentVersion?: string;
+    latestVersion?: string;
+    updateAvailable?: boolean;
+    releasesUrl?: string;
+    error?: string;
+  }> {
+    return this.request('/version-check')
   }
 }
 

@@ -5,8 +5,8 @@ import org.bukkit.plugin.Plugin;
 import java.util.regex.Pattern;
 
 /**
- * AuthMe集成服务类
- * 负责与AuthMe插件交互，包括密码验证、用户注册、注销等功能
+ * AuthMe integration service class
+ * Responsible for interacting with AuthMe plugin, including password verification, user registration, unregistration, etc.
  */
 public class AuthmeService {
     private final Plugin plugin;
@@ -18,35 +18,41 @@ public class AuthmeService {
     }
 
     /**
-     * 检查AuthMe是否启用
+     * Check if AuthMe is enabled
+     * @return true if AuthMe is enabled
      */
     public boolean isAuthmeEnabled() {
         return plugin.getConfig().getBoolean("authme.enabled", false);
     }
 
     /**
-     * 检查是否要求密码
+     * Check if password is required
+     * @return true if password is required
      */
     public boolean isPasswordRequired() {
         return plugin.getConfig().getBoolean("authme.require_password", false);
     }
 
     /**
-     * 检查是否启用自动注册
+     * Check if auto registration is enabled
+     * @return true if auto registration is enabled
      */
     public boolean isAutoRegisterEnabled() {
         return plugin.getConfig().getBoolean("authme.auto_register", false);
     }
 
     /**
-     * 检查是否启用自动注销
+     * Check if auto unregistration is enabled
+     * @return true if auto unregistration is enabled
      */
     public boolean isAutoUnregisterEnabled() {
         return plugin.getConfig().getBoolean("authme.auto_unregister", false);
     }
 
     /**
-     * 验证密码是否符合正则表达式
+     * Validate if password matches regex pattern
+     * @param password Password to validate
+     * @return true if password is valid
      */
     public boolean isValidPassword(String password) {
         if (password == null || password.trim().isEmpty()) {
@@ -57,7 +63,10 @@ public class AuthmeService {
     }
 
     /**
-     * 注册用户到AuthMe（在主线程中执行）
+     * Register user to AuthMe (executed in main thread)
+     * @param username Username to register
+     * @param password Password for registration
+     * @return true if registration successful
      */
     public boolean registerToAuthme(String username, String password) {
         if (!isAuthmeEnabled()) {
@@ -67,11 +76,11 @@ public class AuthmeService {
         
         debugLog("Registering user to AuthMe: " + username);
         
-        // 确保在主线程中执行
+        // Ensure execution in main thread
         if (Bukkit.isPrimaryThread()) {
             return executeAuthmeCommand("register " + username + " " + password);
         } else {
-            // 如果在异步线程中，使用同步任务在主线程执行
+            // If in async thread, use sync task to execute in main thread
             try {
                 return Bukkit.getScheduler().callSyncMethod(plugin, () -> 
                     executeAuthmeCommand("register " + username + " " + password)
@@ -84,7 +93,9 @@ public class AuthmeService {
     }
 
     /**
-     * 从AuthMe注销用户（在主线程中执行）
+     * Unregister user from AuthMe (executed in main thread)
+     * @param username Username to unregister
+     * @return true if unregistration successful
      */
     public boolean unregisterFromAuthme(String username) {
         if (!isAuthmeEnabled()) {
@@ -94,11 +105,11 @@ public class AuthmeService {
         
         debugLog("Unregistering user from AuthMe: " + username);
         
-        // 确保在主线程中执行
+        // Ensure execution in main thread
         if (Bukkit.isPrimaryThread()) {
             return executeAuthmeCommand("purgeplayer " + username);
         } else {
-            // 如果在异步线程中，使用同步任务在主线程执行
+            // If in async thread, use sync task to execute in main thread
             try {
                 return Bukkit.getScheduler().callSyncMethod(plugin, () -> 
                     executeAuthmeCommand("purgeplayer " + username)
@@ -111,7 +122,10 @@ public class AuthmeService {
     }
 
     /**
-     * 修改AuthMe中的用户密码（在主线程中执行）
+     * Change user password in AuthMe (executed in main thread)
+     * @param username Username to change password for
+     * @param newPassword New password
+     * @return true if password change successful
      */
     public boolean changePasswordInAuthme(String username, String newPassword) {
         if (!isAuthmeEnabled()) {
@@ -121,11 +135,11 @@ public class AuthmeService {
         
         debugLog("Changing password in AuthMe: " + username);
         
-        // 确保在主线程中执行
+        // Ensure execution in main thread
         if (Bukkit.isPrimaryThread()) {
             return executeAuthmeCommand("password " + username + " " + newPassword);
         } else {
-            // 如果在异步线程中，使用同步任务在主线程执行
+            // If in async thread, use sync task to execute in main thread
             try {
                 return Bukkit.getScheduler().callSyncMethod(plugin, () -> 
                     executeAuthmeCommand("password " + username + " " + newPassword)
@@ -138,7 +152,9 @@ public class AuthmeService {
     }
 
     /**
-     * 执行AuthMe命令
+     * Execute AuthMe command
+     * @param command Command to execute
+     * @return true if command executed successfully
      */
     private boolean executeAuthmeCommand(String command) {
         try {
@@ -153,7 +169,8 @@ public class AuthmeService {
     }
 
     /**
-     * 调试日志
+     * Debug logging
+     * @param msg Message to log
      */
     private void debugLog(String msg) {
         if (debug) {

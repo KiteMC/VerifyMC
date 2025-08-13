@@ -1,20 +1,19 @@
 <template>
   <div class="min-h-screen flex flex-col">
-    <!-- Top Navigation -->
-    <nav class="fixed top-0 left-0 right-0 z-40 bg-white/80 backdrop-blur-lg border-b border-gray-200 shadow-sm">
-      <div class="max-w-4xl mx-auto px-2 sm:px-6 lg:px-8">
+    <!-- Enhanced Top Navigation -->
+    <nav class="fixed top-0 left-0 right-0 z-40 bg-white/85 backdrop-blur-xl border-b border-gray-200/60 shadow-lg shadow-gray-200/20">
+      <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center h-14">
-          <!-- Logo & Server Name -->
+          <!-- Server Name -->
           <div class="flex items-center">
-            <img v-if="config?.frontend?.logo_url" :src="config.frontend.logo_url" alt="logo" class="h-8 w-8 rounded mr-2" />
-            <router-link to="/" class="text-xl sm:text-2xl font-bold text-blue-600 cursor-pointer">{{ config?.frontend?.web_server_prefix || 'VerifyMC' }}</router-link>
+            <router-link to="/" class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent cursor-pointer hover:from-blue-700 hover:to-purple-700 transition-all duration-300">{{ config?.frontend?.web_server_prefix || 'VerifyMC' }}</router-link>
           </div>
           <!-- Desktop Menu -->
           <div class="hidden md:flex items-center gap-2">
-            <router-link to="/register" class="hover:text-blue-500 cursor-pointer px-3 py-1 text-base font-semibold" active-class="text-blue-700 font-bold">{{ $t('nav.register') }}</router-link>
-            <router-link to="/admin" class="hover:text-blue-500 cursor-pointer px-3 py-1 text-base font-semibold" active-class="text-blue-700 font-bold">{{ $t('nav.admin') }}</router-link>
+            <router-link to="/register" class="hover:text-blue-500 cursor-pointer px-4 py-2 text-base font-semibold rounded-lg hover:bg-blue-50/80 transition-all duration-200" active-class="text-blue-700 font-bold bg-blue-50/60">{{ $t('nav.register') }}</router-link>
+            <router-link to="/admin" class="hover:text-blue-500 cursor-pointer px-4 py-2 text-base font-semibold rounded-lg hover:bg-blue-50/80 transition-all duration-200" active-class="text-blue-700 font-bold bg-blue-50/60">{{ $t('nav.admin') }}</router-link>
             <LanguageSwitcher />
-            <a href="https://github.com/KiteMC/VerifyMC/" target="_blank" rel="noopener" class="ml-2 flex items-center justify-center w-8 h-8 rounded hover:bg-gray-100 transition" title="GitHub">
+            <a href="https://github.com/KiteMC/VerifyMC/" target="_blank" rel="noopener" class="ml-2 flex items-center justify-center w-10 h-10 rounded-xl hover:bg-gradient-to-r hover:from-gray-100 hover:to-gray-50 transition-all duration-300 hover:scale-105 hover:shadow-md" title="GitHub">
               <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-gray-700"><path d="M12 2C6.477 2 2 6.484 2 12.021c0 4.428 2.865 8.184 6.839 9.504.5.092.682-.217.682-.482 0-.237-.009-.868-.014-1.703-2.782.605-3.369-1.342-3.369-1.342-.454-1.157-1.11-1.465-1.11-1.465-.908-.62.069-.608.069-.608 1.004.07 1.532 1.032 1.532 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.339-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.025A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.295 2.748-1.025 2.748-1.025.546 1.378.202 2.397.1 2.65.64.7 1.028 1.595 1.028 2.688 0 3.847-2.338 4.695-4.566 4.944.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.749 0 .267.18.579.688.481C19.138 20.2 22 16.448 22 12.021 22 6.484 17.523 2 12 2z"/></svg>
             </a>
           </div>
@@ -41,10 +40,16 @@
         </div>
       </div>
     </nav>
-    <main class="flex-1 flex flex-col items-center p-2 sm:p-4 pt-16">
+    <main class="flex-1 flex flex-col pt-16">
       <router-view />
     </main>
-    <footer class="bg-white text-center text-gray-400 py-2 text-xs sm:text-sm border-t">VerifyMC © 2025</footer>
+    <footer class="bg-gradient-to-r from-white to-gray-50 text-center text-gray-500 py-4 text-xs sm:text-sm border-t border-gray-200/60 backdrop-blur-sm">
+      <div class="flex items-center justify-center space-x-2">
+        <span>VerifyMC © 2025</span>
+        <span class="text-gray-300">•</span>
+        <span class="text-gray-400">Made with ❤️</span>
+      </div>
+    </footer>
     <Toast ref="toastRef" />
   </div>
 </template>

@@ -5,7 +5,7 @@ web_server_prefix: '[ Name ]'
 auth_methods:
   - email
 max_accounts_per_email: 2
-whitelist_mode: bukkit
+whitelist_mode: plugin
 web_register_url: https://domain.com/
 register:
   auto_approve: false

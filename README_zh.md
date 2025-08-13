@@ -207,7 +207,7 @@ authme:
   auto_register: false
   # 是否在删除用户时自动从Authme注销
   auto_unregister: false
-  # 密码正则表达式，默认至少6个字符
+  # 密码正则表达式
   password_regex: "^[a-zA-Z0-9_]{3,16}$" 
 ```
 > ❤️ 如果你喜欢本项目，欢迎 Star、分享与反馈！ 

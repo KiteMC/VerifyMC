@@ -1,10 +1,11 @@
 <template>
-  <div v-if="show" class="fixed inset-0 z-50 flex items-center justify-center">
-    <!-- 背景遮罩 -->
-    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="handleCancel"></div>
+  <!-- Fixed positioning modal overlay - ensures proper centering relative to viewport -->
+  <div v-if="show" class="modal-overlay">
+    <!-- Background mask -->
+    <div class="modal-backdrop" @click="handleCancel"></div>
     
-    <!-- 对话框 -->
-    <div class="relative bg-white/10 backdrop-blur-md border border-white/20 rounded-lg p-6 max-w-md w-full mx-4 shadow-2xl">
+    <!-- Dialog container -->
+    <div class="modal-dialog">
       <!-- 标题 -->
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-lg font-semibold text-white">{{ title }}</h3>
@@ -46,6 +47,48 @@
     </div>
   </div>
 </template>
+
+<style scoped>
+/* Modal overlay - ensures proper viewport-relative positioning */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+/* Background backdrop */
+.modal-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+}
+
+/* Dialog container */
+.modal-dialog {
+  position: relative;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  max-width: 28rem;
+  width: 100%;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  /* Ensure dialog stays centered */
+  margin: auto;
+}
+</style>
 
 <script setup lang="ts">
 import { defineProps, defineEmits } from 'vue'

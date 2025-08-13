@@ -1,92 +1,134 @@
 <template>
-  <div class="w-full max-w-md mx-auto">
-    <div class="bg-white rounded-lg shadow-lg p-6 w-full">
-      <h2 class="text-2xl font-bold mb-6 text-center text-blue-600">{{ $t('register.title') }}</h2>
+  <!-- Minimalist registration form -->
+  <div class="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8">
+    <div class="max-w-lg w-full">
+      <!-- Header -->
+      <div class="text-center mb-8 fade-in">
+        <div class="mx-auto h-16 w-16 flex items-center justify-center rounded-full bg-gray-100 mb-6">
+          <svg class="h-8 w-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+          </svg>
+        </div>
+        <h2 class="section-title text-center">{{ $t('register.title') }}</h2>
+        <p class="text-gray-600 text-sm">{{ $t('register.subtitle') }}</p>
+      </div>
       
-      <!-- 邮箱注册表单 -->
-      <form @submit.prevent="submitForm" class="space-y-4">
-  <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('register.email') }}</label>
-          <input 
-            v-model="form.email" 
-            type="email" 
-            :placeholder="$t('register.emailPlaceholder')"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            :class="{ 'border-red-500': errors.email }"
-            @blur="validateEmail"
-          />
-          <p v-if="errors.email" class="mt-1 text-sm text-red-600">{{ errors.email }}</p>
-        </div>
-
-      <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('register.username') }}</label>
-          <input 
-            v-model="form.username" 
-            type="text" 
-            :placeholder="$t('register.usernamePlaceholder')"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            :class="{ 'border-red-500': errors.username }"
-            @blur="validateUsername"
-          />
-          <p v-if="errors.username" class="mt-1 text-sm text-red-600">{{ errors.username }}</p>
-        </div>
-
-        <!-- 密码输入框 -->
-        <div v-if="config.authme?.enabled && config.authme?.require_password">
-          <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('register.password') }}</label>
-          <input 
-            v-model="form.password" 
-            type="password" 
-            :placeholder="$t('register.passwordPlaceholder')"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            :class="{ 'border-red-500': errors.password }"
-            @blur="validatePassword"
-          />
-          <p v-if="errors.password" class="mt-1 text-sm text-red-600">{{ errors.password }}</p>
-          <p v-if="config.authme?.password_regex" class="mt-1 text-xs text-gray-500">{{ $t('register.passwordHint', { regex: config.authme.password_regex }) }}</p>
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('register.code') }}</label>
-          <div class="flex flex-col sm:flex-row gap-2">
+      <!-- Registration form -->
+      <div class="minimal-card p-10 slide-up">
+        <form @submit.prevent="submitForm" class="space-y-6">
+          <!-- Email field -->
+          <div>
+            <label class="form-label">{{ $t('register.email') }}</label>
             <input 
-              v-model="form.code" 
-              type="text" 
-              :placeholder="$t('register.codePlaceholder')"
-              class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              :class="{ 'border-red-500': errors.code }"
-              @blur="validateCode"
+              v-model="form.email" 
+              type="email" 
+              :placeholder="$t('register.emailPlaceholder')"
+              class="input-field"
+              :class="{ 'input-error': errors.email }"
+              @blur="validateEmail"
             />
-            <button 
-              type="button"
-              @click="sendCode" 
-              :disabled="sending || !form.email"
-              class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-            >
-              {{ sending ? $t('register.sending') : $t('register.sendCode') }}
-            </button>
+            <p v-if="errors.email" class="form-error">{{ errors.email }}</p>
           </div>
-          <p v-if="errors.code" class="mt-1 text-sm text-red-600">{{ errors.code }}</p>
+
+          <!-- Username field -->
+          <div>
+            <label class="form-label">{{ $t('register.username') }}</label>
+            <input 
+              v-model="form.username" 
+              type="text" 
+              :placeholder="$t('register.usernamePlaceholder')"
+              class="input-field"
+              :class="{ 'input-error': errors.username }"
+              @blur="validateUsername"
+            />
+            <p v-if="errors.username" class="form-error">{{ errors.username }}</p>
+          </div>
+
+          <!-- Password field (conditional) -->
+          <div v-if="config.authme?.enabled && config.authme?.require_password">
+            <label class="form-label">{{ $t('register.password') }}</label>
+            <input 
+              v-model="form.password" 
+              type="password" 
+              :placeholder="$t('register.passwordPlaceholder')"
+              class="input-field"
+              :class="{ 'input-error': errors.password }"
+              @blur="validatePassword"
+            />
+            <p v-if="errors.password" class="form-error">{{ errors.password }}</p>
+            <p v-if="config.authme?.password_regex" class="mt-2 text-xs text-gray-500">
+              {{ $t('register.passwordHint', { regex: config.authme.password_regex }) }}
+            </p>
+          </div>
+
+          <!-- Verification code field -->
+          <div>
+            <label class="form-label">{{ $t('register.code') }}</label>
+            <div class="flex flex-col sm:flex-row gap-3">
+              <input 
+                v-model="form.code" 
+                type="text" 
+                :placeholder="$t('register.codePlaceholder')"
+                class="input-field flex-1"
+                :class="{ 'input-error': errors.code }"
+                @blur="validateCode"
+              />
+              <button 
+                type="button"
+                @click="sendCode" 
+                :disabled="sending || !form.email || cooldownSeconds > 0"
+                class="btn-action-outline whitespace-nowrap sm:px-4 px-6 py-2.5 sm:py-2"
+              >
+                {{ 
+                  sending ? $t('register.sending') : 
+                  cooldownSeconds > 0 ? `${cooldownSeconds}s` : 
+                  $t('register.sendCode') 
+                }}
+              </button>
+            </div>
+            <p v-if="errors.code" class="form-error">{{ errors.code }}</p>
+          </div>
+
+          <!-- Submit button -->
+          <button 
+            type="submit" 
+            :disabled="loading || !isFormValid"
+            class="btn-primary w-full"
+          >
+            <svg v-if="loading" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            {{ loading ? $t('common.loading') : $t('register.submit') }}
+          </button>
+        </form>
+
+        <!-- Message display -->
+        <div v-if="message" class="mt-6 p-4 rounded-lg" :class="messageType === 'error' ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'">
+          <div class="flex items-center">
+            <svg v-if="messageType === 'success'" class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+            </svg>
+            <svg v-else class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+            </svg>
+            <span class="text-sm font-medium">{{ message }}</span>
+          </div>
         </div>
-
-        <button 
-          type="submit" 
-          :disabled="loading"
-          class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {{ loading ? $t('common.loading') : $t('register.submit') }}
-        </button>
-      </form>
-
-      <div v-if="message" :class="messageType === 'error' ? 'text-red-600' : 'text-green-600'" class="mt-4 text-center">
-        {{ message }}
       </div>
+      
+      <!-- Back to home link -->
+      <div class="text-center mt-6 fade-in">
+        <router-link to="/" class="text-sm text-gray-500 hover:text-gray-700 transition-colors">
+          ← {{ $t('common.back_home') }}
+        </router-link>
       </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed, inject } from 'vue'
+import { ref, reactive, onMounted, computed, inject, type Ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
@@ -168,8 +210,44 @@ const validateCode = () => {
   return true
 }
 
+// Rate limiting state for send code button
+const cooldownSeconds = ref(0)
+const cooldownTimer = ref<NodeJS.Timeout | null>(null)
+
+// Start countdown timer for rate limiting
+const startCooldown = (seconds: number) => {
+  cooldownSeconds.value = seconds
+  if (cooldownTimer.value) {
+    clearInterval(cooldownTimer.value)
+  }
+  cooldownTimer.value = setInterval(() => {
+    cooldownSeconds.value--
+    if (cooldownSeconds.value <= 0) {
+      if (cooldownTimer.value) {
+        clearInterval(cooldownTimer.value)
+      }
+      cooldownTimer.value = null
+    }
+  }, 1000)
+}
+
+// Update rate limit message with dynamic countdown
+const updateRateLimitMessage = (seconds: number) => {
+  message.value = t('register.rateLimited', { seconds: seconds })
+  messageType.value = 'error'
+  
+  // Update message every second during countdown
+  const messageTimer = setInterval(() => {
+    if (cooldownSeconds.value > 0) {
+      message.value = t('register.rateLimited', { seconds: cooldownSeconds.value })
+    } else {
+      clearInterval(messageTimer)
+    }
+  }, 1000)
+}
+
 const sendCode = async () => {
-  if (!validateEmail()) return
+  if (!validateEmail() || cooldownSeconds.value > 0) return
   
   sending.value = true
   message.value = ''
@@ -189,8 +267,17 @@ const sendCode = async () => {
     if (data.success) {
       message.value = t('register.codeSent')
       messageType.value = 'success'
+      // Start 60 second cooldown after successful send
+      startCooldown(60)
     } else {
-      message.value = data.msg || t('register.sendFailed')
+      // Handle rate limiting response
+      if ((data as any).remaining_seconds && (data as any).remaining_seconds > 0) {
+        startCooldown((data as any).remaining_seconds)
+        // Use dynamic message that updates with countdown
+        updateRateLimitMessage((data as any).remaining_seconds)
+      } else {
+        message.value = data.msg || t('register.sendFailed')
+      }
       messageType.value = 'error'
     }
   } catch (e) {

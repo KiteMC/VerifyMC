@@ -19,7 +19,9 @@ public class ReviewWebSocketServer extends WebSocketServer {
         this.debug = plugin.getConfig().getBoolean("debug", false);
     }
 
-    // 兼容旧构造函数
+    /**
+     * Compatible with old constructor
+     */
     public ReviewWebSocketServer(int port) {
         super(new InetSocketAddress(port));
         this.plugin = null;
@@ -47,7 +49,7 @@ public class ReviewWebSocketServer extends WebSocketServer {
     @Override
     public void onMessage(WebSocket conn, String message) {
         debugLog("Received message from " + conn.getRemoteSocketAddress() + ": " + message);
-        // 可根据需要处理前端发来的消息
+        // Can handle messages from frontend as needed
     }
 
     @Override

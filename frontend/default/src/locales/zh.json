@@ -35,7 +35,7 @@
   },
   "home": {
     "title": "欢迎使用 VerifyMC",
-    "desc": "这是一个用于 Minecraft 白名单验证的系统。",
+    "desc": "欢迎来到我们的服务器！",
     "registerBtn": "立即注册",
     "welcome": "欢迎加入"
   },
@@ -51,6 +51,8 @@
     "backHome": "返回首页"
   },
   "register": {
+    "title": "白名单注册",
+    "subtitle": "申请加入我们的 Minecraft 服务器白名单",
     "username": "游戏昵称",
     "usernamePlaceholder": "请输入你的游戏昵称",
     "email": "邮箱",
@@ -63,6 +65,7 @@
     "emailRequired": "请输入邮箱",
     "codeSent": "验证码已发送，请查收！",
     "sendFailed": "验证码发送失败，请重试。",
+    "rateLimited": "发送验证码过于频繁，请等待 {seconds} 秒后再试",
     "success": "注册成功！请等待审核。",
     "failed": "注册失败，请重试。",
     "usernameRequired": "请输入游戏昵称",
@@ -91,7 +94,7 @@
     "unban": "解封",
     "changePassword": "修改密码",
     "newPassword": "新密码",
-    "passwordPlaceholder": "请输入新密码",
+    "newPasswordPlaceholder": "请输入新密码",
     "confirmDelete": "确定要删除该用户吗？",
     "confirmBan": "确定要封禁该用户吗？",
     "confirmUnban": "确定要解封该用户吗？",
@@ -106,7 +109,25 @@
     "status_pending": "待审核",
     "status_approved": "已通过",
     "status_rejected": "已拒绝",
-    "status_banned": "已封禁"
+    "status_banned": "已封禁",
+    "searchPlaceholder": "搜索用户名或邮箱...",
+    "noSearchResults": "未找到匹配的用户",
+    "pendingCount": "待审核",
+    "noPending": "暂无待审核用户",
+    "noPendingDesc": "所有用户申请都已处理完毕",
+    "loginSubtitle": "请输入管理员密码以继续",
+    "password": "管理员密码",
+    "loginPasswordPlaceholder": "请输入管理员密码",
+    "loginFailed": "登录失败",
+    "logout": "退出登录",
+    "logoutSuccess": "已退出登录",
+    "sessionExpired": "登录会话已过期，请重新登录",
+    "sessionExpiredRestart": "服务器已重启，请重新登录",
+    "users": {
+      "messages": {
+        "load_error": "加载失败"
+      }
+    }
   },
   "email": {
     "invalid_format": "邮箱格式不正确"
@@ -122,11 +143,35 @@
   "common": {
     "loading": "加载中...",
     "cancel": "取消",
-    "save": "保存"
+    "save": "保存",
+    "back": "返回",
+    "back_home": "返回首页"
   },
   "notification": {
     "register_success": "注册成功！您的申请已提交审核。",
     "register_failed": "注册失败，请稍后再试。",
     "username_exists": "用户名已存在"
+  },
+  "pagination": {
+    "showing": "显示",
+    "of": "共",
+    "items": "条记录",
+    "previous": "上一页",
+    "next": "下一页",
+    "per_page": "每页显示"
+  },
+  "version": {
+    "update_available": "发现新版本",
+    "current_version": "当前版本",
+    "latest_version": "最新版本",
+    "update_description": "建议更新到最新版本以获得更好的功能和安全性。",
+    "remind_later": "稍后提醒",
+    "download_now": "立即下载",
+    "check_failed": "版本检查失败"
+  },
+  "errors": {
+    "network": "网络连接失败，请检查网络设置",
+    "timeout": "请求超时，请稍后重试",
+    "unknown": "未知错误，请稍后重试"
   }
 } 

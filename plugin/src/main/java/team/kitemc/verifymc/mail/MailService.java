@@ -30,6 +30,9 @@ public class MailService {
         init();
     }
 
+    /**
+     * Initialize mail service
+     */
     private void init() {
         debugLog("Initializing MailService");
         FileConfiguration config = plugin.getConfig();
@@ -63,13 +66,20 @@ public class MailService {
         debugLog("MailService initialized successfully");
     }
 
+    /**
+     * Send verification code email
+     * @param to Recipient email address
+     * @param subject Email subject
+     * @param code Verification code
+     * @return true if email sent successfully
+     */
     public boolean sendCode(String to, String subject, String code) {
         debugLog("sendCode called: to=" + to + ", subject=" + subject + ", code=" + code);
         try {
             String lang = plugin.getConfig().getString("language", "zh");
             debugLog("Using language: " + lang);
             
-            // 优先从 plugins/VerifyMC/email 目录加载模板
+            // Prioritize loading template from plugins/VerifyMC/email directory
             File emailDir = new File(plugin.getDataFolder(), "email");
             File templateFile = new File(emailDir, "verify_code_" + lang + ".html");
             String content;

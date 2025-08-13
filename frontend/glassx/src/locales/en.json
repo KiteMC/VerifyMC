@@ -91,8 +91,12 @@
     "send_code": "Send Code",
     "sendCode": "Send Code",
     "sending": "Sending...",
+    "codeSent": "Code sent! Please check your inbox.",
     "code_sent": "Code sent! Please check your inbox.",
     "send_failed": "Failed to send code. Please try again.",
+    "sendFailed": "Failed to send code. Please try again.",
+    "rateLimited": "Verification code sent too frequently. Please wait {seconds} seconds before trying again",
+    "rate_limited": "Verification code sent too frequently. Please wait {seconds} seconds before trying again",
     "success": "Registration successful! Please wait for review.",
     "failed": "Registration failed. Please try again."
   },
@@ -261,5 +265,22 @@
     "switch": "Switch Language",
     "zh": "中文",
     "en": "English"
+  },
+  "pagination": {
+    "showing": "Showing",
+    "of": "of",
+    "items": "items",
+    "previous": "Previous",
+    "next": "Next",
+    "per_page": "Per page"
+  },
+  "version": {
+    "update_available": "New Version Available",
+    "current_version": "Current Version",
+    "latest_version": "Latest Version",
+    "update_description": "We recommend updating to the latest version for better features and security.",
+    "remind_later": "Remind Later",
+    "download_now": "Download Now",
+    "check_failed": "Version check failed"
   }
 }

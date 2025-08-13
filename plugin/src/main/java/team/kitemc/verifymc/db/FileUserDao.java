@@ -40,19 +40,19 @@ public class FileUserDao implements UserDao {
         try (Reader reader = new FileReader(file)) {
             Map<String, Map<String, Object>> loaded = gson.fromJson(reader, new TypeToken<Map<String, Map<String, Object>>>(){}.getType());
             if (loaded != null) {
-                // 兼容性处理：升级旧版本数据格式
+                // Compatibility handling: Upgrade old version data format
                 boolean hasUpgraded = false;
                 for (Map.Entry<String, Map<String, Object>> entry : loaded.entrySet()) {
                     Map<String, Object> user = entry.getValue();
                     if (user != null) {
-                        // 检查并添加缺失的字段
+                        // Check and add missing fields
                         if (!user.containsKey("password")) {
                             user.put("password", null);
                             hasUpgraded = true;
                             debugLog("Added missing password field for user: " + user.get("username"));
                         }
                         
-                        // 确保所有必需字段都存在
+                        // Ensure all required fields exist
                         if (!user.containsKey("uuid")) {
                             user.put("uuid", entry.getKey());
                             hasUpgraded = true;
@@ -70,7 +70,7 @@ public class FileUserDao implements UserDao {
                 users.putAll(loaded);
                 debugLog("Loaded " + loaded.size() + " users from database");
                 
-                // 如果有数据升级，立即保存
+                // If data upgrade occurred, save immediately
                 if (hasUpgraded) {
                     debugLog("Data format upgraded, saving updated data");
                     save();
@@ -98,7 +98,7 @@ public class FileUserDao implements UserDao {
     public boolean registerUser(String uuid, String username, String email, String status) {
         debugLog("registerUser called: uuid=" + uuid + ", username=" + username + ", email=" + email + ", status=" + status);
         try {
-            // 检查用户是否已存在
+            // Check if user already exists
             if (users.containsKey(uuid)) {
                 debugLog("User already exists with UUID: " + uuid + ", skipping registration");
                 return false;
@@ -125,7 +125,7 @@ public class FileUserDao implements UserDao {
     public boolean registerUser(String uuid, String username, String email, String status, String password) {
         debugLog("registerUser with password called: uuid=" + uuid + ", username=" + username + ", email=" + email + ", status=" + status);
         try {
-            // 检查用户是否已存在
+            // Check if user already exists
             if (users.containsKey(uuid)) {
                 debugLog("User already exists with UUID: " + uuid + ", skipping registration");
                 return false;
@@ -175,10 +175,10 @@ public class FileUserDao implements UserDao {
         debugLog("updateUserPassword called: uuidOrName=" + uuidOrName);
         Map<String, Object> user = null;
         
-        // 先尝试作为UUID查找
+        // First try to find as UUID
         user = users.get(uuidOrName);
         
-        // 如果没找到，尝试作为用户名查找
+        // If not found, try to find as username
         if (user == null) {
             for (Map<String, Object> u : users.values()) {
                 if (u.get("username") != null && u.get("username").toString().equalsIgnoreCase(uuidOrName)) {
@@ -265,5 +265,102 @@ public class FileUserDao implements UserDao {
         }
         debugLog("Found " + result.size() + " pending users");
         return result;
+    }
+    
+    @Override
+    public List<Map<String, Object>> getUsersWithPagination(int page, int pageSize) {
+        debugLog("Getting users with pagination: page=" + page + ", pageSize=" + pageSize);
+        List<Map<String, Object>> allUsers = new ArrayList<>(users.values());
+        
+        // Sort by registration time (newest first)
+        allUsers.sort((a, b) -> {
+            Long timeA = (Long) a.get("regTime");
+            Long timeB = (Long) b.get("regTime");
+            if (timeA == null) timeA = 0L;
+            if (timeB == null) timeB = 0L;
+            return timeB.compareTo(timeA);
+        });
+        
+        int startIndex = (page - 1) * pageSize;
+        int endIndex = Math.min(startIndex + pageSize, allUsers.size());
+        
+        if (startIndex >= allUsers.size()) {
+            debugLog("Page " + page + " is out of range, returning empty list");
+            return new ArrayList<>();
+        }
+        
+        List<Map<String, Object>> result = allUsers.subList(startIndex, endIndex);
+        debugLog("Returning " + result.size() + " users for page " + page);
+        return result;
+    }
+    
+    @Override
+    public int getTotalUserCount() {
+        int count = users.size();
+        debugLog("Total user count: " + count);
+        return count;
+    }
+    
+    @Override
+    public List<Map<String, Object>> getUsersWithPaginationAndSearch(int page, int pageSize, String searchQuery) {
+        debugLog("Getting users with pagination and search: page=" + page + ", pageSize=" + pageSize + ", query=" + searchQuery);
+        List<Map<String, Object>> filteredUsers = new ArrayList<>();
+        
+        // Filter users based on search query
+        String query = searchQuery != null ? searchQuery.toLowerCase().trim() : "";
+        for (Map<String, Object> user : users.values()) {
+            if (query.isEmpty()) {
+                filteredUsers.add(user);
+            } else {
+                String username = user.get("username") != null ? user.get("username").toString().toLowerCase() : "";
+                String email = user.get("email") != null ? user.get("email").toString().toLowerCase() : "";
+                if (username.contains(query) || email.contains(query)) {
+                    filteredUsers.add(user);
+                }
+            }
+        }
+        
+        // Sort by registration time (newest first)
+        filteredUsers.sort((a, b) -> {
+            Long timeA = (Long) a.get("regTime");
+            Long timeB = (Long) b.get("regTime");
+            if (timeA == null) timeA = 0L;
+            if (timeB == null) timeB = 0L;
+            return timeB.compareTo(timeA);
+        });
+        
+        int startIndex = (page - 1) * pageSize;
+        int endIndex = Math.min(startIndex + pageSize, filteredUsers.size());
+        
+        if (startIndex >= filteredUsers.size()) {
+            debugLog("Page " + page + " is out of range for search results, returning empty list");
+            return new ArrayList<>();
+        }
+        
+        List<Map<String, Object>> result = filteredUsers.subList(startIndex, endIndex);
+        debugLog("Returning " + result.size() + " users for page " + page + " with search query: " + searchQuery);
+        return result;
+    }
+    
+    @Override
+    public int getTotalUserCountWithSearch(String searchQuery) {
+        debugLog("Getting total user count with search: query=" + searchQuery);
+        int count = 0;
+        String query = searchQuery != null ? searchQuery.toLowerCase().trim() : "";
+        
+        for (Map<String, Object> user : users.values()) {
+            if (query.isEmpty()) {
+                count++;
+            } else {
+                String username = user.get("username") != null ? user.get("username").toString().toLowerCase() : "";
+                String email = user.get("email") != null ? user.get("email").toString().toLowerCase() : "";
+                if (username.contains(query) || email.contains(query)) {
+                    count++;
+                }
+            }
+        }
+        
+        debugLog("Total user count with search '" + searchQuery + "': " + count);
+        return count;
     }
 } 

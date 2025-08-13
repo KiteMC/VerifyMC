@@ -19,6 +19,7 @@ import team.kitemc.verifymc.db.AuditDao;
 import team.kitemc.verifymc.db.MysqlAuditDao;
 import team.kitemc.verifymc.db.MysqlUserDao;
 import team.kitemc.verifymc.service.AuthmeService;
+import team.kitemc.verifymc.service.VersionCheckService;
 
 import java.util.List;
 import java.util.Map;
@@ -39,12 +40,14 @@ public class VerifyMC extends JavaPlugin implements Listener {
     private ResourceBundle messagesEn;
     private WebServer webServer;
     private ReviewWebSocketServer wsServer;
-    // 字段类型改为接口
+    // User data access object interface
     private UserDao userDao;
+    // Audit data access object interface
     private AuditDao auditDao;
     private VerifyCodeService codeService;
     private MailService mailService;
     private AuthmeService authmeService;
+    private VersionCheckService versionCheckService;
     private ResourceManager resourceManager;
     private String whitelistMode;
     private boolean whitelistJsonSync;
@@ -85,20 +88,21 @@ public class VerifyMC extends JavaPlugin implements Listener {
         webServerPrefix = config.getString("web_server_prefix", "[VerifyMC]");
         whitelistJsonPath = Paths.get(getServer().getWorldContainer().getAbsolutePath(), "whitelist.json");
         debug = config.getBoolean("debug", false);
-        // 初始化资源管理器
+        // Initialize resource manager
         resourceManager = new ResourceManager(this);
         resourceManager.initializeResources();
-        // 检查资源更新
+        // Check and update resources
         ResourceUpdater resourceUpdater = new ResourceUpdater(this);
         resourceUpdater.checkAndUpdateResources();
-        // 加载i18n资源包
+        // Load i18n resource bundles
         ResourceBundle[] bundles = resourceManager.loadI18nBundles();
         messagesZh = bundles[0];
         messagesEn = bundles[1];
-        // 初始化服务
+        // Initialize services
         codeService = new VerifyCodeService(this);
         mailService = new MailService(this, this::getMessage);
         authmeService = new AuthmeService(this);
+        versionCheckService = new VersionCheckService(this);
         String storageType = getConfig().getString("storage.type", "data");
         String lang = getConfig().getString("language", "zh");
         ResourceBundle messages;
@@ -135,9 +139,9 @@ public class VerifyMC extends JavaPlugin implements Listener {
             getLogger().info(messages.getString("storage.file.enabled"));
         }
         autoMigrateIfNeeded(messages);
-        // 初始化文件存储
-        // 删除后续 userDao/auditDao 的重复赋值
-        // 启动WebSocket服务（必须先于webServer）
+        // Initialize file storage
+        // Remove duplicate userDao/auditDao assignments
+        // Start WebSocket server (must be before webServer)
         int port = config.getInt("web_port", 8080);
         int wsPort = config.getInt("ws_port", port + 1);
         wsServer = new ReviewWebSocketServer(wsPort, this);
@@ -147,7 +151,7 @@ public class VerifyMC extends JavaPlugin implements Listener {
         } catch (Exception e) {
             getLogger().warning(getMessage("websocket.start_failed") + ": " + e.getMessage());
         }
-        // 启动Web服务
+        // Start web server
         String theme = config.getString("frontend.theme", "default");
         String staticDir = resourceManager.getThemeStaticDir(theme);
         webServer = new WebServer(port, staticDir, this, codeService, mailService, userDao, auditDao, authmeService, wsServer, messagesZh, messagesEn);
@@ -169,7 +173,7 @@ public class VerifyMC extends JavaPlugin implements Listener {
         } else if ("bukkit".equalsIgnoreCase(whitelistMode) && whitelistJsonSync) {
             startWhitelistJsonWatcher();
         }
-        // 兼容性检测与提示
+        // Compatibility detection and hints
         String serverName = getServer().getName().toLowerCase();
         getLogger().info("[VerifyMC] Supported server cores: Bukkit, Spigot, Paper, Purpur, Folia, Velocity, Canvas, Waterfall (MC 1.12 - 1.21.8)");
         if (serverName.contains("folia")) {
@@ -192,6 +196,10 @@ public class VerifyMC extends JavaPlugin implements Listener {
             getLogger().info("[VerifyMC] Unknown server type, attempting to run in compatibility mode.");
         }
         getLogger().info(getMessage("plugin.enabled"));
+        
+        // Start version check (async)
+        startVersionCheck();
+        
         int pluginId = 26637;
         Metrics metrics = new Metrics(this, pluginId);
     }
@@ -208,7 +216,7 @@ public class VerifyMC extends JavaPlugin implements Listener {
                 Thread.currentThread().interrupt();
             }
         }
-        // 插件关闭时保存数据
+        // Save data when plugin is disabled
         if (userDao != null) userDao.save();
         if (auditDao != null) auditDao.save();
         if ("bukkit".equalsIgnoreCase(whitelistMode) && whitelistJsonSync) {
@@ -223,7 +231,7 @@ public class VerifyMC extends JavaPlugin implements Listener {
         String language = getConfigLanguage();
         boolean isPlayer = sender instanceof Player;
         Player player = isPlayer ? (Player) sender : null;
-        // 控制台和玩家都可执行
+        // Both console and players can execute
         if (args.length == 0) {
             showHelp(sender, language);
             return true;
@@ -298,7 +306,11 @@ public class VerifyMC extends JavaPlugin implements Listener {
         return java.util.Collections.emptyList();
     }
 
-    // 支持控制台和玩家
+    /**
+     * Display help information for console and players
+     * @param sender Command sender
+     * @param language Language code
+     */
     private void showHelp(CommandSender sender, String language) {
         sender.sendMessage("§6=== VerifyMC " + getMessage("command.help.title", language) + " ===\n");
         sender.sendMessage("§e/vmc help §7- " + getMessage("command.help.help", language) + "\n");
@@ -308,9 +320,14 @@ public class VerifyMC extends JavaPlugin implements Listener {
         sender.sendMessage("§e/vmc remove <" + getMessage("command.help.player", language) + "> §7- " + getMessage("command.help.remove", language) + "\n");
     }
 
+    /**
+     * Reload the plugin with theme change detection
+     * @param sender Command sender
+     * @param language Language code
+     */
     private void reloadPlugin(CommandSender sender, String language) {
         try {
-            // 检查theme是否变更
+            // Check if theme has changed
             String oldTheme = getConfig().getString("frontend.theme", "default");
             File configFile = new File(getDataFolder(), "config.yml");
             String configContent = new String(java.nio.file.Files.readAllBytes(configFile.toPath()), java.nio.charset.StandardCharsets.UTF_8);
@@ -336,22 +353,28 @@ public class VerifyMC extends JavaPlugin implements Listener {
         }
     }
 
-    // 新增: 支持邮箱的addWhitelist
+    /**
+     * Add user to whitelist with email support
+     * @param sender Command sender
+     * @param targetName Target username
+     * @param email Email address
+     * @param language Language code
+     */
     private void addWhitelist(CommandSender sender, String targetName, String email, String language) {
         addWhitelist(sender, targetName, email, null, language);
     }
     
     /**
-     * 添加用户到白名单（支持密码）
-     * @param sender 命令发送者
-     * @param targetName 目标用户名
-     * @param email 邮箱
-     * @param password 密码（可选）
-     * @param language 语言
+     * Add user to whitelist with password support
+     * @param sender Command sender
+     * @param targetName Target username
+     * @param email Email address
+     * @param password Password (optional)
+     * @param language Language code
      */
     private void addWhitelist(CommandSender sender, String targetName, String email, String password, String language) {
         try {
-            // 验证密码格式（如果提供了密码）
+            // Validate password format (if password is provided)
             if (password != null && !password.isEmpty() && authmeService.isAuthmeEnabled()) {
                 if (!authmeService.isValidPassword(password)) {
                     String passwordRegex = getConfig().getString("authme.password_regex", "^[a-zA-Z0-9_]{3,16}$");
@@ -360,29 +383,29 @@ public class VerifyMC extends JavaPlugin implements Listener {
                 }
             }
             
-            // 设置玩家为白名单
+            // Set player to whitelist
             Bukkit.getOfflinePlayer(targetName).setWhitelisted(true);
             String uuid = Bukkit.getOfflinePlayer(targetName).getUniqueId().toString();
             Map<String, Object> user = userDao.getUserByUuid(uuid);
             boolean ok;
             
             if (user != null) {
-                // 用户已存在，更新状态为approved
+                // User exists, update status to approved
                 ok = userDao.updateUserStatus(uuid, "approved");
-                // 如果提供了密码，更新密码
+                // If password is provided, update password
                 if (password != null && !password.isEmpty()) {
                     userDao.updateUserPassword(uuid, password);
-                    // 如果启用了Authme集成，注册到Authme
+                    // If Authme integration is enabled, register to Authme
                     if (authmeService.isAuthmeEnabled()) {
                         authmeService.registerToAuthme(targetName, password);
                         sender.sendMessage("§a已将用户 " + targetName + " 注册到Authme");
                     }
                 }
             } else {
-                // 用户不存在，注册新用户（状态为approved）
+                // User doesn't exist, register new user (status as approved)
                 if (password != null && !password.isEmpty()) {
                     ok = userDao.registerUser(uuid, targetName, email, "approved", password);
-                    // 如果启用了Authme集成，注册到Authme
+                    // If Authme integration is enabled, register to Authme
                     if (authmeService.isAuthmeEnabled()) {
                         authmeService.registerToAuthme(targetName, password);
                         sender.sendMessage("§a已将用户 " + targetName + " 注册到Authme");
@@ -394,15 +417,15 @@ public class VerifyMC extends JavaPlugin implements Listener {
             
             userDao.save();
             
-            // 立即同步到whitelist.json（如果启用）
+            // Immediately sync to whitelist.json (if enabled)
             if ("bukkit".equalsIgnoreCase(whitelistMode) && whitelistJsonSync) {
                 syncPluginToWhitelistJson();
             }
             
-            // 同步到服务器白名单
+            // Sync to server whitelist
             syncWhitelistToServer();
             
-            // WebSocket通知
+            // WebSocket notification
             if (wsServer != null) {
                 wsServer.broadcastMessage("{\"type\":\"user_update\"}");
             }
@@ -417,21 +440,26 @@ public class VerifyMC extends JavaPlugin implements Listener {
         }
     }
     
-    // 修改: removeWhitelist时同步删除userDao
+    /**
+     * Remove user from whitelist and synchronize with userDao
+     * @param sender Command sender
+     * @param targetName Target username
+     * @param language Language code
+     */
     private void removeWhitelist(CommandSender sender, String targetName, String language) {
         try {
             Bukkit.getOfflinePlayer(targetName).setWhitelisted(false);
-            // 优先用用户名查找用户
+            // Prioritize username lookup
             Map<String, Object> user = userDao.getUserByUsername(targetName);
             String uuid = null;
             if (user != null && user.get("uuid") != null) {
                 uuid = user.get("uuid").toString();
             } else {
-                // 兼容老数据或uuid算法差异
+                // Compatible with old data or UUID algorithm differences
                 uuid = Bukkit.getOfflinePlayer(targetName).getUniqueId().toString();
             }
             
-            // 如果启用了Authme集成且配置了自动注销，从Authme注销用户
+            // If Authme integration is enabled and auto unregister is configured, unregister user from Authme
             if (authmeService.isAuthmeEnabled() && authmeService.isAutoUnregisterEnabled()) {
                 authmeService.unregisterFromAuthme(targetName);
             }
@@ -449,20 +477,28 @@ public class VerifyMC extends JavaPlugin implements Listener {
         }
     }
 
+    /**
+     * Display web server port information
+     * @param sender Command sender
+     * @param language Language code
+     */
     private void showPort(CommandSender sender, String language) {
         int port = getConfig().getInt("web_port", 8080);
         sender.sendMessage("§a" + getMessage("command.port_info", language).replace("{port}", String.valueOf(port)));
     }
 
-    // plugin模式下拦截未注册玩家
+    /**
+     * Intercept unregistered players in plugin mode
+     * @param event Player join event
+     */
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         if (!"plugin".equalsIgnoreCase(whitelistMode)) return;
         Player player = event.getPlayer();
         String ip = player.getAddress() != null ? player.getAddress().getAddress().getHostAddress() : "";
         java.util.List<String> bypassIps = getConfig().getStringList("whitelist_bypass_ips");
-        if (bypassIps.contains(ip)) return; // 免验证
-        // 改为检测玩家名（id）
+        if (bypassIps.contains(ip)) return; // Skip verification
+        // Check player name (id)
         Map<String, Object> user = userDao != null ? userDao.getAllUsers().stream()
             .filter(u -> player.getName().equalsIgnoreCase((String)u.get("username")) && "approved".equals(u.get("status")))
             .findFirst().orElse(null) : null;
@@ -479,7 +515,9 @@ public class VerifyMC extends JavaPlugin implements Listener {
         }
     }
 
-    // bukkit模式下监听 whitelist.json 变更
+    /**
+     * Monitor whitelist.json changes in bukkit mode
+     */
     private void startWhitelistJsonWatcher() {
         if (whitelistJsonPath == null) return;
         new BukkitRunnable() {
@@ -495,10 +533,12 @@ public class VerifyMC extends JavaPlugin implements Listener {
                     }
                 } catch (Exception ignored) {}
             }
-        }.runTaskTimerAsynchronously(this, 40L, 100L); // 每5秒检测一次
+        }.runTaskTimerAsynchronously(this, 40L, 100L); // Check every 5 seconds
     }
 
-    // 将 whitelist.json 同步到插件 data
+    /**
+     * Synchronize whitelist.json to plugin data
+     */
     private void syncWhitelistJsonToPlugin() {
         try {
             List<String> lines = Files.readAllLines(whitelistJsonPath);
@@ -526,7 +566,9 @@ public class VerifyMC extends JavaPlugin implements Listener {
         } catch (Exception ignored) {}
     }
 
-    // 插件 data 变更时同步到 whitelist.json
+    /**
+     * Synchronize plugin data changes to whitelist.json
+     */
     private void syncPluginToWhitelistJson() {
         if (!"bukkit".equalsIgnoreCase(whitelistMode)) return;
         try {
@@ -551,10 +593,21 @@ public class VerifyMC extends JavaPlugin implements Listener {
     private static final String USERNAME_INVALID_KEY = "username.invalid";
     private static final String USERNAME_CASE_CONFLICT_KEY = "username.case_conflict";
 
+    /**
+     * Validate username format
+     * @param username Username to validate
+     * @return true if username is valid
+     */
     public boolean isValidUsername(String username) {
         String regex = getConfig().getString(USERNAME_REGEX_KEY, "^[a-zA-Z0-9_-]{3,16}$");
         return username != null && username.matches(regex);
     }
+    
+    /**
+     * Check for username case conflicts
+     * @param username Username to check
+     * @return true if case conflict exists
+     */
     public boolean isUsernameCaseConflict(String username) {
         boolean caseSensitive = getConfig().getBoolean(USERNAME_CASE_SENSITIVE_KEY, false);
         if (caseSensitive) return false;
@@ -565,6 +618,9 @@ public class VerifyMC extends JavaPlugin implements Listener {
         return false;
     }
 
+    /**
+     * Synchronize whitelist to server
+     */
     private void syncWhitelistToServer() {
         for (Map<String, Object> user : userDao.getAllUsers()) {
             String name = (String) user.get("username");
@@ -576,6 +632,10 @@ public class VerifyMC extends JavaPlugin implements Listener {
             }
         }
     }
+    
+    /**
+     * Clean up server whitelist
+     */
     private void cleanupServerWhitelist() {
         for (org.bukkit.OfflinePlayer p : Bukkit.getWhitelistedPlayers()) {
             Map<String, Object> user = userDao.getUserByUsername(p.getName());
@@ -585,6 +645,10 @@ public class VerifyMC extends JavaPlugin implements Listener {
         }
     }
 
+    /**
+     * Auto migrate data between storage types if needed
+     * @param messages Resource bundle for messages
+     */
     public void autoMigrateIfNeeded(ResourceBundle messages) {
         boolean autoMigrateOnSwitch = getConfig().getBoolean("storage.auto_migrate_on_switch", false);
         String storageType = getConfig().getString("storage.type", "data");
@@ -626,6 +690,11 @@ public class VerifyMC extends JavaPlugin implements Listener {
             }
         }
     }
+    
+    /**
+     * Get MySQL configuration properties
+     * @return MySQL configuration properties
+     */
     private Properties getMysqlConfig() {
         Properties mysqlConfig = new Properties();
         mysqlConfig.setProperty("host", getConfig().getString("storage.mysql.host"));
@@ -634,5 +703,55 @@ public class VerifyMC extends JavaPlugin implements Listener {
         mysqlConfig.setProperty("user", getConfig().getString("storage.mysql.user"));
         mysqlConfig.setProperty("password", getConfig().getString("storage.mysql.password"));
         return mysqlConfig;
+    }
+    
+    /**
+     * Start version check process
+     */
+    private void startVersionCheck() {
+        // Check for updates asynchronously
+        versionCheckService.checkForUpdatesAsync().thenAccept(result -> {
+            if (result.isSuccess() && result.isUpdateAvailable()) {
+                // Log update notification
+                getLogger().info("§e[VerifyMC] " + getMessage("version.update_available"));
+                getLogger().info("§e[VerifyMC] " + getMessage("version.current_version") + ": " + result.getCurrentVersion());
+                getLogger().info("§e[VerifyMC] " + getMessage("version.latest_version") + ": " + result.getLatestVersion());
+                getLogger().info("§e[VerifyMC] " + getMessage("version.download_url") + ": " + versionCheckService.getReleasesUrl());
+                
+                // Schedule periodic reminders (every 30 minutes)
+                new BukkitRunnable() {
+                    private int reminderCount = 0;
+                    private final int maxReminders = 3; // Maximum 3 reminders per session
+                    
+                    @Override
+                    public void run() {
+                        if (reminderCount >= maxReminders) {
+                            this.cancel();
+                            return;
+                        }
+                        
+                        reminderCount++;
+                        getLogger().info("§e[VerifyMC] " + getMessage("version.update_reminder") + " (" + reminderCount + "/" + maxReminders + ")");
+                        getLogger().info("§e[VerifyMC] " + getMessage("version.download_url") + ": " + versionCheckService.getReleasesUrl());
+                    }
+                }.runTaskTimerAsynchronously(this, 36000L, 36000L); // 30 minutes = 36000 ticks
+                
+            } else if (result.isSuccess()) {
+                debugLog("Version check completed. Plugin is up to date.");
+            } else {
+                debugLog("Version check failed: " + result.getErrorMessage());
+            }
+        }).exceptionally(throwable -> {
+            debugLog("Version check error: " + throwable.getMessage());
+            return null;
+        });
+    }
+    
+    /**
+     * Get version check service instance
+     * @return VersionCheckService instance
+     */
+    public VersionCheckService getVersionCheckService() {
+        return versionCheckService;
     }
 } 

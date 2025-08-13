@@ -1,21 +1,92 @@
 <template>
-  <div class="w-full max-w-2xl mx-auto py-10">
-    <h2 class="text-2xl font-bold mb-6 text-center text-blue-600 cursor-default">{{ $t('admin.title') }}</h2>
-    <div v-if="!authed">
-      <div class="bg-gradient-to-br from-blue-100 via-white to-pink-100 shadow-xl rounded-2xl p-8 flex flex-col items-center transition-transform duration-300 hover:scale-105">
-        <div class="text-3xl mb-4">🔒</div>
-        <div class="mb-2 text-lg font-semibold">{{ $t('admin.loginTitle') }}</div>
-        <input v-model="password" type="password" class="w-full max-w-xs px-3 py-2 border rounded focus:outline-none focus:ring mb-4" :placeholder="$t('admin.passwordPlaceholder')" @keyup.enter="login" />
-        <button @click="login" class="bg-blue-600 text-white px-6 py-2 rounded-lg shadow hover:bg-blue-700 transition cursor-pointer w-full max-w-xs transition-transform duration-200 hover:scale-105">{{ $t('admin.loginBtn') }}</button>
+  <!-- Minimalist admin panel design -->
+  <div class="min-h-screen bg-gray-50">
+    <div class="container-wide py-8">
+      <!-- Login form -->
+      <div v-if="!authed" class="min-h-screen flex items-center justify-center">
+        <div class="max-w-lg w-full">
+          <div class="text-center mb-8 fade-in">
+            <div class="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-gray-100 mb-4">
+              <svg class="h-6 w-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+              </svg>
+            </div>
+            <h2 class="section-title">{{ $t('admin.loginTitle') }}</h2>
+            <p class="text-gray-600 text-sm">{{ $t('admin.loginSubtitle') }}</p>
+          </div>
+          
+          <div class="minimal-card p-10 slide-up">
+            <div class="space-y-6">
+              <div>
+                <label class="form-label">{{ $t('admin.password') }}</label>
+                <input 
+                  v-model="password" 
+                  type="password" 
+                  class="input-field" 
+                  :placeholder="$t('admin.loginPasswordPlaceholder')" 
+                  @keyup.enter="login" 
+                />
+              </div>
+              
+              <button @click="login" class="btn-primary w-full" :disabled="!password">
+                <svg v-if="loading" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                {{ loading ? $t('common.loading') : $t('admin.loginBtn') }}
+              </button>
+            </div>
+          </div>
+          
+          <div class="text-center mt-6 fade-in">
+            <router-link to="/" class="text-sm text-gray-500 hover:text-gray-700 transition-colors">
+              ← {{ $t('common.back_home') }}
+            </router-link>
+          </div>
+        </div>
       </div>
-    </div>
-    <div v-else>
-      <div class="flex flex-col sm:flex-row gap-4 mb-4">
-        <button @click="showAllUsers = false" :class="!showAllUsers ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'" class="px-4 py-2 rounded font-semibold">{{ $t('admin.pendingList') }}</button>
-        <button @click="showAllUsers = true" :class="showAllUsers ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'" class="px-4 py-2 rounded font-semibold">{{ $t('admin.allUsers') }}</button>
+      
+      <!-- Admin dashboard -->
+      <div v-else class="fade-in">
+        <!-- Header -->
+        <div class="mb-8">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <h1 class="page-header">{{ $t('admin.title') }}</h1>
+          </div>
+        </div>
+        
+        <!-- Tab navigation -->
+        <div class="mb-10">
+          <nav class="flex space-x-2 bg-gray-100 p-2 rounded-xl w-full max-w-2xl">
+            <button 
+              @click="showAllUsers = false" 
+              :class="!showAllUsers ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
+              class="flex-1 py-3 px-3 sm:px-6 text-sm sm:text-base font-medium rounded-lg transition-all duration-200 flex items-center justify-center"
+            >
+              <svg class="w-4 h-4 sm:w-5 sm:h-5 mr-2 sm:mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <span class="truncate">{{ $t('admin.pendingList') }}</span>
+            </button>
+            <button 
+              @click="showAllUsers = true" 
+              :class="showAllUsers ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
+              class="flex-1 py-3 px-3 sm:px-6 text-sm sm:text-base font-medium rounded-lg transition-all duration-200 flex items-center justify-center"
+            >
+              <svg class="w-4 h-4 sm:w-5 sm:h-5 mr-2 sm:mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+              </svg>
+              <span class="truncate">{{ $t('admin.allUsers') }}</span>
+            </button>
+          </nav>
+        </div>
+        
+        <!-- Content -->
+        <div class="slide-up">
+          <AdminReviewPanel v-if="!showAllUsers" :token="token" />
+          <AllUsersPanel v-else :token="token" />
+        </div>
       </div>
-      <AdminReviewPanel v-if="!showAllUsers" :token="token" />
-      <AllUsersPanel v-else :token="token" />
     </div>
   </div>
 </template>
@@ -33,6 +104,47 @@ const authed = ref(false)
 const password = ref('')
 const token = ref('')
 const showAllUsers = ref(false)
+const loading = ref(false)
+
+// Validate token on page load - Check if stored token is still valid
+const validateStoredToken = async () => {
+  const savedToken = localStorage.getItem('admin_token')
+  if (!savedToken) {
+    return
+  }
+  
+  try {
+    // Test token validity by making a simple API call
+    const res = await fetch('/api/admin-verify', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${savedToken}`
+      }
+    })
+    const data = await res.json()
+    
+    if (data.success) {
+      // Token is valid, restore authentication state
+      token.value = savedToken
+      authed.value = true
+      console.log('Stored token validated successfully')
+    } else {
+      // Token is invalid, clear it and show message
+      localStorage.removeItem('admin_token')
+      console.log('Stored token is invalid, cleared from localStorage')
+      showToast(t('admin.sessionExpired'), 'warning')
+    }
+  } catch (error) {
+    // Network error or server restart, clear invalid token and show message
+    localStorage.removeItem('admin_token')
+    console.log('Token validation failed, cleared from localStorage:', error)
+    showToast(t('admin.sessionExpiredRestart'), 'warning')
+  }
+}
+
+// Validate token on component mount
+validateStoredToken()
 const codeStartLine = 31
 const codeLines = [
   "  # client_secret: your_qq_client_secret",
@@ -63,6 +175,8 @@ async function login() {
     return
   }
   
+  loading.value = true
+  
   try {
     const res = await fetch('/api/admin-login', {
       method: 'POST',
@@ -73,13 +187,24 @@ async function login() {
     if (data.success) {
       authed.value = true
       token.value = data.token
+      localStorage.setItem('admin_token', data.token)
       showToast(t('admin.loginSuccess'), 'success')
     } else {
       showToast(data.message || t('admin.loginFailed'), 'error')
     }
   } catch (e) {
     showToast(t('admin.loginFailed'), 'error')
+  } finally {
+    loading.value = false
   }
+}
+
+function logout() {
+  authed.value = false
+  token.value = ''
+  password.value = ''
+  localStorage.removeItem('admin_token')
+  showToast(t('admin.logoutSuccess'), 'success')
 }
 
 // 添加认证头获取函数

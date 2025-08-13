@@ -20,7 +20,7 @@ public class MysqlUserDao implements UserDao {
                 mysqlConfig.getProperty("database") + "?useSSL=false&characterEncoding=utf8";
         conn = DriverManager.getConnection(url, mysqlConfig.getProperty("user"), mysqlConfig.getProperty("password"));
         try (Statement stmt = conn.createStatement()) {
-            // 创建用户表（如果不存在）
+            // Create users table (if not exists)
             stmt.executeUpdate("CREATE TABLE IF NOT EXISTS users (" +
                     "uuid VARCHAR(36) PRIMARY KEY," +
                     "username VARCHAR(32) NOT NULL," +
@@ -29,36 +29,36 @@ public class MysqlUserDao implements UserDao {
                     "password VARCHAR(255)," +
                     "regTime BIGINT)");
             
-            // 兼容性处理：检查并添加缺失的字段
+            // Compatibility handling: Check and add missing fields
             try {
                 stmt.executeQuery("SELECT password FROM users LIMIT 1");
                 debugLog("Password column already exists in users table");
             } catch (SQLException e) {
-                // password字段不存在，添加它
+                // password field doesn't exist, add it
                 stmt.executeUpdate("ALTER TABLE users ADD COLUMN password VARCHAR(255)");
                 debugLog("Added password column to users table");
             }
             
-            // 检查regTime字段是否存在
+            // Check if regTime field exists
             try {
                 stmt.executeQuery("SELECT regTime FROM users LIMIT 1");
                 debugLog("regTime column already exists in users table");
             } catch (SQLException e) {
-                // regTime字段不存在，添加它
+                // regTime field doesn't exist, add it
                 stmt.executeUpdate("ALTER TABLE users ADD COLUMN regTime BIGINT");
                 debugLog("Added regTime column to users table");
                 
-                // 为现有记录设置默认的regTime值
+                // Set default regTime value for existing records
                 stmt.executeUpdate("UPDATE users SET regTime = " + System.currentTimeMillis() + " WHERE regTime IS NULL");
                 debugLog("Updated existing records with default regTime value");
             }
             
-            // 检查并确保索引存在
+            // Check and ensure indexes exist
             try {
                 stmt.executeQuery("SHOW INDEX FROM users WHERE Key_name = 'idx_username'");
                 debugLog("Username index already exists");
             } catch (SQLException e) {
-                // 添加username索引以提高查询性能
+                // Add username index to improve query performance
                 stmt.executeUpdate("CREATE INDEX idx_username ON users(username)");
                 debugLog("Added username index to users table");
             }
@@ -67,7 +67,7 @@ public class MysqlUserDao implements UserDao {
                 stmt.executeQuery("SHOW INDEX FROM users WHERE Key_name = 'idx_email'");
                 debugLog("Email index already exists");
             } catch (SQLException e) {
-                // 添加email索引以提高查询性能
+                // Add email index to improve query performance
                 stmt.executeUpdate("CREATE INDEX idx_email ON users(email)");
                 debugLog("Added email index to users table");
             }
@@ -80,7 +80,7 @@ public class MysqlUserDao implements UserDao {
 
     @Override
     public boolean registerUser(String uuid, String username, String email, String status) {
-        // 先检查用户是否已存在
+        // First check if user already exists
         String checkSql = "SELECT uuid FROM users WHERE uuid = ?";
         try (PreparedStatement checkPs = conn.prepareStatement(checkSql)) {
             checkPs.setString(1, uuid);
@@ -112,7 +112,7 @@ public class MysqlUserDao implements UserDao {
 
     @Override
     public boolean registerUser(String uuid, String username, String email, String status, String password) {
-        // 先检查用户是否已存在
+        // First check if user already exists
         String checkSql = "SELECT uuid FROM users WHERE uuid = ?";
         try (PreparedStatement checkPs = conn.prepareStatement(checkSql)) {
             checkPs.setString(1, uuid);
@@ -297,7 +297,131 @@ public class MysqlUserDao implements UserDao {
 
     @Override
     public void save() {
-        // MySQL 实现可为空或仅日志提示
+        // MySQL implementation can be empty or just log message
         debugLog("MySQL storage: save() called (no-op)");
+    }
+    
+    @Override
+    public List<Map<String, Object>> getUsersWithPagination(int page, int pageSize) {
+        debugLog("Getting users with pagination: page=" + page + ", pageSize=" + pageSize);
+        List<Map<String, Object>> result = new ArrayList<>();
+        int offset = (page - 1) * pageSize;
+        
+        String sql = "SELECT * FROM users ORDER BY regTime DESC LIMIT ? OFFSET ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, pageSize);
+            ps.setInt(2, offset);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> user = new HashMap<>();
+                    user.put("uuid", rs.getString("uuid"));
+                    user.put("username", rs.getString("username"));
+                    user.put("email", rs.getString("email"));
+                    user.put("status", rs.getString("status"));
+                    user.put("password", rs.getString("password"));
+                    user.put("regTime", rs.getLong("regTime"));
+                    result.add(user);
+                }
+            }
+        } catch (SQLException e) {
+            debugLog("Error getting users with pagination: " + e.getMessage());
+        }
+        
+        debugLog("Returning " + result.size() + " users for page " + page);
+        return result;
+    }
+    
+    @Override
+    public int getTotalUserCount() {
+        debugLog("Getting total user count");
+        int count = 0;
+        String sql = "SELECT COUNT(*) FROM users";
+        try (Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(sql)) {
+            if (rs.next()) {
+                count = rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            debugLog("Error getting total user count: " + e.getMessage());
+        }
+        
+        debugLog("Total user count: " + count);
+        return count;
+    }
+    
+    @Override
+    public List<Map<String, Object>> getUsersWithPaginationAndSearch(int page, int pageSize, String searchQuery) {
+        debugLog("Getting users with pagination and search: page=" + page + ", pageSize=" + pageSize + ", query=" + searchQuery);
+        List<Map<String, Object>> result = new ArrayList<>();
+        int offset = (page - 1) * pageSize;
+        
+        String sql;
+        if (searchQuery == null || searchQuery.trim().isEmpty()) {
+            sql = "SELECT * FROM users ORDER BY regTime DESC LIMIT ? OFFSET ?";
+        } else {
+            sql = "SELECT * FROM users WHERE LOWER(username) LIKE LOWER(?) OR LOWER(email) LIKE LOWER(?) ORDER BY regTime DESC LIMIT ? OFFSET ?";
+        }
+        
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            if (searchQuery == null || searchQuery.trim().isEmpty()) {
+                ps.setInt(1, pageSize);
+                ps.setInt(2, offset);
+            } else {
+                String searchPattern = "%" + searchQuery.trim() + "%";
+                ps.setString(1, searchPattern);
+                ps.setString(2, searchPattern);
+                ps.setInt(3, pageSize);
+                ps.setInt(4, offset);
+            }
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> user = new HashMap<>();
+                    user.put("uuid", rs.getString("uuid"));
+                    user.put("username", rs.getString("username"));
+                    user.put("email", rs.getString("email"));
+                    user.put("status", rs.getString("status"));
+                    user.put("password", rs.getString("password"));
+                    user.put("regTime", rs.getLong("regTime"));
+                    result.add(user);
+                }
+            }
+        } catch (SQLException e) {
+            debugLog("Error getting users with pagination and search: " + e.getMessage());
+        }
+        
+        debugLog("Returning " + result.size() + " users for page " + page + " with search query: " + searchQuery);
+        return result;
+    }
+    
+    @Override
+    public int getTotalUserCountWithSearch(String searchQuery) {
+        debugLog("Getting total user count with search: query=" + searchQuery);
+        int count = 0;
+        
+        String sql;
+        if (searchQuery == null || searchQuery.trim().isEmpty()) {
+            sql = "SELECT COUNT(*) FROM users";
+        } else {
+            sql = "SELECT COUNT(*) FROM users WHERE LOWER(username) LIKE LOWER(?) OR LOWER(email) LIKE LOWER(?)";
+        }
+        
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            if (searchQuery != null && !searchQuery.trim().isEmpty()) {
+                String searchPattern = "%" + searchQuery.trim() + "%";
+                ps.setString(1, searchPattern);
+                ps.setString(2, searchPattern);
+            }
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    count = rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            debugLog("Error getting total user count with search: " + e.getMessage());
+        }
+        
+        debugLog("Total user count with search '" + searchQuery + "': " + count);
+        return count;
     }
 } 

@@ -23,7 +23,7 @@ auth_methods:
 # Maximum number of game accounts that can be linked to a single email address.
 max_accounts_per_email: 2
 # Whitelist mode: 'bukkit' (syncs with server's whitelist.json) or 'plugin' (uses internal database).
-whitelist_mode: bukkit
+whitelist_mode: plugin
 # Registration URL displayed to non-whitelisted players when in 'plugin' mode.
 web_register_url: https://domain.com/
 
@@ -140,5 +140,5 @@ authme:
   auto_register: false
   # Whether to automatically unregister from Authme when user is deleted
   auto_unregister: false
-  # Password regex pattern, default requires at least 6 characters
+  # Password regex pattern
   password_regex: "^[a-zA-Z0-9_]{3,16}$" 

@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "type-check": "vue-tsc --noEmit --skipLibCheck"
   },
   "dependencies": {
     "vue": "^3.4.21",
@@ -14,11 +15,13 @@
   },
   "funding": "https://afdian.com/a/kitemc",
   "devDependencies": {
+    "@types/node": "^20.11.0",
     "@vitejs/plugin-vue": "^4.5.0",
     "autoprefixer": "^10.4.17",
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.1",
     "typescript": "^5.4.5",
-    "vite": "^4.5.0"
+    "vite": "^4.5.0",
+    "vue-tsc": "^2.0.0"
   }
 }

@@ -8,8 +8,13 @@
   }
 
   body {
-    @apply bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 min-h-screen;
+    @apply min-h-screen;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
+    background-size: 400% 400%;
+    animation: gradientShift 15s ease infinite;
     font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   html {
@@ -19,19 +24,96 @@
 
 @layer components {
   .glass-card {
-    @apply bg-glass-100 backdrop-blur-xl border border-glass-200 rounded-3xl shadow-2xl;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 24px;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37), 
+                0 0 0 1px rgba(255, 255, 255, 0.1) inset,
+                0 1px 0 0 rgba(255, 255, 255, 0.2) inset;
+    transform: translateZ(0);
+    will-change: transform;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .glass-card:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.5),
+                0 0 0 1px rgba(255, 255, 255, 0.15) inset,
+                0 1px 0 0 rgba(255, 255, 255, 0.25) inset;
+    transform: translateY(-2px) translateZ(0);
   }
 
   .glass-button {
-    @apply bg-glass-100 hover:bg-glass-200 backdrop-blur-xl border border-glass-200 rounded-2xl px-6 py-3 transition-all duration-300 hover:scale-105 hover:shadow-lg;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    padding: 12px 24px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateZ(0);
+    will-change: background-color, box-shadow, transform;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .glass-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+  }
+  
+  .glass-button:hover::before {
+    left: 100%;
+  }
+  
+  .glass-button:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 8px 25px 0 rgba(31, 38, 135, 0.4),
+                0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+    transform: translateY(-1px) translateZ(0);
   }
 
   .glass-input {
-    @apply bg-glass-50 backdrop-blur-xl border border-glass-200 rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-300;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    padding: 12px 16px;
+    outline: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateZ(0);
+    will-change: border-color, box-shadow, background-color;
+    color: white;
+  }
+  
+  .glass-input::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+  }
+  
+  .glass-input:focus {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1),
+                0 8px 25px 0 rgba(31, 38, 135, 0.3),
+                0 0 0 1px rgba(255, 255, 255, 0.1) inset;
   }
 
   .glass-tab {
-    @apply px-6 py-3 rounded-2xl transition-all duration-300 cursor-pointer;
+    @apply px-6 py-3 rounded-2xl transition-all duration-200 cursor-pointer;
+    /* Hardware acceleration */
+    transform: translateZ(0);
+    will-change: background-color;
   }
 
   .glass-tab-active {
@@ -43,16 +125,132 @@
   }
 
   .gradient-text {
-    @apply bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
+    background-size: 200% 200%;
+    animation: gradientTextShift 8s ease infinite;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 700;
+    letter-spacing: -0.02em;
   }
 
   .floating-animation {
     animation: float 6s ease-in-out infinite;
+    /* Hardware acceleration for animations */
+    transform: translateZ(0);
+    will-change: transform;
   }
 
   .glow-effect {
-    @apply shadow-2xl;
-    box-shadow: 0 0 50px rgba(59, 130, 246, 0.3);
+    box-shadow: 0 0 60px rgba(102, 126, 234, 0.4),
+                0 0 100px rgba(118, 75, 162, 0.3),
+                0 0 140px rgba(240, 147, 251, 0.2);
+    transform: translateZ(0);
+    animation: glowPulse 4s ease-in-out infinite alternate;
+  }
+
+  /* Performance optimized animation classes */
+  .animate-optimized {
+    transform: translateZ(0);
+    will-change: transform;
+  }
+
+  .backdrop-optimized {
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    /* Use GPU acceleration */
+    transform: translateZ(0);
+  }
+
+  /* 小清新状态徽章 */
+  .fresh-badge {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(12px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 20px;
+    padding: 6px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: white;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    animation: freshFloat 6s ease-in-out infinite;
+  }
+
+  /* 小清新卡片变体 */
+  .fresh-card {
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(24px) saturate(200%);
+    -webkit-backdrop-filter: blur(24px) saturate(200%);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37),
+                0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateZ(0);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .fresh-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  }
+
+  .fresh-card:hover {
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.5),
+                0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+    transform: translateY(-4px) translateZ(0);
+  }
+
+  /* 小清新按钮变体 */
+  .fresh-button {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 14px;
+    padding: 10px 20px;
+    color: white;
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .fresh-button::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+    transition: all 0.3s ease;
+    transform: translate(-50%, -50%);
+  }
+
+  .fresh-button:hover::after {
+    width: 200px;
+    height: 200px;
+  }
+
+  .fresh-button:hover {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.2));
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 8px 25px 0 rgba(31, 38, 135, 0.4);
   }
 }
 
@@ -85,7 +283,7 @@
   background: rgba(255, 255, 255, 0.5);
 }
 
-/* Loading spinner */
+/* Optimized loading spinner with hardware acceleration */
 .spinner {
   border: 2px solid rgba(255, 255, 255, 0.3);
   border-radius: 50%;
@@ -93,13 +291,123 @@
   width: 20px;
   height: 20px;
   animation: spin 1s linear infinite;
+  /* Hardware acceleration */
+  transform: translateZ(0);
+  will-change: transform;
 }
 
 @keyframes spin {
   0% {
-    transform: rotate(0deg);
+    transform: rotate(0deg) translateZ(0);
   }
   100% {
-    transform: rotate(360deg);
+    transform: rotate(360deg) translateZ(0);
+  }
+}
+
+/* Optimized keyframes with hardware acceleration */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) translateZ(0);
+  }
+  50% {
+    transform: translateY(-10px) translateZ(0);
+  }
+}
+
+/* Reduce animation frequency for better performance */
+@keyframes floating-optimized {
+  0%, 100% {
+    transform: translateY(0px) translateZ(0);
+  }
+  50% {
+    transform: translateY(-8px) translateZ(0);
+  }
+}
+
+/* Performance-optimized pulse animation */
+@keyframes pulse-optimized {
+  0%, 100% {
+    opacity: 0.4;
+    transform: translateZ(0);
+  }
+  50% {
+    opacity: 0.8;
+    transform: translateZ(0);
+  }
+}
+
+/* 小清新渐变背景动画 */
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* 渐变文字动画 */
+@keyframes gradientTextShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* 发光脉冲动画 */
+@keyframes glowPulse {
+  0% {
+    box-shadow: 0 0 60px rgba(102, 126, 234, 0.4),
+                0 0 100px rgba(118, 75, 162, 0.3),
+                0 0 140px rgba(240, 147, 251, 0.2);
+  }
+  100% {
+    box-shadow: 0 0 80px rgba(102, 126, 234, 0.6),
+                0 0 120px rgba(118, 75, 162, 0.5),
+                0 0 160px rgba(240, 147, 251, 0.4);
+  }
+}
+
+/* 小清新浮动动画 */
+@keyframes freshFloat {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg) translateZ(0);
+  }
+  25% {
+    transform: translateY(-8px) rotate(1deg) translateZ(0);
+  }
+  50% {
+    transform: translateY(-12px) rotate(0deg) translateZ(0);
+  }
+  75% {
+    transform: translateY(-8px) rotate(-1deg) translateZ(0);
+  }
+}
+
+/* 彩虹边框动画 */
+@keyframes rainbowBorder {
+  0% {
+    border-color: rgba(102, 126, 234, 0.5);
+  }
+  25% {
+    border-color: rgba(118, 75, 162, 0.5);
+  }
+  50% {
+    border-color: rgba(240, 147, 251, 0.5);
+  }
+  75% {
+    border-color: rgba(245, 87, 108, 0.5);
+  }
+  100% {
+    border-color: rgba(79, 172, 254, 0.5);
   }
 }
