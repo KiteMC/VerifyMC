@@ -37,7 +37,7 @@ export default defineConfig({
           // UI utilities
           utils: ["axios", "lucide-vue-next"],
           // Separate large components
-          components: ["@/components/HeroGeometric.vue", "@/components/ElegantShape.vue"],
+          components: ["@/components/HeroGeometric.vue"],
         },
         // Optimize asset naming
         assetFileNames: (assetInfo) => {

@@ -78,6 +78,36 @@ public interface UserDao {
     int getTotalUserCountWithSearch(String searchQuery);
     
     /**
+     * Get total count of approved users (excluding pending users)
+     * @return Total number of approved users
+     */
+    int getApprovedUserCount();
+    
+    /**
+     * Get total count of approved users matching search criteria (excluding pending users)
+     * @param searchQuery Search query for username or email
+     * @return Total number of approved users matching the search
+     */
+    int getApprovedUserCountWithSearch(String searchQuery);
+    
+    /**
+     * Get approved users with pagination (excluding pending users)
+     * @param page Page number (starting from 1)
+     * @param pageSize Number of users per page
+     * @return List of approved users for the specified page
+     */
+    List<Map<String, Object>> getApprovedUsersWithPagination(int page, int pageSize);
+    
+    /**
+     * Get approved users with pagination and search (excluding pending users)
+     * @param page Page number (starting from 1)
+     * @param pageSize Number of users per page
+     * @param searchQuery Search query for username or email
+     * @return List of approved users matching the search criteria
+     */
+    List<Map<String, Object>> getApprovedUsersWithPaginationAndSearch(int page, int pageSize, String searchQuery);
+    
+    /**
      * Get user by UUID
      * @param uuid User UUID
      * @return User data map

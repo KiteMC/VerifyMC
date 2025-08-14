@@ -77,7 +77,8 @@
     "passwordPlaceholder": "请输入密码",
     "passwordRequired": "请输入密码",
     "invalid_password": "密码格式不正确，应符合正则表达式：{regex}",
-    "passwordHint": "密码应符合正则表达式：{regex}"
+    "passwordHint": "密码应符合正则表达式：{regex}",
+    "usernameExists": "用户名已存在"
   },
   "admin": {
     "allUsers": "所有用户",
@@ -145,7 +146,9 @@
     "cancel": "取消",
     "save": "保存",
     "back": "返回",
-    "back_home": "返回首页"
+    "back_home": "返回首页",
+    "second": "秒",
+    "seconds": "秒"
   },
   "notification": {
     "register_success": "注册成功！您的申请已提交审核。",

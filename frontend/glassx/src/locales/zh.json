@@ -20,7 +20,9 @@
     "error": "错误",
     "warning": "警告",
     "info": "信息",
-    "back_home": "返回首页"
+    "back_home": "返回首页",
+    "second": "秒",
+    "seconds": "秒"
   },
   "nav": {
     "home": "首页",
@@ -86,19 +88,20 @@
     "messages": {
       "success": "白名单申请已提交，请等待管理员审核",
       "error": "申请提交失败，请稍后重试",
-      "user_exists": "用户名或邮箱已存在"
+      "user_exists": "用户名或邮箱已存在",
+      "username_exists": "用户名已存在"
     },
     "send_code": "发送验证码",
     "sendCode": "发送验证码",
     "sending": "发送中...",
-    "codeSent": "验证码已发送，请查收！",
     "code_sent": "验证码已发送，请查收！",
+    "codeSent": "验证码已发送，请查收！",
     "send_failed": "验证码发送失败，请重试。",
     "sendFailed": "验证码发送失败，请重试。",
-    "rateLimited": "发送验证码过于频繁，请等待 {seconds} 秒后再试",
     "rate_limited": "发送验证码过于频繁，请等待 {seconds} 秒后再试",
     "success": "注册成功！请等待审核。",
-    "failed": "注册失败，请重试。"
+    "failed": "注册失败，请重试。",
+    "usernameExists": "用户名已存在"
   },
   "login": {
     "title": "管理员登录",

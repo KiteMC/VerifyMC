@@ -94,7 +94,7 @@
       <span class="text-white/60">{{ $t('pagination.per_page') }}:</span>
       <select
         :value="pageSize"
-        @change="changePageSize($event.target.value)"
+        @change="changePageSize(($event.target as HTMLSelectElement)?.value)"
         class="bg-white/10 border border-white/20 rounded-lg px-2 py-1 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
       >
         <option value="10" class="bg-gray-800 text-white">10</option>
@@ -201,7 +201,8 @@ const goToPage = (page: number) => {
  * Change page size
  * @param newPageSize New page size value
  */
-const changePageSize = (newPageSize: string) => {
+const changePageSize = (newPageSize: string | undefined) => {
+  if (!newPageSize) return
   const size = parseInt(newPageSize)
   if (size > 0 && size !== props.pageSize) {
     emit('page-size-change', size)

@@ -78,7 +78,8 @@
     "passwordPlaceholder": "Enter your password",
     "passwordRequired": "Please enter password",
     "invalid_password": "Invalid password format. Must match regex: {regex}",
-    "passwordHint": "Password must match regex: {regex}"
+    "passwordHint": "Password must match regex: {regex}",
+    "usernameExists": "Username already exists"
   },
   "admin": {
     "allUsers": "All Users",
@@ -146,7 +147,9 @@
     "cancel": "Cancel",
     "save": "Save",
     "back": "Back",
-    "back_home": "Back to Home"
+    "back_home": "Back to Home",
+    "second": "second",
+    "seconds": "seconds"
   },
   "pagination": {
     "showing": "Showing",

@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-6">
+  <div class="space-y-6 w-full overflow-hidden">
     <div class="flex justify-between items-center">
       <h1 class="text-3xl font-bold text-white">{{ $t('admin.title') }}</h1>
     </div>
@@ -286,15 +286,15 @@
 /* Dialog container */
 .password-modal-dialog {
   position: relative;
-  background: rgba(15, 15, 15, 0.95);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: rgba(15, 15, 15, 0.85);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
   border-radius: 1rem;
   padding: 2rem;
   width: 100%;
   max-width: 28rem;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1);
   /* Ensure dialog stays centered and above backdrop */
   margin: auto;
   z-index: 99999;

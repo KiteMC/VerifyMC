@@ -30,6 +30,32 @@ public class FileUserDao implements UserDao {
     private void debugLog(String msg) {
         if (debug && plugin != null) plugin.getLogger().info("[DEBUG] FileUserDao: " + msg);
     }
+    
+    /**
+     * Safely convert regTime value to Long, handling both Long and Double types
+     * @param regTimeValue The regTime value from JSON
+     * @return Long value or null if conversion fails
+     */
+    private Long getRegTimeAsLong(Object regTimeValue) {
+        if (regTimeValue == null) {
+            return null;
+        }
+        if (regTimeValue instanceof Long) {
+            return (Long) regTimeValue;
+        }
+        if (regTimeValue instanceof Double) {
+            return ((Double) regTimeValue).longValue();
+        }
+        if (regTimeValue instanceof Number) {
+            return ((Number) regTimeValue).longValue();
+        }
+        try {
+            return Long.parseLong(regTimeValue.toString());
+        } catch (NumberFormatException e) {
+            debugLog("Failed to convert regTime to Long: " + regTimeValue + ", error: " + e.getMessage());
+            return 0L;
+        }
+    }
 
     public synchronized void load() {
         debugLog("Loading users from: " + file.getAbsolutePath());
@@ -274,8 +300,8 @@ public class FileUserDao implements UserDao {
         
         // Sort by registration time (newest first)
         allUsers.sort((a, b) -> {
-            Long timeA = (Long) a.get("regTime");
-            Long timeB = (Long) b.get("regTime");
+            Long timeA = getRegTimeAsLong(a.get("regTime"));
+            Long timeB = getRegTimeAsLong(b.get("regTime"));
             if (timeA == null) timeA = 0L;
             if (timeB == null) timeB = 0L;
             return timeB.compareTo(timeA);
@@ -322,8 +348,8 @@ public class FileUserDao implements UserDao {
         
         // Sort by registration time (newest first)
         filteredUsers.sort((a, b) -> {
-            Long timeA = (Long) a.get("regTime");
-            Long timeB = (Long) b.get("regTime");
+            Long timeA = getRegTimeAsLong(a.get("regTime"));
+            Long timeB = getRegTimeAsLong(b.get("regTime"));
             if (timeA == null) timeA = 0L;
             if (timeB == null) timeB = 0L;
             return timeB.compareTo(timeA);
@@ -362,5 +388,123 @@ public class FileUserDao implements UserDao {
         
         debugLog("Total user count with search '" + searchQuery + "': " + count);
         return count;
+    }
+    
+    @Override
+    public int getApprovedUserCount() {
+        debugLog("Getting approved user count (excluding pending)");
+        int count = 0;
+        for (Map<String, Object> user : users.values()) {
+            String status = user.get("status") != null ? user.get("status").toString() : "";
+            if (!"pending".equalsIgnoreCase(status)) {
+                count++;
+            }
+        }
+        debugLog("Approved user count: " + count);
+        return count;
+    }
+    
+    @Override
+    public int getApprovedUserCountWithSearch(String searchQuery) {
+        debugLog("Getting approved user count with search: query=" + searchQuery);
+        int count = 0;
+        String query = searchQuery != null ? searchQuery.toLowerCase().trim() : "";
+        
+        for (Map<String, Object> user : users.values()) {
+            String status = user.get("status") != null ? user.get("status").toString() : "";
+            if (!"pending".equalsIgnoreCase(status)) {
+                if (query.isEmpty()) {
+                    count++;
+                } else {
+                    String username = user.get("username") != null ? user.get("username").toString().toLowerCase() : "";
+                    String email = user.get("email") != null ? user.get("email").toString().toLowerCase() : "";
+                    if (username.contains(query) || email.contains(query)) {
+                        count++;
+                    }
+                }
+            }
+        }
+        
+        debugLog("Approved user count with search '" + searchQuery + "': " + count);
+        return count;
+    }
+    
+    @Override
+    public List<Map<String, Object>> getApprovedUsersWithPagination(int page, int pageSize) {
+        debugLog("Getting approved users with pagination: page=" + page + ", pageSize=" + pageSize);
+        List<Map<String, Object>> approvedUsers = new ArrayList<>();
+        
+        // Filter out pending users
+        for (Map<String, Object> user : users.values()) {
+            String status = user.get("status") != null ? user.get("status").toString() : "";
+            if (!"pending".equalsIgnoreCase(status)) {
+                approvedUsers.add(user);
+            }
+        }
+        
+        // Sort by registration time (newest first)
+        approvedUsers.sort((a, b) -> {
+            Long timeA = getRegTimeAsLong(a.get("regTime"));
+            Long timeB = getRegTimeAsLong(b.get("regTime"));
+            if (timeA == null) timeA = 0L;
+            if (timeB == null) timeB = 0L;
+            return timeB.compareTo(timeA);
+        });
+        
+        int startIndex = (page - 1) * pageSize;
+        int endIndex = Math.min(startIndex + pageSize, approvedUsers.size());
+        
+        if (startIndex >= approvedUsers.size()) {
+            debugLog("Page " + page + " is out of range for approved users, returning empty list");
+            return new ArrayList<>();
+        }
+        
+        List<Map<String, Object>> result = approvedUsers.subList(startIndex, endIndex);
+        debugLog("Returning " + result.size() + " approved users for page " + page);
+        return result;
+    }
+    
+    @Override
+    public List<Map<String, Object>> getApprovedUsersWithPaginationAndSearch(int page, int pageSize, String searchQuery) {
+        debugLog("Getting approved users with pagination and search: page=" + page + ", pageSize=" + pageSize + ", query=" + searchQuery);
+        List<Map<String, Object>> filteredUsers = new ArrayList<>();
+        
+        // Filter users based on search query and exclude pending users
+        String query = searchQuery != null ? searchQuery.toLowerCase().trim() : "";
+        for (Map<String, Object> user : users.values()) {
+            String status = user.get("status") != null ? user.get("status").toString() : "";
+            if (!"pending".equalsIgnoreCase(status)) {
+                if (query.isEmpty()) {
+                    filteredUsers.add(user);
+                } else {
+                    String username = user.get("username") != null ? user.get("username").toString().toLowerCase() : "";
+                    String email = user.get("email") != null ? user.get("email").toString().toLowerCase() : "";
+                    if (username.contains(query) || email.contains(query)) {
+                        filteredUsers.add(user);
+                    }
+                }
+            }
+        }
+        
+        // Sort by registration time (newest first)
+        filteredUsers.sort((a, b) -> {
+            Long timeA = getRegTimeAsLong(a.get("regTime"));
+            Long timeB = getRegTimeAsLong(b.get("regTime"));
+            if (timeA == null) timeA = 0L;
+            if (timeB == null) timeB = 0L;
+            return timeB.compareTo(timeA);
+        });
+        
+        int startIndex = (page - 1) * pageSize;
+        int endIndex = Math.min(startIndex + pageSize, filteredUsers.size());
+        
+        if (startIndex >= filteredUsers.size()) {
+            debugLog("Page " + page + " is out of range for approved users search results, returning empty list");
+            return new ArrayList<>();
+        }
+        
+        List<Map<String, Object>> result = filteredUsers.subList(startIndex, endIndex);
+        debugLog("Returning " + result.size() + " approved users for page " + page + " with search query: " + searchQuery);
+        return result;
     }
 } 

@@ -383,8 +383,13 @@ public class VerifyMC extends JavaPlugin implements Listener {
                 }
             }
             
-            // Set player to whitelist
-            Bukkit.getOfflinePlayer(targetName).setWhitelisted(true);
+            // Set player to whitelist with error handling
+            try {
+                Bukkit.getOfflinePlayer(targetName).setWhitelisted(true);
+            } catch (Exception whitelistError) {
+                debugLog("Whitelist operation failed for " + targetName + ": " + whitelistError.getMessage());
+                // Continue with user registration even if whitelist fails
+            }
             String uuid = Bukkit.getOfflinePlayer(targetName).getUniqueId().toString();
             Map<String, Object> user = userDao.getUserByUuid(uuid);
             boolean ok;

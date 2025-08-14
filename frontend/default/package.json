@@ -6,7 +6,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "type-check": "vue-tsc --noEmit --skipLibCheck"
+    "type-check": "vue-tsc --noEmit --skipLibCheck --allowJs"
   },
   "dependencies": {
     "vue": "^3.4.21",

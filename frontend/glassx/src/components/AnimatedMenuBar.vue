@@ -1,21 +1,67 @@
 <template>
-  <nav class="p-2 rounded-2xl bg-gradient-to-b from-white/10 to-white/5 backdrop-blur-lg border border-white/20 shadow-lg relative overflow-hidden">
-    <ul :class="['flex items-center gap-2 relative z-10', $attrs.class]">
-      <li v-for="item in menuItems" :key="item.label" class="relative">
-        <div class="block rounded-xl overflow-visible group relative" style="perspective: 600px">
+  <nav 
+    class="menu-nav"
+    @mouseenter="isNavHovered = true"
+    @mouseleave="isNavHovered = false"
+  >
+    <!-- 导航发光背景 -->
+    <div 
+      class="nav-glow-bg"
+      :class="{ 'nav-glow-active': isNavHovered }"
+    />
+    
+    <ul class="menu-items-list">
+      <li 
+        v-for="(item, index) in menuItems" 
+        :key="item.label" 
+        class="menu-item-wrapper"
+      >
+        <div 
+          class="menu-item-3d"
+          @mouseenter="hoveredIndex = index"
+          @mouseleave="hoveredIndex = null"
+        >
+          <!-- 项目发光效果 -->
           <div 
-            class="absolute inset-0 z-0 pointer-events-none rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-500 scale-80 group-hover:scale-200"
+            class="item-glow-effect"
+            :class="{ 'glow-active': hoveredIndex === index }"
             :style="{ background: item.gradient }"
           />
+          
+          <!-- 正面 -->
           <router-link
             :to="item.href"
-            class="flex items-center gap-2 px-4 py-2 relative z-10 bg-transparent text-white/70 group-hover:text-white transition-colors rounded-xl"
-            style="transform-style: preserve-3d; transform-origin: center bottom"
+            class="menu-link menu-front"
+            :class="{ 
+              'front-flipped': hoveredIndex === index,
+              'link-active': isActive(item.href)
+            }"
           >
-            <span :class="`transition-colors duration-300 group-hover:${item.iconColor} text-white`">
-              <component :is="item.icon" class="w-5 h-5" />
+            <span 
+              class="menu-icon-wrapper"
+              :class="{ [item.iconColor]: hoveredIndex === index }"
+            >
+              <component :is="item.icon" class="menu-icon" />
             </span>
-            <span>{{ item.label }}</span>
+            <span class="menu-label">{{ item.label }}</span>
+          </router-link>
+          
+          <!-- 背面 -->
+          <router-link
+            :to="item.href"
+            class="menu-link menu-back"
+            :class="{ 
+              'back-visible': hoveredIndex === index,
+              'link-active': isActive(item.href)
+            }"
+          >
+            <span 
+              class="menu-icon-wrapper"
+              :class="{ [item.iconColor]: hoveredIndex === index }"
+            >
+              <component :is="item.icon" class="menu-icon" />
+            </span>
+            <span class="menu-label">{{ item.label }}</span>
           </router-link>
         </div>
       </li>
@@ -24,11 +70,16 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRoute } from 'vue-router'
 import { Home, UserPlus, LogIn, Settings } from 'lucide-vue-next'
 
 const { t } = useI18n()
+const route = useRoute()
+
+const hoveredIndex = ref<number | null>(null)
+const isNavHovered = ref(false)
 
 const menuItems = computed(() => [
   {
@@ -60,18 +111,214 @@ const menuItems = computed(() => [
     iconColor: 'text-red-500',
   },
 ])
+
+const isActive = (href: string) => {
+  if (href === '/') {
+    return route.path === '/'
+  }
+  return route.path.startsWith(href)
+}
 </script>
 
 <style scoped>
-.bg-gradient-radial {
-  background: radial-gradient(circle, var(--tw-gradient-stops));
+.menu-nav {
+  padding: 0.5rem;
+  border-radius: 1rem;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.08));
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+  position: relative;
+  overflow: hidden;
 }
 
-.rotate-x-0 {
+.nav-glow-bg {
+  position: absolute;
+  inset: -0.5rem;
+  background: radial-gradient(
+    circle,
+    transparent 0%,
+    rgba(255, 255, 255, 0.1) 30%,
+    rgba(255, 255, 255, 0.05) 60%,
+    transparent 100%
+  );
+  border-radius: 1.5rem;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav-glow-active {
+  opacity: 1;
+}
+
+.menu-items-list {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+  z-index: 10;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.menu-item-wrapper {
+  position: relative;
+}
+
+.menu-item-3d {
+  display: block;
+  border-radius: 0.75rem;
+  overflow: visible;
+  position: relative;
+  perspective: 600px;
+}
+
+.item-glow-effect {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: 1rem;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glow-active {
+  opacity: 1;
+  transform: scale(2);
+}
+
+.menu-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  position: relative;
+  z-index: 10;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  text-decoration: none;
+  border-radius: 0.75rem;
+  transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transform-style: preserve-3d;
+}
+
+.menu-link:hover {
+  color: rgba(255, 255, 255, 1);
+}
+
+.link-active {
+  color: rgba(255, 255, 255, 1);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.menu-front {
+  transform-origin: center bottom;
   transform: rotateX(0deg);
+  opacity: 1;
 }
 
-.rotate-x-90 {
-  transform: rotateX(90deg);
+.front-flipped {
+  transform: rotateX(-90deg);
+  opacity: 0;
 }
-</style> 
+
+.menu-back {
+  position: absolute;
+  inset: 0;
+  transform-origin: center top;
+  transform: rotateX(90deg);
+  opacity: 0;
+}
+
+.back-visible {
+  transform: rotateX(0deg);
+  opacity: 1;
+}
+
+.menu-icon-wrapper {
+  transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.menu-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.text-blue-500 {
+  color: #3b82f6 !important;
+}
+
+.text-orange-500 {
+  color: #f97316 !important;
+}
+
+.text-green-500 {
+  color: #22c55e !important;
+}
+
+.text-red-500 {
+  color: #ef4444 !important;
+}
+
+.menu-label {
+  font-weight: 500;
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .menu-nav {
+    padding: 0.25rem;
+  }
+  
+  .menu-items-list {
+    flex-direction: column;
+    gap: 0.25rem;
+    width: 100%;
+  }
+  
+  .menu-item-wrapper {
+    width: 100%;
+  }
+  
+  .menu-link {
+    width: 100%;
+    justify-content: flex-start;
+    padding: 0.75rem 1rem;
+  }
+  
+  .glow-active {
+    transform: scale(1.1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-glow-bg,
+  .item-glow-effect,
+  .menu-link,
+  .menu-icon-wrapper {
+    transition: none !important;
+  }
+  
+  .menu-front,
+  .menu-back {
+    transform: none !important;
+  }
+  
+  .front-flipped {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  
+  .back-visible {
+    display: none !important;
+  }
+}
+</style>

@@ -20,7 +20,9 @@
     "error": "Error",
     "warning": "Warning",
     "info": "Info",
-    "back_home": "Back to Home"
+    "back_home": "Back to Home",
+    "second": "second",
+    "seconds": "seconds"
   },
   "nav": {
     "home": "Home",
@@ -86,19 +88,20 @@
     "messages": {
       "success": "Whitelist application submitted successfully, please wait for admin review",
       "error": "Application submission failed, please try again later",
-      "user_exists": "Username or email already exists"
+      "user_exists": "Username or email already exists",
+      "username_exists": "Username already exists"
     },
     "send_code": "Send Code",
     "sendCode": "Send Code",
     "sending": "Sending...",
-    "codeSent": "Code sent! Please check your inbox.",
     "code_sent": "Code sent! Please check your inbox.",
+    "codeSent": "Code sent! Please check your inbox.",
     "send_failed": "Failed to send code. Please try again.",
     "sendFailed": "Failed to send code. Please try again.",
-    "rateLimited": "Verification code sent too frequently. Please wait {seconds} seconds before trying again",
     "rate_limited": "Verification code sent too frequently. Please wait {seconds} seconds before trying again",
     "success": "Registration successful! Please wait for review.",
-    "failed": "Registration failed. Please try again."
+    "failed": "Registration failed. Please try again.",
+    "usernameExists": "Username already exists"
   },
   "login": {
     "title": "Admin Login",

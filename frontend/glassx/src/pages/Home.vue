@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen relative overflow-hidden">
+  <div class="home-page">
     <!-- Hero Section -->
     <HeroGeometric 
       v-if="serverName !== undefined"
@@ -19,6 +19,15 @@ const serverName = computed(() => config.value?.frontend?.web_server_prefix)
 </script>
 
 <style scoped>
+.home-page {
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  /* 移除任何可能覆盖背景的样式 */
+  background: transparent;
+}
+
 .gradient-text {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   -webkit-background-clip: text;
@@ -33,5 +42,12 @@ const serverName = computed(() => config.value?.frontend?.web_server_prefix)
   border-radius: 12px;
   padding: 8px 16px;
   font-weight: 500;
+}
+
+/* 确保在移动端也能正确显示 */
+@supports (-webkit-touch-callout: none) {
+  .home-page {
+    min-height: -webkit-fill-available;
+  }
 }
 </style>

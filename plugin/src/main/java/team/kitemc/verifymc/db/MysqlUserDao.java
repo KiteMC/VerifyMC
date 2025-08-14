@@ -424,4 +424,128 @@ public class MysqlUserDao implements UserDao {
         debugLog("Total user count with search '" + searchQuery + "': " + count);
         return count;
     }
+    
+    @Override
+    public int getApprovedUserCount() {
+        debugLog("Getting approved user count (excluding pending)");
+        int count = 0;
+        String sql = "SELECT COUNT(*) FROM users WHERE status != 'pending'";
+        try (Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(sql)) {
+            if (rs.next()) {
+                count = rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            debugLog("Error getting approved user count: " + e.getMessage());
+        }
+        
+        debugLog("Approved user count: " + count);
+        return count;
+    }
+    
+    @Override
+    public int getApprovedUserCountWithSearch(String searchQuery) {
+        debugLog("Getting approved user count with search: query=" + searchQuery);
+        int count = 0;
+        
+        String sql;
+        if (searchQuery == null || searchQuery.trim().isEmpty()) {
+            sql = "SELECT COUNT(*) FROM users WHERE status != 'pending'";
+        } else {
+            sql = "SELECT COUNT(*) FROM users WHERE status != 'pending' AND (LOWER(username) LIKE LOWER(?) OR LOWER(email) LIKE LOWER(?))";
+        }
+        
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            if (searchQuery != null && !searchQuery.trim().isEmpty()) {
+                String searchPattern = "%" + searchQuery.trim() + "%";
+                ps.setString(1, searchPattern);
+                ps.setString(2, searchPattern);
+            }
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    count = rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            debugLog("Error getting approved user count with search: " + e.getMessage());
+        }
+        
+        debugLog("Approved user count with search '" + searchQuery + "': " + count);
+        return count;
+    }
+    
+    @Override
+    public List<Map<String, Object>> getApprovedUsersWithPagination(int page, int pageSize) {
+        debugLog("Getting approved users with pagination: page=" + page + ", pageSize=" + pageSize);
+        List<Map<String, Object>> result = new ArrayList<>();
+        int offset = (page - 1) * pageSize;
+        
+        String sql = "SELECT * FROM users WHERE status != 'pending' ORDER BY regTime DESC LIMIT ? OFFSET ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, pageSize);
+            ps.setInt(2, offset);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> user = new HashMap<>();
+                    user.put("uuid", rs.getString("uuid"));
+                    user.put("username", rs.getString("username"));
+                    user.put("email", rs.getString("email"));
+                    user.put("status", rs.getString("status"));
+                    user.put("password", rs.getString("password"));
+                    user.put("regTime", rs.getLong("regTime"));
+                    result.add(user);
+                }
+            }
+        } catch (SQLException e) {
+            debugLog("Error getting approved users with pagination: " + e.getMessage());
+        }
+        
+        debugLog("Returning " + result.size() + " approved users for page " + page);
+        return result;
+    }
+    
+    @Override
+    public List<Map<String, Object>> getApprovedUsersWithPaginationAndSearch(int page, int pageSize, String searchQuery) {
+        debugLog("Getting approved users with pagination and search: page=" + page + ", pageSize=" + pageSize + ", query=" + searchQuery);
+        List<Map<String, Object>> result = new ArrayList<>();
+        int offset = (page - 1) * pageSize;
+        
+        String sql;
+        if (searchQuery == null || searchQuery.trim().isEmpty()) {
+            sql = "SELECT * FROM users WHERE status != 'pending' ORDER BY regTime DESC LIMIT ? OFFSET ?";
+        } else {
+            sql = "SELECT * FROM users WHERE status != 'pending' AND (LOWER(username) LIKE LOWER(?) OR LOWER(email) LIKE LOWER(?)) ORDER BY regTime DESC LIMIT ? OFFSET ?";
+        }
+        
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            if (searchQuery == null || searchQuery.trim().isEmpty()) {
+                ps.setInt(1, pageSize);
+                ps.setInt(2, offset);
+            } else {
+                String searchPattern = "%" + searchQuery.trim() + "%";
+                ps.setString(1, searchPattern);
+                ps.setString(2, searchPattern);
+                ps.setInt(3, pageSize);
+                ps.setInt(4, offset);
+            }
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> user = new HashMap<>();
+                    user.put("uuid", rs.getString("uuid"));
+                    user.put("username", rs.getString("username"));
+                    user.put("email", rs.getString("email"));
+                    user.put("status", rs.getString("status"));
+                    user.put("password", rs.getString("password"));
+                    user.put("regTime", rs.getLong("regTime"));
+                    result.add(user);
+                }
+            }
+        } catch (SQLException e) {
+            debugLog("Error getting approved users with pagination and search: " + e.getMessage());
+        }
+        
+        debugLog("Returning " + result.size() + " approved users for page " + page + " with search query: " + searchQuery);
+        return result;
+    }
 } 

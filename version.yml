@@ -3,22 +3,23 @@ version: 1.2.1
 release_notes: |
   [简体中文](https://github.com/KiteMC/VerifyMC/blob/v1.2.1/release_notes_zh.md) | English | [📚 Official Documentation](https://kitemc.com/docs/verifymc/)
   
-  ## 🎉 New Version Highlights
-
-  VerifyMC v1.2.1 brings several important updates, including theme refactoring, performance optimization, security enhancements, and user experience improvements.
-
-  ## ✨ Main Updates
-
-  ### 🎨 Theme System Refactoring
-  - **Default Theme Refactoring**: Completely redesigned the Default theme, providing a more modern and consistent user interface.
-  - **GlassX Theme Beautification**: Optimized the visual effects of the GlassX theme, enhancing overall aesthetics.
-  - **Frontend Performance Optimization**: Significantly improved frontend performance, reducing load times and resource consumption.
-
-  ### 🔒 Security Enhancements
-  - **API Rate Limiting**: Added rate limiting mechanism to the `/api/send-code` endpoint to effectively prevent abuse.
-  - **Security Protection**: Enhanced overall security to protect user data and system stability.
-
-  ### 📊 Feature Enhancements
-  - **Pagination Feature**: Added pagination for loading user data, improving performance in scenarios with large data volumes.
-  - **Real-time Refresh**: Added refresh functionality, allowing data updates without reloading the entire page.
-  - **Popup Optimization**: Fixed popup position display issues to ensure popups always appear centered on the page.
+  ## 🎉 What's New in v1.2.1
+  
+  ### 🎨 Theme & UI Improvements
+  - ✨ **Completely refactored Default theme** - Fresh new look with improved visual consistency
+  - 🌟 **Enhanced GlassX theme components** - Better glass effects and smoother animations
+  - 🔧 **Fixed GlassX popup positioning** - No more misaligned modal dialogs!
+  
+  ### 🔒 Security & Performance
+  - ⏱️ **Smart rate limiting for verification codes** - Prevents spam with 60-second cooldown per email
+  - 🚀 **Optimized email delivery system** - More reliable and faster code sending
+  
+  ### 👑 Admin Panel Enhancements
+  - 📄 **Pagination system** - Handle thousands of users without performance issues
+  - 🔄 **Real-time refresh** - Update user data instantly without page reloads
+  - 📊 **Better data management** - Smoother admin experience overall
+  
+  ### 🛠️ Under the Hood
+  - 🐛 **Various bug fixes** - Improved stability and reliability
+  - ⚡ **Performance optimizations** - Faster loading times
+  - 🔧 **Code quality improvements** - Better maintainability

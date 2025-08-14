@@ -6,18 +6,6 @@ declare module '*.vue' {
   export default component
 }
 
-declare module '@vue/runtime-core' {
-  interface ComponentCustomProperties {
-    $t: (key: string, params?: Record<string, any>) => string
-  }
-}
-
-// Explicitly declare Vue module exports to fix TypeScript issues
-declare module 'vue' {
-  export * from '@vue/runtime-dom'
-  export { createApp } from '@vue/runtime-dom'
-}
-
 interface ImportMetaEnv {
   readonly VITE_APP_TITLE: string
   // more env variables...

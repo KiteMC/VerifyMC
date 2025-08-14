@@ -4,7 +4,7 @@
   <groupId>team.kitemc</groupId>
   <artifactId>verifymc</artifactId>
   <name>VerifyMC</name>
-  <version>1.2.0</version>
+  <version>1.2.1</version>
   <description>Web-based MC whitelist authentication plugin</description>
   <build>
     <resources>

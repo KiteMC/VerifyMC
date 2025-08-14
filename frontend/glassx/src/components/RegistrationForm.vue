@@ -111,14 +111,16 @@
 import { ref, computed, reactive, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { apiService } from '@/services/api'
+import { useNotification } from '@/composables/useNotification'
 import type { RegisterRequest, ConfigResponse } from '@/services/api'
-import { useNotification } from '../composables/useNotification'
 
 const { t } = useI18n()
-const { success, error, info } = useNotification()
+const { success, error } = useNotification()
 
 const loading = ref(false)
 const sending = ref(false)
+const message = ref('')
+const messageType = ref<'success' | 'error'>('success')
 const config = ref<ConfigResponse>({
   login: { enable_email: false, email_smtp: '' },
   admin: {},
@@ -223,10 +225,10 @@ const isFormValid = computed(() => {
 
 // Rate limiting state for send code button
 const cooldownSeconds = ref(0)
-const cooldownTimer = ref<NodeJS.Timeout | null>(null)
+const cooldownTimer = ref(null)
 
 // Start countdown timer for rate limiting
-const startCooldown = (seconds: number) => {
+const startCooldown = (seconds) => {
   cooldownSeconds.value = seconds
   if (cooldownTimer.value) {
     clearInterval(cooldownTimer.value)
@@ -234,26 +236,8 @@ const startCooldown = (seconds: number) => {
   cooldownTimer.value = setInterval(() => {
     cooldownSeconds.value--
     if (cooldownSeconds.value <= 0) {
-      if (cooldownTimer.value) {
-        clearInterval(cooldownTimer.value)
-      }
+      clearInterval(cooldownTimer.value)
       cooldownTimer.value = null
-    }
-  }, 1000)
-}
-
-// Show rate limit notification with dynamic countdown
-const showRateLimitNotification = (seconds: number) => {
-  // Show initial notification
-  error(t('register.rateLimited', { seconds: seconds }), '', 0)
-  
-  // Update notification every second during countdown
-  const notificationTimer = setInterval(() => {
-    if (cooldownSeconds.value > 0) {
-      // Update the notification with new countdown
-      error(t('register.rateLimited', { seconds: cooldownSeconds.value }), '', 0)
-    } else {
-      clearInterval(notificationTimer)
     }
   }, 1000)
 }
@@ -263,7 +247,7 @@ const sendCode = async () => {
   validateEmail()
   if (errors.email) return
   sending.value = true
-  
+  message.value = ''
   try {
     const email = form.email.trim().toLowerCase()
     console.log('Sending code to:', email) // Debug log
@@ -273,24 +257,27 @@ const sendCode = async () => {
     })
     console.log('Send code response:', res) // Debug log
     if (res.success) {
-      // Show success notification
-      success(t('register.codeSent'), '', 3000)
+      success(t('register.codeSent'))
       // Start 60 second cooldown after successful send
       startCooldown(60)
     } else {
       // Handle rate limiting response
-      if ((res as any).remaining_seconds && (res as any).remaining_seconds > 0) {
-        startCooldown((res as any).remaining_seconds)
-        // Show rate limit notification with dynamic countdown
-        showRateLimitNotification((res as any).remaining_seconds)
+      if (res.remaining_seconds && res.remaining_seconds > 0) {
+        startCooldown(res.remaining_seconds)
+        // Don't show static message, let the button text handle the countdown
+        const secondsText = t('common.seconds', 'seconds')
+        const secondText = t('common.second', 'second')
+        const chineseSecond = t('common.second')
+        const errorMsg = res.msg && !res.msg.includes(chineseSecond) && !res.msg.includes(secondsText) && !res.msg.includes(secondText) ? res.msg : t('register.sendFailed')
+        if (errorMsg) error(errorMsg)
       } else {
-        // Show error notification
-        error(t('register.sendFailed'), res.msg || '', 5000)
+        const errorMsg = res.msg && res.msg !== t('register.sendFailed') ? res.msg : t('register.sendFailed')
+        error(errorMsg)
       }
     }
   } catch (e) {
     console.error('Send code error:', e) // Debug log
-    error(t('register.sendFailed'), '', 5000)
+    error(t('register.sendFailed'))
   } finally {
     sending.value = false
   }
@@ -301,7 +288,7 @@ const handleSubmit = async () => {
   validateForm()
   if (!isFormValid.value) return
   loading.value = true
-  
+  message.value = ''
   try {
     const registerData = {
       username: form.username,
@@ -315,8 +302,7 @@ const handleSubmit = async () => {
     const response = await apiService.register(registerData)
     console.log('Registration response:', response) // 调试日志
     if (response.success) {
-      // Show success notification
-      success(t('register.success'), '', 5000)
+      success(t('register.success'))
       Object.assign(form, {
         username: '',
         email: '',
@@ -324,12 +310,11 @@ const handleSubmit = async () => {
         password: '' // Clear password on success
       })
     } else {
-      // Show error notification
-      error(t('register.failed'), response.msg || '', 5000)
+      error(response.msg || t('register.failed'))
     }
   } catch (error: any) {
     console.error('Registration error:', error) // 调试日志
-    error(t('register.failed'), '', 5000)
+    error(t('register.failed'))
   } finally {
     loading.value = false
   }

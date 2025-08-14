@@ -24,8 +24,8 @@
               <Info v-else class="w-5 h-5 text-blue-400" />
             </div>
             <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium text-white">{{ title }}</p>
-              <p v-if="message" class="text-sm text-gray-300 mt-1">{{ message }}</p>
+              <p class="text-sm font-medium">{{ title }}</p>
+              <p v-if="message" class="text-sm opacity-90 mt-1">{{ message }}</p>
             </div>
           </div>
           
@@ -95,16 +95,16 @@ const emit = defineEmits<{
 }>()
 
 const notificationClasses = computed(() => {
-  const baseClasses = 'backdrop-blur-lg border-b'
+  const baseClasses = 'backdrop-blur-lg border-b text-white'
   switch (props.type) {
     case 'success':
-      return `${baseClasses} bg-green-900/90 border-green-400/30`
+      return `${baseClasses} bg-green-500/20 border-green-400/30`
     case 'error':
-      return `${baseClasses} bg-red-900/90 border-red-400/30`
+      return `${baseClasses} bg-red-500/20 border-red-400/30`
     case 'warning':
-      return `${baseClasses} bg-yellow-900/90 border-yellow-400/30`
+      return `${baseClasses} bg-yellow-500/20 border-yellow-400/30`
     default:
-      return `${baseClasses} bg-blue-900/90 border-blue-400/30`
+      return `${baseClasses} bg-blue-500/20 border-blue-400/30`
   }
 })
 

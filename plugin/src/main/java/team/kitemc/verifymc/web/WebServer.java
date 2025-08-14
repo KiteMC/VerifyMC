@@ -742,8 +742,8 @@ public class WebServer {
                 List<Map<String, Object>> filtered = new java.util.ArrayList<>();
                 for (Map<String, Object> user : users) {
                     if (!"pending".equalsIgnoreCase(String.valueOf(user.get("status")))) {
-                    if (!user.containsKey("regTime")) user.put("regTime", null);
-                    if (!user.containsKey("email")) user.put("email", "");
+                        if (!user.containsKey("regTime")) user.put("regTime", null);
+                        if (!user.containsKey("email")) user.put("email", "");
                         filtered.add(user);
                     }
                 }
@@ -810,23 +810,19 @@ public class WebServer {
                 List<Map<String, Object>> users;
                 int totalCount;
                 
-                // Get users with pagination and optional search
+                // Get approved users with pagination and optional search
                 if (searchQuery != null && !searchQuery.trim().isEmpty()) {
-                    users = userDao.getUsersWithPaginationAndSearch(page, pageSize, searchQuery);
-                    totalCount = userDao.getTotalUserCountWithSearch(searchQuery);
+                    users = userDao.getApprovedUsersWithPaginationAndSearch(page, pageSize, searchQuery);
+                    totalCount = userDao.getApprovedUserCountWithSearch(searchQuery);
                 } else {
-                    users = userDao.getUsersWithPagination(page, pageSize);
-                    totalCount = userDao.getTotalUserCount();
+                    users = userDao.getApprovedUsersWithPagination(page, pageSize);
+                    totalCount = userDao.getApprovedUserCount();
                 }
                 
-                // Filter out pending users and ensure required fields exist
-                List<Map<String, Object>> filtered = new java.util.ArrayList<>();
+                // Ensure required fields exist (no need to filter pending users as they're already excluded)
                 for (Map<String, Object> user : users) {
-                    if (!"pending".equalsIgnoreCase(String.valueOf(user.get("status")))) {
-                        if (!user.containsKey("regTime")) user.put("regTime", null);
-                        if (!user.containsKey("email")) user.put("email", "");
-                        filtered.add(user);
-                    }
+                    if (!user.containsKey("regTime")) user.put("regTime", null);
+                    if (!user.containsKey("email")) user.put("email", "");
                 }
                 
                 // Calculate pagination info
@@ -835,7 +831,7 @@ public class WebServer {
                 boolean hasPrev = page > 1;
                 
                 resp.put("success", true);
-                resp.put("users", filtered);
+                resp.put("users", users);
                 resp.put("pagination", new JSONObject()
                     .put("currentPage", page)
                     .put("pageSize", pageSize)
@@ -845,7 +841,7 @@ public class WebServer {
                     .put("hasPrev", hasPrev)
                 );
                 
-                debugLog("Returning " + filtered.size() + " users for page " + page + "/" + totalPages);
+                debugLog("Returning " + users.size() + " approved users for page " + page + "/" + totalPages);
                 
             } catch (Exception e) {
                 debugLog("Error in paginated users API: " + e.getMessage());
