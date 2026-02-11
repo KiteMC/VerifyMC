@@ -17,8 +17,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public abstract class OpenAICompatibleScoringProvider implements EssayScoringService {
     protected final Plugin plugin;
-    private final LlmScoringConfig config;
-    private final HttpClient client;
+    protected final LlmScoringConfig config;
+    protected final HttpClient client;
     private final Semaphore concurrentLimiter;
     private final AtomicInteger consecutiveFailures = new AtomicInteger(0);
     private volatile long circuitOpenUntil = 0L;
@@ -114,23 +114,15 @@ public abstract class OpenAICompatibleScoringProvider implements EssayScoringSer
         return message;
     }
 
-    private String callModel(EssayScoringRequest request, String requestId) throws IOException, InterruptedException {
-        JSONObject payload = new JSONObject();
-        payload.put("model", config.getModel());
-        payload.put("temperature", 0.0D);
+    protected String callModel(EssayScoringRequest request, String requestId) throws IOException, InterruptedException {
+        JSONObject payload = buildPayload(request);
 
-        JSONArray messages = new JSONArray();
-        messages.put(new JSONObject().put("role", "system").put("content", sanitizePrompt(config.getSystemPrompt(), 4000)));
-        messages.put(new JSONObject().put("role", "user").put("content", buildUserPrompt(request)));
-        payload.put("messages", messages);
-
-        HttpRequest httpRequest = HttpRequest.newBuilder()
-            .uri(URI.create(normalizeChatCompletionsUrl(config.getApiBase())))
-            .header("Authorization", "Bearer " + config.getApiKey())
-            .header("Content-Type", "application/json")
-            .header("X-Request-ID", requestId)
-            .timeout(Duration.ofMillis(config.getTimeoutMs()))
-            .POST(HttpRequest.BodyPublishers.ofString(payload.toString()))
+        HttpRequest httpRequest = applyDefaultHeaders(
+            HttpRequest.newBuilder()
+                .uri(URI.create(buildRequestUrl()))
+                .timeout(Duration.ofMillis(config.getTimeoutMs())),
+            requestId
+        ).POST(HttpRequest.BodyPublishers.ofString(payload.toString()))
             .build();
 
         HttpResponse<String> resp = client.send(httpRequest, HttpResponse.BodyHandlers.ofString());
@@ -139,6 +131,38 @@ public abstract class OpenAICompatibleScoringProvider implements EssayScoringSer
         }
 
         JSONObject json = new JSONObject(resp.body());
+        String content = extractResponseText(json);
+        if (content.isEmpty()) {
+            throw new IOException("Empty model response");
+        }
+        return content;
+    }
+
+    protected String buildRequestUrl() {
+        return normalizeChatCompletionsUrl(config.getApiBase());
+    }
+
+    protected JSONObject buildPayload(EssayScoringRequest request) {
+        JSONObject payload = new JSONObject();
+        payload.put("model", config.getModel());
+        payload.put("temperature", 0.0D);
+
+        JSONArray messages = new JSONArray();
+        messages.put(new JSONObject().put("role", "system").put("content", sanitizePrompt(config.getSystemPrompt(), 4000)));
+        messages.put(new JSONObject().put("role", "user").put("content", buildUserPrompt(request)));
+        payload.put("messages", messages);
+        return payload;
+    }
+
+
+    protected HttpRequest.Builder applyDefaultHeaders(HttpRequest.Builder builder, String requestId) {
+        return builder
+            .header("Authorization", "Bearer " + config.getApiKey())
+            .header("X-Request-ID", requestId)
+            .header("Content-Type", "application/json");
+    }
+
+    protected String extractResponseText(JSONObject json) throws IOException {
         JSONArray choices = json.optJSONArray("choices");
         if (choices == null || choices.isEmpty()) {
             throw new IOException("No choices returned by model");
@@ -147,14 +171,10 @@ public abstract class OpenAICompatibleScoringProvider implements EssayScoringSer
         if (message == null) {
             throw new IOException("Missing message in model response");
         }
-        String content = message.optString("content", "").trim();
-        if (content.isEmpty()) {
-            throw new IOException("Empty model response");
-        }
-        return content;
+        return message.optString("content", "").trim();
     }
 
-    private String buildUserPrompt(EssayScoringRequest request) {
+    protected String buildUserPrompt(EssayScoringRequest request) {
         JSONObject userInput = new JSONObject();
         userInput.put("questionId", request.getQuestionId());
         userInput.put("question", sanitizePrompt(request.getQuestion(), config.getInputMaxLength()));
@@ -169,7 +189,7 @@ public abstract class OpenAICompatibleScoringProvider implements EssayScoringSer
             + userInput.toString();
     }
 
-    private String sanitizePrompt(String input, int maxLength) {
+    protected String sanitizePrompt(String input, int maxLength) {
         String value = input == null ? "" : input.replaceAll("[\\p{Cntrl}&&[^\\r\\n\\t]]", " ").trim();
         if (value.length() > maxLength) {
             return value.substring(0, maxLength);
@@ -177,7 +197,7 @@ public abstract class OpenAICompatibleScoringProvider implements EssayScoringSer
         return value;
     }
 
-    private EssayScoringResult parseResult(String rawContent, int maxScore, String requestId, long started, int retryCount) {
+    protected EssayScoringResult parseResult(String rawContent, int maxScore, String requestId, long started, int retryCount) {
         JSONObject resultJson = new JSONObject(extractJsonObject(rawContent));
         int score = Math.max(0, Math.min(maxScore, resultJson.optInt("score", 0)));
         String reason = sanitizePrompt(resultJson.optString("reason", "No reason provided"), 1000);
@@ -188,7 +208,7 @@ public abstract class OpenAICompatibleScoringProvider implements EssayScoringSer
             System.currentTimeMillis() - started, retryCount);
     }
 
-    private String extractJsonObject(String rawContent) {
+    protected String extractJsonObject(String rawContent) {
         String cleaned = rawContent != null ? rawContent.trim() : "";
         if (cleaned.startsWith("```") && cleaned.endsWith("```")) {
             cleaned = cleaned.replaceFirst("^```(?:json)?", "").replaceFirst("```$", "").trim();

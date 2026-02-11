@@ -213,11 +213,16 @@ questionnaire:
 llm:
   # 评分提供方。可选：deepseek / google
   provider: deepseek
-  # OpenAI 兼容接口基础地址（程序会自动拼接 /chat/completions）
+  # API 基础地址
+  # - deepseek：OpenAI 兼容基础地址，程序会自动拼接 /chat/completions
+  # - google：Gemini API 基础地址，例如 https://generativelanguage.googleapis.com/v1beta
   api_base: https://api.deepseek.com/v1
   # API 密钥
+  # - google 提供方请填写 Google AI API key
   api_key: ""
   # 模型名称
+  # - deepseek: deepseek-chat
+  # - google: gemini-1.5-flash（或其他 Gemini 模型）
   model: deepseek-chat
   # 请求超时时间（毫秒）
   timeout: 10000
