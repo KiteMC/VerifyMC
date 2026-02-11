@@ -3,9 +3,9 @@ package team.kitemc.verifymc.proxy;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.Properties;
 import org.yaml.snakeyaml.Yaml;
 import java.util.Map;
+import java.util.logging.Logger;
 
 /**
  * Configuration handler for VerifyMC Proxy
@@ -13,6 +13,7 @@ import java.util.Map;
 public class ProxyConfig {
     private final File configFile;
     private Map<String, Object> config;
+    private final Logger logger;
     
     // Configuration values
     private String backendUrl = "http://localhost:8080";
@@ -29,7 +30,12 @@ public class ProxyConfig {
     private String language = "en";
     
     public ProxyConfig(File dataFolder) {
+        this(dataFolder, null);
+    }
+
+    public ProxyConfig(File dataFolder, Logger logger) {
         this.configFile = new File(dataFolder, "config.yml");
+        this.logger = logger;
         loadConfig();
     }
     
@@ -70,12 +76,24 @@ public class ProxyConfig {
                 autoUpdateI18n = getBoolean("auto_update_i18n", autoUpdateI18n);
                 backupOnUpdate = getBoolean("backup_on_update", backupOnUpdate);
                 language = getString("language", language);
+
+                if (apiKey == null || apiKey.trim().isEmpty()) {
+                    warn("[VerifyMC-Proxy] API key is empty. Requests to secured backend endpoints may be rejected.");
+                }
             }
         } catch (IOException e) {
             System.err.println("Failed to load config: " + e.getMessage());
         }
     }
     
+    private void warn(String message) {
+        if (logger != null) {
+            logger.warning(message);
+        } else {
+            System.err.println(message);
+        }
+    }
+
     /**
      * Get string value from config
      */

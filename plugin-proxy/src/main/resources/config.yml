@@ -5,7 +5,8 @@
 # This should point to the web server port of your backend Bukkit/Paper server
 backend_url: "http://localhost:8080"
 
-# API key for authentication (optional, for future use)
+# API key for authentication
+# Must match backend plugin security.api_key (or proxy.api_key) exactly
 api_key: ""
 
 # Kick message for unregistered players

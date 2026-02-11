@@ -321,6 +321,37 @@ discord:
 
 ---
 
+## 🔐 代理 API Key 对齐配置（Bungee/Velocity）
+
+当你使用 `plugin-proxy`（BungeeCord/Velocity）调用主插件的 `/api/check-whitelist` 等接口时，**代理端与主插件 key 必须一致**。
+
+### 主插件（Bukkit/Paper）`config.yml`
+
+```yaml
+security:
+  api_key: "your_shared_key"
+
+# 可选：如果同时配置，proxy.api_key 优先级更高
+proxy:
+  api_key: "your_shared_key"
+```
+
+### 代理端 `plugin-proxy/config.yml`
+
+```yaml
+backend_url: "http://localhost:8080"
+api_key: "your_shared_key"
+```
+
+### 常见排障
+
+- 若代理日志出现 401 / `Invalid API key`：请先确认两端 key 文本完全一致（包括空格与大小写）。
+- 若代理端未配置 `api_key`（为空）：代理插件启动后会输出 `warn` 提示，表示访问受保护接口可能被主插件拒绝。
+- 若你暂时不想启用鉴权：可在主插件中将 `security.api_key` 与 `proxy.api_key` 都留空（不推荐生产环境）。
+
+
+---
+
 ## 💬 官方社区
 
 - **QQ 群**: 1041540576 ([点击加入](https://qm.qq.com/q/F7zuhZ7Mze))

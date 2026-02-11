@@ -27,7 +27,7 @@ public class VerifyMCProxy extends Plugin implements Listener {
     public void onEnable() {
         // Load configuration
         saveDefaultConfig();
-        config = new ProxyConfig(getDataFolder());
+        config = new ProxyConfig(getDataFolder(), getLogger());
         
         // Initialize API client
         apiClient = new ApiClient(config, getLogger());

@@ -17,6 +17,13 @@ web_server_prefix: '[ Name ]'
 # 仅在你已正确配置反向代理覆盖并清洗该头部时开启，否则可能被伪造来源 IP。
 web:
   trust_proxy: false
+# 代理访问后端 API 的鉴权密钥
+# - 建议至少配置 security.api_key
+# - 若同时配置 proxy.api_key，则优先使用 proxy.api_key
+security:
+  api_key: ""
+proxy:
+  api_key: ""
 
 # ----------------------------------------
 # 验证与白名单

@@ -17,6 +17,13 @@ web_server_prefix: '[ Name ]'
 # Enable this only when your reverse proxy is correctly overwriting and sanitizing this header; otherwise source IP can be spoofed.
 web:
   trust_proxy: false
+# API key used by proxy plugins to call backend endpoints.
+# - Configure at least security.api_key
+# - If both are set, proxy.api_key takes precedence over security.api_key
+security:
+  api_key: ""
+proxy:
+  api_key: ""
 
 # ----------------------------------------
 # Verification & Whitelist
