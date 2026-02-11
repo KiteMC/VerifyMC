@@ -13,6 +13,17 @@ debug: false
 web_port: 8080
 # 显示在网页界面上的服务器名称。
 web_server_prefix: '[ Name ]'
+# 是否信任反向代理传入的 X-Forwarded-For 头以获取客户端 IP。
+# 仅在你已正确配置反向代理覆盖并清洗该头部时开启，否则可能被伪造来源 IP。
+web:
+  trust_proxy: false
+# 代理访问后端 API 的鉴权密钥
+# - 建议至少配置 security.api_key
+# - 若同时配置 proxy.api_key，则优先使用 proxy.api_key
+security:
+  api_key: ""
+proxy:
+  api_key: ""
 
 # ----------------------------------------
 # 验证与白名单
@@ -209,11 +220,16 @@ questionnaire:
 llm:
   # 评分提供方。可选：deepseek / google
   provider: deepseek
-  # OpenAI 兼容接口基础地址（程序会自动拼接 /chat/completions）
+  # API 基础地址
+  # - deepseek：OpenAI 兼容基础地址，程序会自动拼接 /chat/completions
+  # - google：Gemini API 基础地址，例如 https://generativelanguage.googleapis.com/v1beta
   api_base: https://api.deepseek.com/v1
   # API 密钥
+  # - google 提供方请填写 Google AI API key
   api_key: ""
   # 模型名称
+  # - deepseek: deepseek-chat
+  # - google: gemini-1.5-flash（或其他 Gemini 模型）
   model: deepseek-chat
   # 请求超时时间（毫秒）
   timeout: 10000
@@ -232,6 +248,8 @@ llm:
     1) 与题意相关性
     2) 回答完整度与细节
     3) 对服务器规则与社区氛围的理解
+  # 当模型置信度低于该阈值时强制转人工审核（范围 0~1）
+  confidence_threshold: 0.6
   # 期望模型输出格式（JSON）
   score_format: '{"score": number, "reason": string, "confidence": number}'
 

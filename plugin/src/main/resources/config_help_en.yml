@@ -13,6 +13,17 @@ debug: false
 web_port: 8080
 # The server name displayed on the web interface.
 web_server_prefix: '[ Name ]'
+# Whether to trust the X-Forwarded-For header from a reverse proxy for client IP detection.
+# Enable this only when your reverse proxy is correctly overwriting and sanitizing this header; otherwise source IP can be spoofed.
+web:
+  trust_proxy: false
+# API key used by proxy plugins to call backend endpoints.
+# - Configure at least security.api_key
+# - If both are set, proxy.api_key takes precedence over security.api_key
+security:
+  api_key: ""
+proxy:
+  api_key: ""
 
 # ----------------------------------------
 # Verification & Whitelist
@@ -209,11 +220,16 @@ questionnaire:
 llm:
   # Scoring provider. Options: deepseek / google
   provider: deepseek
-  # OpenAI-compatible API base URL (plugin appends /chat/completions automatically)
+  # API base URL
+  # - deepseek: OpenAI-compatible base, plugin appends /chat/completions automatically
+  # - google: Gemini API base, e.g. https://generativelanguage.googleapis.com/v1beta
   api_base: https://api.deepseek.com/v1
   # API key
+  # - google provider uses Google AI API key
   api_key: ""
   # Model name
+  # - deepseek: deepseek-chat
+  # - google: gemini-1.5-flash (or another Gemini model)
   model: deepseek-chat
   # Request timeout in milliseconds
   timeout: 10000
@@ -232,6 +248,8 @@ llm:
     1) Relevance to the question
     2) Completeness and level of detail
     3) Understanding of server rules and community norms
+  # Force manual review when model confidence is below this threshold (range 0~1)
+  confidence_threshold: 0.6
   # Expected model output schema (JSON)
   score_format: '{"score": number, "reason": string, "confidence": number}'
 

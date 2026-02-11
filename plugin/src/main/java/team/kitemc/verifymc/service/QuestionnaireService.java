@@ -35,11 +35,20 @@ public class QuestionnaireService {
 
     private EssayScoringService buildScoringService() {
         String provider = plugin.getConfig().getString("llm.provider", "deepseek").toLowerCase(Locale.ROOT);
+        String defaultApiBase = "google".equals(provider)
+            ? "https://generativelanguage.googleapis.com/v1beta"
+            : "https://api.deepseek.com/v1";
+        String defaultModel = "google".equals(provider) ? "gemini-1.5-flash" : "deepseek-chat";
+
+        if ("google".equals(provider)) {
+            plugin.getLogger().info("[VerifyMC] llm.provider=google requires Gemini-style config: api_base=https://generativelanguage.googleapis.com/v1beta, model=<gemini-model>, api_key=<google-ai-api-key>");
+        }
+
         OpenAICompatibleScoringProvider.LlmScoringConfig config = new OpenAICompatibleScoringProvider.LlmScoringConfig(
             provider,
-            plugin.getConfig().getString("llm.api_base", "https://api.deepseek.com/v1"),
+            plugin.getConfig().getString("llm.api_base", defaultApiBase),
             plugin.getConfig().getString("llm.api_key", ""),
-            plugin.getConfig().getString("llm.model", "deepseek-chat"),
+            plugin.getConfig().getString("llm.model", defaultModel),
             plugin.getConfig().getInt("llm.timeout", 10000),
             plugin.getConfig().getInt("llm.retry", 1),
             plugin.getConfig().getString("llm.system_prompt", "You are an impartial questionnaire scorer. Return JSON only."),
@@ -50,7 +59,8 @@ public class QuestionnaireService {
             plugin.getConfig().getInt("llm.retry_backoff_max", 5000),
             plugin.getConfig().getInt("llm.circuit_breaker.failure_threshold", 5),
             plugin.getConfig().getInt("llm.circuit_breaker.open_ms", 30000),
-            plugin.getConfig().getInt("llm.input_max_length", 2000)
+            plugin.getConfig().getInt("llm.input_max_length", 2000),
+            plugin.getConfig().getDouble("llm.confidence_threshold", 0.6D)
         );
 
         if ("google".equals(provider)) {

@@ -549,12 +549,13 @@ public class VerifyMC extends JavaPlugin implements Listener {
             return; // Skip verification for whitelisted IPs
         }
         
-        // Check player name (id) in plugin database
-        Map<String, Object> user = userDao != null ? userDao.getAllUsers().stream()
-            .filter(u -> player.getName().equalsIgnoreCase((String)u.get("username")) && "approved".equals(u.get("status")))
-            .findFirst().orElse(null) : null;
-        
-        if (user == null) {
+        // Performance note: login event is hot-path, avoid O(n) scan over all users.
+        // Delegate username lookup to DAO so storage implementations can use indexed access
+        // (e.g. file map index or MySQL username_normalized/functional index).
+        Map<String, Object> user = userDao != null ? userDao.getUserByUsername(player.getName()) : null;
+
+        // Preserve behavior: only users in approved state can pass login check.
+        if (user == null || !"approved".equals(user.get("status"))) {
             // Player is not in approved list
             String url = webRegisterUrl;
             String msg = "§c[ VerifyMC ]\n§7Please visit §a" + url + " §7to register";

@@ -49,6 +49,7 @@ public class WebServer {
     private final ReviewWebSocketServer wsServer;
     private final ResourceBundle messages;
     private final boolean debug;
+    private final boolean trustProxy;
     private final HashMap<String, ResourceBundle> languageCache = new HashMap<>();
     
     // Authentication related
@@ -57,8 +58,12 @@ public class WebServer {
     private final Pattern UUID_PATTERN = Pattern.compile("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$");
     private static final long TOKEN_EXPIRY_TIME = 3600000; // 1 hour
     private static final long QUESTIONNAIRE_SUBMISSION_TTL_MS = 10 * 60 * 1000; // 10 minutes
+    private static final long CLEANUP_INTERVAL_MS = 300000; // 5 minutes
+    // Questionnaire token lifecycle: keep records until successful registration consumes them,
+    // otherwise let them expire naturally and be reclaimed by cleanupExpiredQuestionnaireSubmissions.
     private final ConcurrentHashMap<String, QuestionnaireSubmissionRecord> questionnaireSubmissionStore = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, WindowRateLimitRecord> questionnaireRateLimitStore = new ConcurrentHashMap<>();
+    private Thread cleanupThread;
 
     // Default mainstream email domain whitelist
     private static final java.util.List<String> DEFAULT_EMAIL_DOMAIN_WHITELIST = Arrays.asList(
@@ -82,6 +87,9 @@ public class WebServer {
         this.wsServer = wsServer;
         this.messages = messages;
         this.debug = plugin.getConfig().getBoolean("debug", false);
+        this.trustProxy = plugin.getConfig().contains("web.trust_proxy")
+            ? plugin.getConfig().getBoolean("web.trust_proxy", false)
+            : plugin.getConfig().getBoolean("security.trust_proxy", false);
     }
 
 
@@ -114,12 +122,20 @@ public class WebServer {
 
 
     private static class WindowRateLimitRecord {
-        private int count;
-        private long windowStart;
+        private final int count;
+        private final long windowStart;
 
         private WindowRateLimitRecord(int count, long windowStart) {
             this.count = count;
             this.windowStart = windowStart;
+        }
+
+        private int count() {
+            return count;
+        }
+
+        private long windowStart() {
+            return windowStart;
         }
     }
 
@@ -138,24 +154,29 @@ public class WebServer {
             return new RateLimitDecision(true, 0L);
         }
         long now = System.currentTimeMillis();
+        questionnaireRateLimitStore.computeIfPresent(key, (k, old) -> now - old.windowStart() >= windowMs ? null : old);
         WindowRateLimitRecord rec = questionnaireRateLimitStore.compute(key, (k, old) -> {
-            if (old == null || now - old.windowStart >= windowMs) {
+            if (old == null || now - old.windowStart() >= windowMs) {
                 return new WindowRateLimitRecord(1, now);
             }
-            old.count++;
-            return old;
+            return new WindowRateLimitRecord(old.count() + 1, old.windowStart());
         });
-        if (rec.count > limit) {
-            long retryAfterMs = windowMs - (now - rec.windowStart);
+        if (rec.count() > limit) {
+            long retryAfterMs = windowMs - (now - rec.windowStart());
             return new RateLimitDecision(false, Math.max(1L, retryAfterMs));
         }
         return new RateLimitDecision(true, 0L);
     }
 
     private String getClientIp(HttpExchange exchange) {
-        String forwarded = exchange.getRequestHeaders().getFirst("X-Forwarded-For");
-        if (forwarded != null && !forwarded.isBlank()) {
-            return forwarded.split(",")[0].trim();
+        if (trustProxy) {
+            String forwarded = exchange.getRequestHeaders().getFirst("X-Forwarded-For");
+            if (forwarded != null && !forwarded.isBlank()) {
+                String firstForwardedIp = forwarded.split(",")[0].trim();
+                if (!firstForwardedIp.isEmpty()) {
+                    return firstForwardedIp;
+                }
+            }
         }
         if (exchange.getRemoteAddress() != null && exchange.getRemoteAddress().getAddress() != null) {
             return exchange.getRemoteAddress().getAddress().getHostAddress();
@@ -269,6 +290,51 @@ public class WebServer {
         }
         return true;
     }
+
+    /**
+     * Read API key used by proxy-to-backend endpoints.
+     * Priority: proxy.api_key -> security.api_key.
+     */
+    private String getConfiguredProxyApiKey() {
+        String key = plugin.getConfig().getString("proxy.api_key", "");
+        if (key == null || key.isBlank()) {
+            key = plugin.getConfig().getString("security.api_key", "");
+        }
+        return key == null ? "" : key.trim();
+    }
+
+    /**
+     * Unified API key validation for proxy-facing endpoints.
+     *
+     * Supported request formats:
+     * - X-API-Key: <key>
+     * - Authorization: Bearer <key>
+     *
+     * If API key is not configured in the main plugin, validation is treated as disabled.
+     */
+    private boolean isApiKeyValid(HttpExchange exchange) {
+        String configuredApiKey = getConfiguredProxyApiKey();
+        if (configuredApiKey.isBlank()) {
+            return true;
+        }
+
+        String requestKey = exchange.getRequestHeaders().getFirst("X-API-Key");
+        if (requestKey == null || requestKey.isBlank()) {
+            String authHeader = exchange.getRequestHeaders().getFirst("Authorization");
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                requestKey = authHeader.substring(7);
+            }
+        }
+
+        if (requestKey == null || requestKey.isBlank()) {
+            return false;
+        }
+
+        return MessageDigest.isEqual(
+            configuredApiKey.getBytes(StandardCharsets.UTF_8),
+            requestKey.trim().getBytes(StandardCharsets.UTF_8)
+        );
+    }
     
     /**
      * Generate secure token
@@ -323,17 +389,51 @@ public class WebServer {
      * Scheduled task to clean up expired tokens
      */
     private void startTokenCleanupTask() {
-        new Thread(() -> {
-            while (true) {
+        if (cleanupThread != null && cleanupThread.isAlive()) {
+            return;
+        }
+        cleanupThread = new Thread(() -> {
+            while (!Thread.currentThread().isInterrupted()) {
                 try {
-                    Thread.sleep(300000); // Clean up every 5 minutes
+                    Thread.sleep(CLEANUP_INTERVAL_MS);
                     long currentTime = System.currentTimeMillis();
                     validTokens.entrySet().removeIf(entry -> entry.getValue() < currentTime);
+                    cleanupExpiredQuestionnaireSubmissions(currentTime);
+                    cleanupStaleQuestionnaireRateLimits(currentTime);
                 } catch (InterruptedException e) {
-                    break;
+                    Thread.currentThread().interrupt();
                 }
             }
-        }).start();
+        }, "VerifyMC-Web-Cleanup");
+        cleanupThread.setDaemon(true);
+        cleanupThread.start();
+    }
+
+    private void stopCleanupTask() {
+        if (cleanupThread != null) {
+            cleanupThread.interrupt();
+            cleanupThread = null;
+        }
+    }
+
+    private void cleanupExpiredQuestionnaireSubmissions(long currentTime) {
+        // Records are retained for retry after non-questionnaire failures and removed here on natural expiry.
+        questionnaireSubmissionStore.entrySet().removeIf(entry -> {
+            QuestionnaireSubmissionRecord record = entry.getValue();
+            return record == null || record.expiresAt <= currentTime || record.isExpired();
+        });
+    }
+
+    private void cleanupStaleQuestionnaireRateLimits(long currentTime) {
+        long windowMs = plugin.getConfig().getLong("questionnaire.rate_limit.window_ms", 300000L);
+        if (windowMs <= 0) {
+            questionnaireRateLimitStore.clear();
+            return;
+        }
+        questionnaireRateLimitStore.entrySet().removeIf(entry -> {
+            WindowRateLimitRecord record = entry.getValue();
+            return record == null || currentTime - record.windowStart() >= windowMs;
+        });
     }
 
     /**
@@ -514,6 +614,19 @@ public class WebServer {
                 exchange.sendResponseHeaders(405, 0); 
                 exchange.close(); 
                 return; 
+            }
+
+            if (!isApiKeyValid(exchange)) {
+                debugLog("/api/check-whitelist unauthorized request");
+                JSONObject unauthorized = new JSONObject();
+                unauthorized.put("success", false);
+                unauthorized.put("msg", "Invalid API key");
+                byte[] data = unauthorized.toString().getBytes(StandardCharsets.UTF_8);
+                exchange.getResponseHeaders().add("Content-Type", "application/json; charset=utf-8");
+                exchange.sendResponseHeaders(401, data.length);
+                exchange.getResponseBody().write(data);
+                exchange.close();
+                return;
             }
             
             String query = exchange.getRequestURI().getQuery();
@@ -1141,6 +1254,7 @@ public class WebServer {
             }
 
             QuestionnaireSubmissionRecord questionnaireSubmissionRecord = null;
+            String questionnaireSubmissionToken = null;
             boolean questionnaireEnabled = questionnaireService.isEnabled();
             boolean requireQuestionnairePass = plugin.getConfig().getBoolean("questionnaire.require_pass_before_register", false) && questionnaireEnabled;
             boolean hasQuestionnairePayload = questionnaireEnabled && questionnaire != null && questionnaire.length() > 0;
@@ -1153,7 +1267,6 @@ public class WebServer {
                     return;
                 }
 
-                boolean passed = questionnaire.optBoolean("passed", false);
                 String questionnaireToken = questionnaire.optString("token", "");
                 long submittedAt = questionnaire.optLong("submitted_at", 0L);
                 long expiresAt = questionnaire.optLong("expires_at", 0L);
@@ -1166,7 +1279,8 @@ public class WebServer {
                     return;
                 }
 
-                QuestionnaireSubmissionRecord record = questionnaireSubmissionStore.remove(questionnaireToken);
+                cleanupExpiredQuestionnaireSubmissions(System.currentTimeMillis());
+                QuestionnaireSubmissionRecord record = questionnaireSubmissionStore.get(questionnaireToken);
                 if (record == null) {
                     questionnaireResp.put("success", false);
                     questionnaireResp.put("msg", getMsg("register.questionnaire_missing", language));
@@ -1174,7 +1288,7 @@ public class WebServer {
                     return;
                 }
 
-                if (requireQuestionnairePass && !passed && !record.manualReviewRequired) {
+                if (requireQuestionnairePass && !record.passed && !record.manualReviewRequired) {
                     questionnaireResp.put("success", false);
                     questionnaireResp.put("msg", getMsg("register.questionnaire_required", language));
                     sendJson(exchange, questionnaireResp);
@@ -1196,6 +1310,7 @@ public class WebServer {
                 }
 
                 questionnaireSubmissionRecord = record;
+                questionnaireSubmissionToken = questionnaireToken;
             }
 
             JSONObject resp = new JSONObject();
@@ -1279,6 +1394,17 @@ public class WebServer {
                 
                 debugLog("registerUser result: " + ok);
                 if (ok) {
+                    if (submissionRecord != null && questionnaireSubmissionToken != null) {
+                        boolean questionnaireConsumed = questionnaireSubmissionStore.remove(questionnaireSubmissionToken, submissionRecord);
+                        if (!questionnaireConsumed) {
+                            plugin.getLogger().warning("[VerifyMC] Registration duplicated or replayed: questionnaire token already consumed, tokenHash=" + hashToken(questionnaireSubmissionToken));
+                            resp.put("success", false);
+                            resp.put("msg", getMsg("register.questionnaire_already_used", language));
+                            sendJson(exchange, resp);
+                            return;
+                        }
+                    }
+
                     // Registration successful, automatically add to whitelist
                     debugLog("Execute: whitelist add " + username);
                     org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
@@ -2027,6 +2153,7 @@ public class WebServer {
     }
 
     public void stop() {
+        stopCleanupTask();
         if (server != null) server.stop(0);
     }
 
