@@ -122,12 +122,20 @@ public class WebServer {
 
 
     private static class WindowRateLimitRecord {
-        private int count;
-        private long windowStart;
+        private final int count;
+        private final long windowStart;
 
         private WindowRateLimitRecord(int count, long windowStart) {
             this.count = count;
             this.windowStart = windowStart;
+        }
+
+        private int count() {
+            return count;
+        }
+
+        private long windowStart() {
+            return windowStart;
         }
     }
 
@@ -146,16 +154,15 @@ public class WebServer {
             return new RateLimitDecision(true, 0L);
         }
         long now = System.currentTimeMillis();
-        questionnaireRateLimitStore.computeIfPresent(key, (k, old) -> now - old.windowStart >= windowMs ? null : old);
+        questionnaireRateLimitStore.computeIfPresent(key, (k, old) -> now - old.windowStart() >= windowMs ? null : old);
         WindowRateLimitRecord rec = questionnaireRateLimitStore.compute(key, (k, old) -> {
-            if (old == null || now - old.windowStart >= windowMs) {
+            if (old == null || now - old.windowStart() >= windowMs) {
                 return new WindowRateLimitRecord(1, now);
             }
-            old.count++;
-            return old;
+            return new WindowRateLimitRecord(old.count() + 1, old.windowStart());
         });
-        if (rec.count > limit) {
-            long retryAfterMs = windowMs - (now - rec.windowStart);
+        if (rec.count() > limit) {
+            long retryAfterMs = windowMs - (now - rec.windowStart());
             return new RateLimitDecision(false, Math.max(1L, retryAfterMs));
         }
         return new RateLimitDecision(true, 0L);
@@ -380,7 +387,7 @@ public class WebServer {
         }
         questionnaireRateLimitStore.entrySet().removeIf(entry -> {
             WindowRateLimitRecord record = entry.getValue();
-            return record == null || currentTime - record.windowStart >= windowMs;
+            return record == null || currentTime - record.windowStart() >= windowMs;
         });
     }
 
