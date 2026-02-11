@@ -241,6 +241,8 @@ llm:
     1) 与题意相关性
     2) 回答完整度与细节
     3) 对服务器规则与社区氛围的理解
+  # 当模型置信度低于该阈值时强制转人工审核（范围 0~1）
+  confidence_threshold: 0.6
   # 期望模型输出格式（JSON）
   score_format: '{"score": number, "reason": string, "confidence": number}'
 
