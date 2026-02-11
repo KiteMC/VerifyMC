@@ -90,8 +90,11 @@ questionnaire:
 llm:
   provider: deepseek
   api_base: https://api.deepseek.com/v1
+  # provider=google 时请使用 Gemini 规范，例如 https://generativelanguage.googleapis.com/v1beta
   api_key: ""
+  # provider=google 时请填写 Google AI API key
   model: deepseek-chat
+  # provider=google 时请填写 Gemini 模型名，例如 gemini-1.5-flash
   timeout: 10000
   retry: 1
   max_concurrency: 4

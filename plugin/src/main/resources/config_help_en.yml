@@ -209,11 +209,16 @@ questionnaire:
 llm:
   # Scoring provider. Options: deepseek / google
   provider: deepseek
-  # OpenAI-compatible API base URL (plugin appends /chat/completions automatically)
+  # API base URL
+  # - deepseek: OpenAI-compatible base, plugin appends /chat/completions automatically
+  # - google: Gemini API base, e.g. https://generativelanguage.googleapis.com/v1beta
   api_base: https://api.deepseek.com/v1
   # API key
+  # - google provider uses Google AI API key
   api_key: ""
   # Model name
+  # - deepseek: deepseek-chat
+  # - google: gemini-1.5-flash (or another Gemini model)
   model: deepseek-chat
   # Request timeout in milliseconds
   timeout: 10000
