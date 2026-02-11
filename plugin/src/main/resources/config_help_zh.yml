@@ -13,6 +13,10 @@ debug: false
 web_port: 8080
 # 显示在网页界面上的服务器名称。
 web_server_prefix: '[ Name ]'
+# 是否信任反向代理传入的 X-Forwarded-For 头以获取客户端 IP。
+# 仅在你已正确配置反向代理覆盖并清洗该头部时开启，否则可能被伪造来源 IP。
+web:
+  trust_proxy: false
 
 # ----------------------------------------
 # 验证与白名单
