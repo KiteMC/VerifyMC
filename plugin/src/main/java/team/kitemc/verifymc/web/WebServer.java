@@ -1442,9 +1442,10 @@ public class WebServer {
                 debugLog("registerUser result: " + ok);
                 if (ok) {
                     // Registration successful, automatically add to whitelist
-                    debugLog("Execute: whitelist add " + username);
+                    String registeredUsername = username;
+                    debugLog("Execute: whitelist add " + registeredUsername);
                     org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
-                        org.bukkit.Bukkit.dispatchCommand(org.bukkit.Bukkit.getConsoleSender(), "whitelist add " + username);
+                        org.bukkit.Bukkit.dispatchCommand(org.bukkit.Bukkit.getConsoleSender(), "whitelist add " + registeredUsername);
                     });
                     
                     // If Authme integration is enabled and auto registration is enabled, register to Authme
