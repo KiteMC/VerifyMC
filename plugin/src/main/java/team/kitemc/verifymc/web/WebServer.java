@@ -1189,7 +1189,6 @@ public class WebServer {
                     return;
                 }
 
-                boolean passed = questionnaire.optBoolean("passed", false);
                 String questionnaireToken = questionnaire.optString("token", "");
                 long submittedAt = questionnaire.optLong("submitted_at", 0L);
                 long expiresAt = questionnaire.optLong("expires_at", 0L);
@@ -1211,7 +1210,7 @@ public class WebServer {
                     return;
                 }
 
-                if (requireQuestionnairePass && !passed && !record.manualReviewRequired) {
+                if (requireQuestionnairePass && !record.passed && !record.manualReviewRequired) {
                     questionnaireResp.put("success", false);
                     questionnaireResp.put("msg", getMsg("register.questionnaire_required", language));
                     sendJson(exchange, questionnaireResp);
