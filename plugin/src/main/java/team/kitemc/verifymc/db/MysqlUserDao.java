@@ -10,11 +10,13 @@ public class MysqlUserDao implements UserDao {
     private final ResourceBundle messages;
     private final boolean debug;
     private final Plugin plugin;
+    private final boolean usernameCaseSensitive;
 
     public MysqlUserDao(Properties mysqlConfig, ResourceBundle messages, Plugin plugin) throws SQLException {
         this.messages = messages;
         this.plugin = plugin;
         this.debug = plugin.getConfig().getBoolean("debug", false);
+        this.usernameCaseSensitive = plugin.getConfig().getBoolean("username_case_sensitive", false);
         String url = "jdbc:mysql://" + mysqlConfig.getProperty("host") + ":" +
                 mysqlConfig.getProperty("port") + "/" +
                 mysqlConfig.getProperty("database") + "?useSSL=false&characterEncoding=utf8";
@@ -31,7 +33,8 @@ public class MysqlUserDao implements UserDao {
                     "questionnaire_score INT NULL," +
                     "questionnaire_passed BOOLEAN NULL," +
                     "questionnaire_review_summary TEXT NULL," +
-                    "questionnaire_scored_at BIGINT NULL)");
+                    "questionnaire_scored_at BIGINT NULL," +
+                    "username_normalized VARCHAR(32) NULL)");
             
             // Compatibility handling: Check and add missing fields
             try {
@@ -93,6 +96,18 @@ public class MysqlUserDao implements UserDao {
                 debugLog("Added questionnaire_scored_at column to users table");
             }
 
+            try {
+                stmt.executeQuery("SELECT username_normalized FROM users LIMIT 1");
+            } catch (SQLException e) {
+                stmt.executeUpdate("ALTER TABLE users ADD COLUMN username_normalized VARCHAR(32) NULL");
+                debugLog("Added username_normalized column to users table");
+            }
+
+            String normalizeSql = usernameCaseSensitive
+                    ? "UPDATE users SET username_normalized = username WHERE username_normalized IS NULL OR username_normalized <> username"
+                    : "UPDATE users SET username_normalized = LOWER(username) WHERE username_normalized IS NULL OR username_normalized <> LOWER(username)";
+            stmt.executeUpdate(normalizeSql);
+
             // Check and ensure indexes exist
             try {
                 stmt.executeQuery("SHOW INDEX FROM users WHERE Key_name = 'idx_username'");
@@ -101,6 +116,14 @@ public class MysqlUserDao implements UserDao {
                 // Add username index to improve query performance
                 stmt.executeUpdate("CREATE INDEX idx_username ON users(username)");
                 debugLog("Added username index to users table");
+            }
+
+            try {
+                stmt.executeQuery("SHOW INDEX FROM users WHERE Key_name = 'idx_username_normalized'");
+                debugLog("Username normalized index already exists");
+            } catch (SQLException e) {
+                stmt.executeUpdate("CREATE INDEX idx_username_normalized ON users(username_normalized)");
+                debugLog("Added username normalized index to users table");
             }
             
             try {
@@ -116,6 +139,17 @@ public class MysqlUserDao implements UserDao {
 
     private void debugLog(String msg) {
         if (debug) plugin.getLogger().info("[DEBUG] MysqlUserDao: " + msg);
+    }
+
+    private String normalizeUsername(String username) {
+        if (username == null) {
+            return null;
+        }
+        return usernameCaseSensitive ? username : username.toLowerCase(Locale.ROOT);
+    }
+
+    private String usernameCondition() {
+        return usernameCaseSensitive ? "username=?" : "username_normalized=?";
     }
 
     private boolean userExists(String uuid) {
@@ -140,18 +174,19 @@ public class MysqlUserDao implements UserDao {
         boolean hasPassword = password != null;
         String sql;
         if (hasPassword) {
-            sql = "INSERT INTO users (uuid, username, email, status, password, regTime, questionnaire_score, questionnaire_passed, questionnaire_review_summary, questionnaire_scored_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            sql = "INSERT INTO users (uuid, username, username_normalized, email, status, password, regTime, questionnaire_score, questionnaire_passed, questionnaire_review_summary, questionnaire_scored_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         } else {
-            sql = "INSERT INTO users (uuid, username, email, status, regTime, questionnaire_score, questionnaire_passed, questionnaire_review_summary, questionnaire_scored_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            sql = "INSERT INTO users (uuid, username, username_normalized, email, status, regTime, questionnaire_score, questionnaire_passed, questionnaire_review_summary, questionnaire_scored_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         }
 
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, uuid);
             ps.setString(2, username);
-            ps.setString(3, email);
-            ps.setString(4, status);
+            ps.setString(3, normalizeUsername(username));
+            ps.setString(4, email);
+            ps.setString(5, status);
 
-            int index = 5;
+            int index = 6;
             if (hasPassword) {
                 ps.setString(index++, password);
             }
@@ -204,11 +239,11 @@ public class MysqlUserDao implements UserDao {
 
     @Override
     public boolean updateUserStatus(String uuidOrName, String status) {
-        String sql = "UPDATE users SET status=? WHERE uuid=? OR username=?";
+        String sql = "UPDATE users SET status=? WHERE uuid=? OR " + usernameCondition();
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, status);
             ps.setString(2, uuidOrName);
-            ps.setString(3, uuidOrName);
+            ps.setString(3, normalizeUsername(uuidOrName));
             int rows = ps.executeUpdate();
             debugLog("User status updated: " + uuidOrName + " to " + status);
             return rows > 0;
@@ -220,11 +255,11 @@ public class MysqlUserDao implements UserDao {
 
     @Override
     public boolean updateUserPassword(String uuidOrName, String password) {
-        String sql = "UPDATE users SET password=? WHERE uuid=? OR username=?";
+        String sql = "UPDATE users SET password=? WHERE uuid=? OR " + usernameCondition();
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, password);
             ps.setString(2, uuidOrName);
-            ps.setString(3, uuidOrName);
+            ps.setString(3, normalizeUsername(uuidOrName));
             int rows = ps.executeUpdate();
             debugLog("User password updated: " + uuidOrName);
             return rows > 0;
@@ -243,6 +278,7 @@ public class MysqlUserDao implements UserDao {
                 Map<String, Object> user = new HashMap<>();
                 user.put("uuid", rs.getString("uuid"));
                 user.put("username", rs.getString("username"));
+                user.put("username_normalized", rs.getString("username_normalized"));
                 user.put("email", rs.getString("email"));
                 user.put("status", rs.getString("status"));
                 user.put("password", rs.getString("password"));
@@ -269,6 +305,7 @@ public class MysqlUserDao implements UserDao {
                 Map<String, Object> user = new HashMap<>();
                 user.put("uuid", rs.getString("uuid"));
                 user.put("username", rs.getString("username"));
+                user.put("username_normalized", rs.getString("username_normalized"));
                 user.put("email", rs.getString("email"));
                 user.put("status", rs.getString("status"));
                 user.put("password", rs.getString("password"));
@@ -296,6 +333,7 @@ public class MysqlUserDao implements UserDao {
                     Map<String, Object> user = new HashMap<>();
                     user.put("uuid", rs.getString("uuid"));
                     user.put("username", rs.getString("username"));
+                    user.put("username_normalized", rs.getString("username_normalized"));
                     user.put("email", rs.getString("email"));
                     user.put("status", rs.getString("status"));
                     user.put("password", rs.getString("password"));
@@ -316,14 +354,15 @@ public class MysqlUserDao implements UserDao {
 
     @Override
     public Map<String, Object> getUserByUsername(String username) {
-        String sql = "SELECT * FROM users WHERE LOWER(username)=LOWER(?)";
+        String sql = "SELECT * FROM users WHERE " + usernameCondition();
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, username);
+            ps.setString(1, normalizeUsername(username));
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     Map<String, Object> user = new HashMap<>();
                     user.put("uuid", rs.getString("uuid"));
                     user.put("username", rs.getString("username"));
+                    user.put("username_normalized", rs.getString("username_normalized"));
                     user.put("email", rs.getString("email"));
                     user.put("status", rs.getString("status"));
                     user.put("password", rs.getString("password"));
@@ -344,10 +383,10 @@ public class MysqlUserDao implements UserDao {
 
     @Override
     public boolean deleteUser(String uuidOrName) {
-        String sql = "DELETE FROM users WHERE uuid=? OR username=?";
+        String sql = "DELETE FROM users WHERE uuid=? OR " + usernameCondition();
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, uuidOrName);
-            ps.setString(2, uuidOrName);
+            ps.setString(2, normalizeUsername(uuidOrName));
             int rows = ps.executeUpdate();
             debugLog("User deleted: " + uuidOrName);
             return rows > 0;
@@ -395,6 +434,7 @@ public class MysqlUserDao implements UserDao {
                     Map<String, Object> user = new HashMap<>();
                     user.put("uuid", rs.getString("uuid"));
                     user.put("username", rs.getString("username"));
+                    user.put("username_normalized", rs.getString("username_normalized"));
                     user.put("email", rs.getString("email"));
                     user.put("status", rs.getString("status"));
                     user.put("password", rs.getString("password"));
@@ -462,6 +502,7 @@ public class MysqlUserDao implements UserDao {
                     Map<String, Object> user = new HashMap<>();
                     user.put("uuid", rs.getString("uuid"));
                     user.put("username", rs.getString("username"));
+                    user.put("username_normalized", rs.getString("username_normalized"));
                     user.put("email", rs.getString("email"));
                     user.put("status", rs.getString("status"));
                     user.put("password", rs.getString("password"));
@@ -578,6 +619,7 @@ public class MysqlUserDao implements UserDao {
                     Map<String, Object> user = new HashMap<>();
                     user.put("uuid", rs.getString("uuid"));
                     user.put("username", rs.getString("username"));
+                    user.put("username_normalized", rs.getString("username_normalized"));
                     user.put("email", rs.getString("email"));
                     user.put("status", rs.getString("status"));
                     user.put("password", rs.getString("password"));
@@ -628,6 +670,7 @@ public class MysqlUserDao implements UserDao {
                     Map<String, Object> user = new HashMap<>();
                     user.put("uuid", rs.getString("uuid"));
                     user.put("username", rs.getString("username"));
+                    user.put("username_normalized", rs.getString("username_normalized"));
                     user.put("email", rs.getString("email"));
                     user.put("status", rs.getString("status"));
                     user.put("password", rs.getString("password"));
@@ -651,11 +694,11 @@ public class MysqlUserDao implements UserDao {
     @Override
     public boolean updateUserDiscordId(String uuidOrName, String discordId) {
         debugLog("updateUserDiscordId called: uuidOrName=" + uuidOrName + ", discordId=" + discordId);
-        String sql = "UPDATE users SET discord_id=? WHERE uuid=? OR LOWER(username)=LOWER(?)";
+        String sql = "UPDATE users SET discord_id=? WHERE uuid=? OR " + usernameCondition();
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, discordId);
             ps.setString(2, uuidOrName);
-            ps.setString(3, uuidOrName);
+            ps.setString(3, normalizeUsername(uuidOrName));
             int rows = ps.executeUpdate();
             debugLog("User Discord ID updated: " + uuidOrName + " -> " + discordId + ", rows affected: " + rows);
             return rows > 0;
@@ -676,6 +719,7 @@ public class MysqlUserDao implements UserDao {
                     Map<String, Object> user = new HashMap<>();
                     user.put("uuid", rs.getString("uuid"));
                     user.put("username", rs.getString("username"));
+                    user.put("username_normalized", rs.getString("username_normalized"));
                     user.put("email", rs.getString("email"));
                     user.put("status", rs.getString("status"));
                     user.put("password", rs.getString("password"));
