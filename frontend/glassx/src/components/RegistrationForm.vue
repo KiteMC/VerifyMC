@@ -82,7 +82,7 @@
 
           <div v-if="discordEnabled" class="pt-2">
             <label class="block text-sm font-medium text-white mb-2">Discord {{ discordRequired ? '*' : '' }}</label>
-            <DiscordLink :username="form.username" :required="discordRequired" @linked="onDiscordLinked" @unlinked="onDiscordUnlinked" />
+            <DiscordLink :username="normalizedUsername" :required="discordRequired" @linked="onDiscordLinked" @unlinked="onDiscordUnlinked" />
             <p v-if="errors.discord" class="mt-1 text-sm text-red-400">{{ errors.discord }}</p>
           </div>
         </div>
@@ -151,14 +151,14 @@ const captchaEnabled = computed(() => config.value.captcha?.enabled || false)
 const emailEnabled = computed(() => config.value.captcha?.email_enabled !== false)
 const bedrockEnabled = computed(() => config.value.bedrock?.enabled || false)
 
-const normalizeUsernameForSubmit = () => {
+const normalizedUsername = computed(() => {
   const username = form.username.trim()
   if (!bedrockEnabled.value || form.platform !== 'bedrock') return username
 
   const prefix = config.value.bedrock?.prefix || '.'
   if (!prefix) return username
   return username.startsWith(prefix) ? username : `${prefix}${username}`
-}
+})
 
 const discordLinked = ref(false)
 const discordEnabled = computed(() => config.value.discord?.enabled || false)
@@ -214,8 +214,8 @@ const validateDiscord = () => {
 }
 const validateUsername = () => {
   errors.username = ''
-  const normalizedUsername = normalizeUsernameForSubmit()
-  if (!normalizedUsername) {
+  const submitUsername = normalizedUsername.value
+  if (!submitUsername) {
     errors.username = t('register.validation.username_required')
     return
   }
@@ -224,7 +224,7 @@ const validateUsername = () => {
     ? (config.value.bedrock?.username_regex || '^\\.[a-zA-Z0-9_\\s]{3,16}$')
     : (config.value.frontend?.username_regex || '^[a-zA-Z0-9_]+$')
 
-  if (!new RegExp(usernameRegex).test(normalizedUsername)) {
+  if (!new RegExp(usernameRegex).test(submitUsername)) {
     errors.username = t('register.validation.username_format', { regex: usernameRegex })
   }
 }
@@ -357,7 +357,7 @@ const handleSubmit = async () => {
   registrationSubmitted.value = false
   try {
     const registerData: any = {
-      username: normalizeUsernameForSubmit(),
+      username: normalizedUsername.value,
       email: form.email.trim().toLowerCase(),
       uuid: generateUUID(),
       language: locale.value,
