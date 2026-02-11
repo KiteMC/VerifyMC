@@ -381,6 +381,26 @@ public class WebServer {
         String regex = plugin.getConfig().getString("username_regex", "^[a-zA-Z0-9_-]{3,16}$");
         return username.matches(regex);
     }
+
+    private String normalizeBedrockUsername(String username) {
+        if (username == null) {
+            return "";
+        }
+        String normalized = username.trim();
+        String prefix = plugin.getConfig().getString("bedrock.prefix", ".");
+        if (prefix == null || prefix.isEmpty()) {
+            return normalized;
+        }
+        return normalized.startsWith(prefix) ? normalized : prefix + normalized;
+    }
+
+    private boolean isValidBedrockUsername(String username) {
+        if (username == null || username.trim().isEmpty()) {
+            return false;
+        }
+        String regex = plugin.getConfig().getString("bedrock.username_regex", "^\\.[a-zA-Z0-9_\\s]{3,16}$");
+        return username.matches(regex);
+    }
     private boolean isUsernameCaseConflict(String username) {
         return ((team.kitemc.verifymc.VerifyMC)plugin).isUsernameCaseConflict(username);
     }
@@ -1145,6 +1165,7 @@ public class WebServer {
             String code = req.optString("code");
             String uuid = req.optString("uuid");
             String username = req.optString("username");
+            String platform = req.optString("platform", "java").trim().toLowerCase();
             String password = req.optString("password", ""); // New password parameter
             String captchaToken = req.optString("captchaToken", "");
             String captchaAnswer = req.optString("captchaAnswer", "");
@@ -1194,6 +1215,14 @@ public class WebServer {
                     return;
                 }
             }
+            boolean bedrockEnabled = plugin.getConfig().getBoolean("bedrock.enabled", false);
+            boolean useBedrockUsernameRule = bedrockEnabled && "bedrock".equals(platform);
+            if (useBedrockUsernameRule) {
+                username = normalizeBedrockUsername(username);
+            } else if (username != null) {
+                username = username.trim();
+            }
+
             // Username uniqueness check
             if (userDao.getUserByUsername(username) != null) {
                 debugLog("Username already exists: " + username);
@@ -1204,10 +1233,12 @@ public class WebServer {
                 return;
             }
             // Pre-registration username rule validation and case conflict check
-            if (!isValidUsername(username)) {
+            if (useBedrockUsernameRule ? !isValidBedrockUsername(username) : !isValidUsername(username)) {
                 JSONObject resp = new JSONObject();
                 resp.put("success", false);
-                String usernameRegex = plugin.getConfig().getString("username_regex", "^[a-zA-Z0-9_-]{3,16}$");
+                String usernameRegex = useBedrockUsernameRule
+                    ? plugin.getConfig().getString("bedrock.username_regex", "^\\.[a-zA-Z0-9_\\s]{3,16}$")
+                    : plugin.getConfig().getString("username_regex", "^[a-zA-Z0-9_-]{3,16}$");
                 resp.put("msg", getMsg("username.invalid", language).replace("{regex}", usernameRegex));
                 sendJson(exchange, resp);
                 return;

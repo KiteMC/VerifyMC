@@ -29,6 +29,14 @@
 
       <form v-if="currentStep === 'basic'" @submit.prevent="goToQuestionnaire" class="space-y-5 relative z-10">
         <div class="space-y-3">
+          <div v-if="bedrockEnabled">
+            <label for="platform" class="block text-sm font-medium text-white mb-1">{{ $t('register.form.platform') }}</label>
+            <select id="platform" v-model="form.platform" class="glass-input">
+              <option value="java">{{ $t('register.form.platform_java') }}</option>
+              <option value="bedrock">{{ $t('register.form.platform_bedrock') }}</option>
+            </select>
+          </div>
+
           <div>
             <label for="username" class="block text-sm font-medium text-white mb-1">{{ $t('register.form.username') }}</label>
             <input id="username" v-model="form.username" type="text" :placeholder="$t('register.form.username_placeholder')" class="glass-input" :class="{ 'glass-input-error': errors.username }" @blur="validateUsername" />
@@ -74,7 +82,7 @@
 
           <div v-if="discordEnabled" class="pt-2">
             <label class="block text-sm font-medium text-white mb-2">Discord {{ discordRequired ? '*' : '' }}</label>
-            <DiscordLink :username="form.username" :required="discordRequired" @linked="onDiscordLinked" @unlinked="onDiscordUnlinked" />
+            <DiscordLink :username="normalizedUsername" :required="discordRequired" @linked="onDiscordLinked" @unlinked="onDiscordUnlinked" />
             <p v-if="errors.discord" class="mt-1 text-sm text-red-400">{{ errors.discord }}</p>
           </div>
         </div>
@@ -133,13 +141,24 @@ const config = ref<ConfigResponse>({
   frontend: { theme: '', logo_url: '', announcement: '', web_server_prefix: '', username_regex: '' },
   authme: { enabled: false, require_password: false, auto_register: false, auto_unregister: false, password_regex: '' },
   captcha: { enabled: false, email_enabled: true, type: 'math' },
-  questionnaire: { enabled: false, pass_score: 60, auto_approve_on_pass: false, require_pass_before_register: false }
+  questionnaire: { enabled: false, pass_score: 60, auto_approve_on_pass: false, require_pass_before_register: false },
+  bedrock: { enabled: false, prefix: '.', username_regex: '^\\.[a-zA-Z0-9_\\s]{3,16}$' }
 })
 
 const captchaImage = ref('')
 const captchaToken = ref('')
 const captchaEnabled = computed(() => config.value.captcha?.enabled || false)
 const emailEnabled = computed(() => config.value.captcha?.email_enabled !== false)
+const bedrockEnabled = computed(() => config.value.bedrock?.enabled || false)
+
+const normalizedUsername = computed(() => {
+  const username = form.username.trim()
+  if (!bedrockEnabled.value || form.platform !== 'bedrock') return username
+
+  const prefix = config.value.bedrock?.prefix || '.'
+  if (!prefix) return username
+  return username.startsWith(prefix) ? username : `${prefix}${username}`
+})
 
 const discordLinked = ref(false)
 const discordEnabled = computed(() => config.value.discord?.enabled || false)
@@ -176,7 +195,7 @@ const refreshCaptcha = async () => {
   }
 }
 
-const form = reactive({ username: '', email: '', code: '', password: '', captchaAnswer: '' })
+const form = reactive({ username: '', email: '', code: '', password: '', captchaAnswer: '', platform: 'java' as 'java' | 'bedrock' })
 const errors = reactive({ username: '', email: '', code: '', password: '', captcha: '', discord: '' })
 
 const onDiscordLinked = () => {
@@ -195,12 +214,18 @@ const validateDiscord = () => {
 }
 const validateUsername = () => {
   errors.username = ''
-  if (!form.username) {
+  const submitUsername = normalizedUsername.value
+  if (!submitUsername) {
     errors.username = t('register.validation.username_required')
-  } else if (config.value.frontend?.username_regex && !new RegExp(config.value.frontend.username_regex).test(form.username)) {
-    errors.username = t('register.validation.username_format', { regex: config.value.frontend.username_regex })
-  } else if (!config.value.frontend?.username_regex && !/^[a-zA-Z0-9_]+$/.test(form.username)) {
-    errors.username = t('register.validation.username_format', { regex: '^[a-zA-Z0-9_]+$' })
+    return
+  }
+
+  const usernameRegex = bedrockEnabled.value && form.platform === 'bedrock'
+    ? (config.value.bedrock?.username_regex || '^\\.[a-zA-Z0-9_\\s]{3,16}$')
+    : (config.value.frontend?.username_regex || '^[a-zA-Z0-9_]+$')
+
+  if (!new RegExp(usernameRegex).test(submitUsername)) {
+    errors.username = t('register.validation.username_format', { regex: usernameRegex })
   }
 }
 const validateEmail = () => {
@@ -332,10 +357,11 @@ const handleSubmit = async () => {
   registrationSubmitted.value = false
   try {
     const registerData: any = {
-      username: form.username,
+      username: normalizedUsername.value,
       email: form.email.trim().toLowerCase(),
       uuid: generateUUID(),
-      language: locale.value
+      language: locale.value,
+      platform: form.platform
     }
 
     if (emailEnabled.value) registerData.code = form.code

@@ -76,7 +76,10 @@
       "password": "密码",
       "password_placeholder": "请输入密码",
       "password_hint": "密码应符合正则表达式：{regex}",
-      "submit": "提交白名单申请"
+      "submit": "提交白名单申请",
+      "platform": "游戏版本",
+      "platform_java": "Java版",
+      "platform_bedrock": "基岩版"
     },
     "validation": {
       "username_required": "请输入用户名",
