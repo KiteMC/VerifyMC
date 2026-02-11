@@ -58,6 +58,8 @@ public class WebServer {
     private static final long TOKEN_EXPIRY_TIME = 3600000; // 1 hour
     private static final long QUESTIONNAIRE_SUBMISSION_TTL_MS = 10 * 60 * 1000; // 10 minutes
     private static final long CLEANUP_INTERVAL_MS = 300000; // 5 minutes
+    // Questionnaire token lifecycle: keep records until successful registration consumes them,
+    // otherwise let them expire naturally and be reclaimed by cleanupExpiredQuestionnaireSubmissions.
     private final ConcurrentHashMap<String, QuestionnaireSubmissionRecord> questionnaireSubmissionStore = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, WindowRateLimitRecord> questionnaireRateLimitStore = new ConcurrentHashMap<>();
     private Thread cleanupThread;
@@ -354,6 +356,7 @@ public class WebServer {
     }
 
     private void cleanupExpiredQuestionnaireSubmissions(long currentTime) {
+        // Records are retained for retry after non-questionnaire failures and removed here on natural expiry.
         questionnaireSubmissionStore.entrySet().removeIf(entry -> {
             QuestionnaireSubmissionRecord record = entry.getValue();
             return record == null || record.expiresAt <= currentTime || record.isExpired();
@@ -1177,6 +1180,7 @@ public class WebServer {
             }
 
             QuestionnaireSubmissionRecord questionnaireSubmissionRecord = null;
+            String questionnaireSubmissionToken = null;
             boolean questionnaireEnabled = questionnaireService.isEnabled();
             boolean requireQuestionnairePass = plugin.getConfig().getBoolean("questionnaire.require_pass_before_register", false) && questionnaireEnabled;
             boolean hasQuestionnairePayload = questionnaireEnabled && questionnaire != null && questionnaire.length() > 0;
@@ -1202,7 +1206,7 @@ public class WebServer {
                 }
 
                 cleanupExpiredQuestionnaireSubmissions(System.currentTimeMillis());
-                QuestionnaireSubmissionRecord record = questionnaireSubmissionStore.remove(questionnaireToken);
+                QuestionnaireSubmissionRecord record = questionnaireSubmissionStore.get(questionnaireToken);
                 if (record == null) {
                     questionnaireResp.put("success", false);
                     questionnaireResp.put("msg", getMsg("register.questionnaire_missing", language));
@@ -1232,6 +1236,7 @@ public class WebServer {
                 }
 
                 questionnaireSubmissionRecord = record;
+                questionnaireSubmissionToken = questionnaireToken;
             }
 
             JSONObject resp = new JSONObject();
@@ -1315,6 +1320,17 @@ public class WebServer {
                 
                 debugLog("registerUser result: " + ok);
                 if (ok) {
+                    if (submissionRecord != null && questionnaireSubmissionToken != null) {
+                        boolean questionnaireConsumed = questionnaireSubmissionStore.remove(questionnaireSubmissionToken, submissionRecord);
+                        if (!questionnaireConsumed) {
+                            plugin.getLogger().warning("[VerifyMC] Registration duplicated or replayed: questionnaire token already consumed, tokenHash=" + hashToken(questionnaireSubmissionToken));
+                            resp.put("success", false);
+                            resp.put("msg", getMsg("register.questionnaire_already_used", language));
+                            sendJson(exchange, resp);
+                            return;
+                        }
+                    }
+
                     // Registration successful, automatically add to whitelist
                     debugLog("Execute: whitelist add " + username);
                     org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
