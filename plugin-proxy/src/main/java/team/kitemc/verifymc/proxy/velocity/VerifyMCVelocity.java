@@ -81,7 +81,7 @@ public class VerifyMCVelocity {
         saveDefaultConfig();
         
         // Load configuration
-        config = new ProxyConfig(dataDirectory.toFile());
+        config = new ProxyConfig(dataDirectory.toFile(), julLogger);
         
         // Initialize API client
         apiClient = new ApiClient(config, julLogger);

@@ -290,6 +290,51 @@ public class WebServer {
         }
         return true;
     }
+
+    /**
+     * Read API key used by proxy-to-backend endpoints.
+     * Priority: proxy.api_key -> security.api_key.
+     */
+    private String getConfiguredProxyApiKey() {
+        String key = plugin.getConfig().getString("proxy.api_key", "");
+        if (key == null || key.isBlank()) {
+            key = plugin.getConfig().getString("security.api_key", "");
+        }
+        return key == null ? "" : key.trim();
+    }
+
+    /**
+     * Unified API key validation for proxy-facing endpoints.
+     *
+     * Supported request formats:
+     * - X-API-Key: <key>
+     * - Authorization: Bearer <key>
+     *
+     * If API key is not configured in the main plugin, validation is treated as disabled.
+     */
+    private boolean isApiKeyValid(HttpExchange exchange) {
+        String configuredApiKey = getConfiguredProxyApiKey();
+        if (configuredApiKey.isBlank()) {
+            return true;
+        }
+
+        String requestKey = exchange.getRequestHeaders().getFirst("X-API-Key");
+        if (requestKey == null || requestKey.isBlank()) {
+            String authHeader = exchange.getRequestHeaders().getFirst("Authorization");
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                requestKey = authHeader.substring(7);
+            }
+        }
+
+        if (requestKey == null || requestKey.isBlank()) {
+            return false;
+        }
+
+        return MessageDigest.isEqual(
+            configuredApiKey.getBytes(StandardCharsets.UTF_8),
+            requestKey.trim().getBytes(StandardCharsets.UTF_8)
+        );
+    }
     
     /**
      * Generate secure token
@@ -569,6 +614,19 @@ public class WebServer {
                 exchange.sendResponseHeaders(405, 0); 
                 exchange.close(); 
                 return; 
+            }
+
+            if (!isApiKeyValid(exchange)) {
+                debugLog("/api/check-whitelist unauthorized request");
+                JSONObject unauthorized = new JSONObject();
+                unauthorized.put("success", false);
+                unauthorized.put("msg", "Invalid API key");
+                byte[] data = unauthorized.toString().getBytes(StandardCharsets.UTF_8);
+                exchange.getResponseHeaders().add("Content-Type", "application/json; charset=utf-8");
+                exchange.sendResponseHeaders(401, data.length);
+                exchange.getResponseBody().write(data);
+                exchange.close();
+                return;
             }
             
             String query = exchange.getRequestURI().getQuery();

@@ -4,6 +4,12 @@ web_port: 8080
 web_server_prefix: '[ Name ]'
 web:
   trust_proxy: false
+security:
+  # 代理插件访问后端 API 使用的密钥（建议与 proxy.api_key 保持一致）
+  api_key: ""
+proxy:
+  # 可选：覆盖 security.api_key，供代理调用 /api/check-whitelist 等接口
+  api_key: ""
 auth_methods:
   - email
 max_accounts_per_email: 2
