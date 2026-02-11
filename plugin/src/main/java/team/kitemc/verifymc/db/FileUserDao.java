@@ -9,14 +9,17 @@ import com.google.gson.Gson;
 public class FileUserDao implements UserDao {
     private final File file;
     private final Map<String, Map<String, Object>> users = new ConcurrentHashMap<>();
+    private final Map<String, String> usernameIndex = new ConcurrentHashMap<>();
     private final Gson gson = new Gson();
     private final boolean debug;
     private final org.bukkit.plugin.Plugin plugin;
+    private final boolean usernameCaseSensitive;
 
     public FileUserDao(File dataFile, org.bukkit.plugin.Plugin plugin) {
         this.file = dataFile;
         this.plugin = plugin;
         this.debug = plugin.getConfig().getBoolean("debug", false);
+        this.usernameCaseSensitive = plugin.getConfig().getBoolean("username_case_sensitive", false);
         load();
     }
 
@@ -24,7 +27,30 @@ public class FileUserDao implements UserDao {
         this.file = dataFile;
         this.plugin = null;
         this.debug = false;
+        this.usernameCaseSensitive = false;
         load();
+    }
+
+    private String normalizeUsername(String username) {
+        if (username == null) {
+            return null;
+        }
+        return usernameCaseSensitive ? username : username.toLowerCase(Locale.ROOT);
+    }
+
+    private void rebuildUsernameIndex() {
+        usernameIndex.clear();
+        for (Map.Entry<String, Map<String, Object>> entry : users.entrySet()) {
+            Map<String, Object> user = entry.getValue();
+            if (user == null || user.get("username") == null) {
+                continue;
+            }
+            String normalized = normalizeUsername(user.get("username").toString());
+            if (normalized != null) {
+                usernameIndex.put(normalized, entry.getKey());
+            }
+        }
+        debugLog("Rebuilt username index, entries=" + usernameIndex.size());
     }
 
     private void debugLog(String msg) {
@@ -118,6 +144,7 @@ public class FileUserDao implements UserDao {
                 }
                 
                 users.putAll(loaded);
+                rebuildUsernameIndex();
                 debugLog("Loaded " + loaded.size() + " users from database");
                 
                 // If data upgrade occurred, save immediately
@@ -179,6 +206,7 @@ public class FileUserDao implements UserDao {
             applyQuestionnaireAuditFields(user, questionnaireScore, questionnairePassed, questionnaireReviewSummary, questionnaireScoredAt);
             debugLog("Adding user to map: " + user);
             users.put(uuid, user);
+            usernameIndex.put(normalizeUsername(username), uuid);
             save();
             debugLog("User registration successful");
             return true;
@@ -215,6 +243,7 @@ public class FileUserDao implements UserDao {
             applyQuestionnaireAuditFields(user, questionnaireScore, questionnairePassed, questionnaireReviewSummary, questionnaireScoredAt);
             debugLog("Adding user with password to map: " + user);
             users.put(uuid, user);
+            usernameIndex.put(normalizeUsername(username), uuid);
             save();
             debugLog("User registration with password successful");
             return true;
@@ -289,9 +318,12 @@ public class FileUserDao implements UserDao {
     @Override
     public Map<String, Object> getUserByUsername(String username) {
         debugLog("Getting user by username: " + username);
-        for (Map<String, Object> user : users.values()) {
-            if (user.get("username") != null && user.get("username").toString().equalsIgnoreCase(username)) {
-                debugLog("User found: " + user.get("uuid"));
+        String normalized = normalizeUsername(username);
+        String uuid = normalized != null ? usernameIndex.get(normalized) : null;
+        if (uuid != null) {
+            Map<String, Object> user = users.get(uuid);
+            if (user != null) {
+                debugLog("User found via username index: " + uuid);
                 return user;
             }
         }
@@ -300,11 +332,21 @@ public class FileUserDao implements UserDao {
     }
 
     @Override
-    public boolean deleteUser(String uuid) {
-        debugLog("deleteUser called: uuid=" + uuid);
+    public boolean deleteUser(String uuidOrName) {
+        debugLog("deleteUser called: uuidOrName=" + uuidOrName);
         try {
-            Map<String, Object> removed = users.remove(uuid);
+            Map<String, Object> removed = users.remove(uuidOrName);
+            if (removed == null) {
+                Map<String, Object> byName = getUserByUsername(uuidOrName);
+                if (byName != null && byName.get("uuid") != null) {
+                    removed = users.remove(byName.get("uuid").toString());
+                }
+            }
             if (removed != null) {
+                Object removedUsername = removed.get("username");
+                if (removedUsername != null) {
+                    usernameIndex.remove(normalizeUsername(removedUsername.toString()));
+                }
                 debugLog("User deleted: " + removed.get("username"));
                 save();
                 return true;
