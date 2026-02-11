@@ -378,7 +378,8 @@ public class WebServer {
         if (username == null || username.trim().isEmpty()) {
             return false;
         }
-        String regex = plugin.getConfig().getString("username_regex", "^[a-zA-Z0-9_-]{3,16}$");
+        String regex = plugin.getConfig().getString("register.username_regex",
+            plugin.getConfig().getString("username_regex", "^[a-zA-Z0-9_-]{3,16}$"));
         return username.matches(regex);
     }
 
@@ -400,6 +401,20 @@ public class WebServer {
         }
         String regex = plugin.getConfig().getString("bedrock.username_regex", "^\\.[a-zA-Z0-9_\\s]{3,16}$");
         return username.matches(regex);
+    }
+
+    private boolean shouldUseBedrockUsernameRule(String platform, String username) {
+        boolean bedrockEnabled = plugin.getConfig().getBoolean("bedrock.enabled", false);
+        if (!bedrockEnabled) {
+            return false;
+        }
+
+        if ("bedrock".equals(platform)) {
+            return true;
+        }
+
+        String bedrockPrefix = plugin.getConfig().getString("bedrock.prefix", ".");
+        return bedrockPrefix != null && !bedrockPrefix.isEmpty() && username != null && username.trim().startsWith(bedrockPrefix);
     }
     private boolean isUsernameCaseConflict(String username) {
         return ((team.kitemc.verifymc.VerifyMC)plugin).isUsernameCaseConflict(username);
@@ -587,7 +602,8 @@ public class WebServer {
             authme.put("auto_unregister", config.getBoolean("authme.auto_unregister", false));
             authme.put("password_regex", config.getString("authme.password_regex", "^[a-zA-Z0-9_]{3,16}$"));
             // Username regex pattern
-            frontend.put("username_regex", config.getString("username_regex", "^[a-zA-Z0-9_-]{3,16}$"));
+            frontend.put("username_regex", config.getString("register.username_regex",
+                config.getString("username_regex", "^[a-zA-Z0-9_-]{3,16}$")));
             
             // Captcha configuration
             JSONObject captcha = new JSONObject();
@@ -1215,8 +1231,7 @@ public class WebServer {
                     return;
                 }
             }
-            boolean bedrockEnabled = plugin.getConfig().getBoolean("bedrock.enabled", false);
-            boolean useBedrockUsernameRule = bedrockEnabled && "bedrock".equals(platform);
+            boolean useBedrockUsernameRule = shouldUseBedrockUsernameRule(platform, username);
             if (useBedrockUsernameRule) {
                 username = normalizeBedrockUsername(username);
             } else if (username != null) {
@@ -1238,7 +1253,8 @@ public class WebServer {
                 resp.put("success", false);
                 String usernameRegex = useBedrockUsernameRule
                     ? plugin.getConfig().getString("bedrock.username_regex", "^\\.[a-zA-Z0-9_\\s]{3,16}$")
-                    : plugin.getConfig().getString("username_regex", "^[a-zA-Z0-9_-]{3,16}$");
+                    : plugin.getConfig().getString("register.username_regex",
+                        plugin.getConfig().getString("username_regex", "^[a-zA-Z0-9_-]{3,16}$"));
                 resp.put("msg", getMsg("username.invalid", language).replace("{regex}", usernameRegex));
                 sendJson(exchange, resp);
                 return;
