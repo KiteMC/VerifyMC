@@ -1425,17 +1425,6 @@ public class WebServer {
                 
                 debugLog("registerUser result: " + ok);
                 if (ok) {
-                    if (submissionRecord != null && questionnaireSubmissionToken != null) {
-                        boolean questionnaireConsumed = questionnaireSubmissionStore.remove(questionnaireSubmissionToken, submissionRecord);
-                        if (!questionnaireConsumed) {
-                            plugin.getLogger().warning("[VerifyMC] Registration duplicated or replayed: questionnaire token already consumed, tokenHash=" + hashToken(questionnaireSubmissionToken));
-                            resp.put("success", false);
-                            resp.put("msg", getMsg("register.questionnaire_already_used", language));
-                            sendJson(exchange, resp);
-                            return;
-                        }
-                    }
-
                     // Registration successful, automatically add to whitelist
                     debugLog("Execute: whitelist add " + username);
                     org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
@@ -1446,6 +1435,17 @@ public class WebServer {
                     if (authmeService.isAuthmeEnabled() && authmeService.isAutoRegisterEnabled() && 
                         password != null && !password.trim().isEmpty()) {
                         authmeService.registerToAuthme(username, password);
+                    }
+
+                    if (submissionRecord != null && questionnaireSubmissionToken != null) {
+                        boolean questionnaireConsumed = questionnaireSubmissionStore.remove(questionnaireSubmissionToken, submissionRecord);
+                        if (!questionnaireConsumed) {
+                            plugin.getLogger().warning("[VerifyMC] Registration duplicated or replayed: questionnaire token already consumed, tokenHash=" + hashToken(questionnaireSubmissionToken));
+                            resp.put("success", false);
+                            resp.put("msg", getMsg("register.questionnaire_already_used", language));
+                            sendJson(exchange, resp);
+                            return;
+                        }
                     }
                 }
                 if (!ok) {
