@@ -76,7 +76,10 @@
       "password": "Password",
       "password_placeholder": "Enter your password",
       "password_hint": "Password must match regex: {regex}",
-      "submit": "Submit Whitelist Application"
+      "submit": "Submit Whitelist Application",
+      "platform": "Game Edition",
+      "platform_java": "Java Edition",
+      "platform_bedrock": "Bedrock Edition"
     },
     "validation": {
       "username_required": "Please enter username",
