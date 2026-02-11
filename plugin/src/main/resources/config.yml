@@ -104,6 +104,7 @@ llm:
   retry_backoff_base: 300
   retry_backoff_max: 5000
   input_max_length: 2000
+  confidence_threshold: 0.6
   circuit_breaker:
     failure_threshold: 5
     open_ms: 30000

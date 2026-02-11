@@ -59,7 +59,8 @@ public class QuestionnaireService {
             plugin.getConfig().getInt("llm.retry_backoff_max", 5000),
             plugin.getConfig().getInt("llm.circuit_breaker.failure_threshold", 5),
             plugin.getConfig().getInt("llm.circuit_breaker.open_ms", 30000),
-            plugin.getConfig().getInt("llm.input_max_length", 2000)
+            plugin.getConfig().getInt("llm.input_max_length", 2000),
+            plugin.getConfig().getDouble("llm.confidence_threshold", 0.6D)
         );
 
         if ("google".equals(provider)) {

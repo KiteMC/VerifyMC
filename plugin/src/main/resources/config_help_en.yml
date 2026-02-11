@@ -241,6 +241,8 @@ llm:
     1) Relevance to the question
     2) Completeness and level of detail
     3) Understanding of server rules and community norms
+  # Force manual review when model confidence is below this threshold (range 0~1)
+  confidence_threshold: 0.6
   # Expected model output schema (JSON)
   score_format: '{"score": number, "reason": string, "confidence": number}'
 
