@@ -2,6 +2,8 @@ language: zh
 debug: false
 web_port: 8080
 web_server_prefix: '[ Name ]'
+web:
+  trust_proxy: false
 auth_methods:
   - email
 max_accounts_per_email: 2

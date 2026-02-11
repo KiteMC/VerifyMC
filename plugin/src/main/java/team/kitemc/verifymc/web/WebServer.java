@@ -49,6 +49,7 @@ public class WebServer {
     private final ReviewWebSocketServer wsServer;
     private final ResourceBundle messages;
     private final boolean debug;
+    private final boolean trustProxy;
     private final HashMap<String, ResourceBundle> languageCache = new HashMap<>();
     
     // Authentication related
@@ -86,6 +87,9 @@ public class WebServer {
         this.wsServer = wsServer;
         this.messages = messages;
         this.debug = plugin.getConfig().getBoolean("debug", false);
+        this.trustProxy = plugin.getConfig().contains("web.trust_proxy")
+            ? plugin.getConfig().getBoolean("web.trust_proxy", false)
+            : plugin.getConfig().getBoolean("security.trust_proxy", false);
     }
 
 
@@ -158,9 +162,14 @@ public class WebServer {
     }
 
     private String getClientIp(HttpExchange exchange) {
-        String forwarded = exchange.getRequestHeaders().getFirst("X-Forwarded-For");
-        if (forwarded != null && !forwarded.isBlank()) {
-            return forwarded.split(",")[0].trim();
+        if (trustProxy) {
+            String forwarded = exchange.getRequestHeaders().getFirst("X-Forwarded-For");
+            if (forwarded != null && !forwarded.isBlank()) {
+                String firstForwardedIp = forwarded.split(",")[0].trim();
+                if (!firstForwardedIp.isEmpty()) {
+                    return firstForwardedIp;
+                }
+            }
         }
         if (exchange.getRemoteAddress() != null && exchange.getRemoteAddress().getAddress() != null) {
             return exchange.getRemoteAddress().getAddress().getHostAddress();
