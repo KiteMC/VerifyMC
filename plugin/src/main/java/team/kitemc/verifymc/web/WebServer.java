@@ -57,8 +57,10 @@ public class WebServer {
     private final Pattern UUID_PATTERN = Pattern.compile("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$");
     private static final long TOKEN_EXPIRY_TIME = 3600000; // 1 hour
     private static final long QUESTIONNAIRE_SUBMISSION_TTL_MS = 10 * 60 * 1000; // 10 minutes
+    private static final long CLEANUP_INTERVAL_MS = 300000; // 5 minutes
     private final ConcurrentHashMap<String, QuestionnaireSubmissionRecord> questionnaireSubmissionStore = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, WindowRateLimitRecord> questionnaireRateLimitStore = new ConcurrentHashMap<>();
+    private Thread cleanupThread;
 
     // Default mainstream email domain whitelist
     private static final java.util.List<String> DEFAULT_EMAIL_DOMAIN_WHITELIST = Arrays.asList(
@@ -138,6 +140,7 @@ public class WebServer {
             return new RateLimitDecision(true, 0L);
         }
         long now = System.currentTimeMillis();
+        questionnaireRateLimitStore.computeIfPresent(key, (k, old) -> now - old.windowStart >= windowMs ? null : old);
         WindowRateLimitRecord rec = questionnaireRateLimitStore.compute(key, (k, old) -> {
             if (old == null || now - old.windowStart >= windowMs) {
                 return new WindowRateLimitRecord(1, now);
@@ -323,17 +326,50 @@ public class WebServer {
      * Scheduled task to clean up expired tokens
      */
     private void startTokenCleanupTask() {
-        new Thread(() -> {
-            while (true) {
+        if (cleanupThread != null && cleanupThread.isAlive()) {
+            return;
+        }
+        cleanupThread = new Thread(() -> {
+            while (!Thread.currentThread().isInterrupted()) {
                 try {
-                    Thread.sleep(300000); // Clean up every 5 minutes
+                    Thread.sleep(CLEANUP_INTERVAL_MS);
                     long currentTime = System.currentTimeMillis();
                     validTokens.entrySet().removeIf(entry -> entry.getValue() < currentTime);
+                    cleanupExpiredQuestionnaireSubmissions(currentTime);
+                    cleanupStaleQuestionnaireRateLimits(currentTime);
                 } catch (InterruptedException e) {
-                    break;
+                    Thread.currentThread().interrupt();
                 }
             }
-        }).start();
+        }, "VerifyMC-Web-Cleanup");
+        cleanupThread.setDaemon(true);
+        cleanupThread.start();
+    }
+
+    private void stopCleanupTask() {
+        if (cleanupThread != null) {
+            cleanupThread.interrupt();
+            cleanupThread = null;
+        }
+    }
+
+    private void cleanupExpiredQuestionnaireSubmissions(long currentTime) {
+        questionnaireSubmissionStore.entrySet().removeIf(entry -> {
+            QuestionnaireSubmissionRecord record = entry.getValue();
+            return record == null || record.expiresAt <= currentTime || record.isExpired();
+        });
+    }
+
+    private void cleanupStaleQuestionnaireRateLimits(long currentTime) {
+        long windowMs = plugin.getConfig().getLong("questionnaire.rate_limit.window_ms", 300000L);
+        if (windowMs <= 0) {
+            questionnaireRateLimitStore.clear();
+            return;
+        }
+        questionnaireRateLimitStore.entrySet().removeIf(entry -> {
+            WindowRateLimitRecord record = entry.getValue();
+            return record == null || currentTime - record.windowStart >= windowMs;
+        });
     }
 
     /**
@@ -1166,6 +1202,7 @@ public class WebServer {
                     return;
                 }
 
+                cleanupExpiredQuestionnaireSubmissions(System.currentTimeMillis());
                 QuestionnaireSubmissionRecord record = questionnaireSubmissionStore.remove(questionnaireToken);
                 if (record == null) {
                     questionnaireResp.put("success", false);
@@ -2027,6 +2064,7 @@ public class WebServer {
     }
 
     public void stop() {
+        stopCleanupTask();
         if (server != null) server.stop(0);
     }
 
