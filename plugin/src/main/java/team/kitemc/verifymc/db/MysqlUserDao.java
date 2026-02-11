@@ -118,6 +118,58 @@ public class MysqlUserDao implements UserDao {
         if (debug) plugin.getLogger().info("[DEBUG] MysqlUserDao: " + msg);
     }
 
+    private boolean userExists(String uuid) {
+        String checkSql = "SELECT uuid FROM users WHERE uuid = ?";
+        try (PreparedStatement checkPs = conn.prepareStatement(checkSql)) {
+            checkPs.setString(1, uuid);
+            ResultSet rs = checkPs.executeQuery();
+            if (rs.next()) {
+                debugLog("User already exists with UUID: " + uuid + ", skipping registration");
+                return true;
+            }
+            return false;
+        } catch (SQLException e) {
+            debugLog("Error checking existing user: " + e.getMessage());
+            return true;
+        }
+    }
+
+    private boolean insertUser(String uuid, String username, String email, String status, String password,
+                               Integer questionnaireScore, Boolean questionnairePassed,
+                               String questionnaireReviewSummary, Long questionnaireScoredAt) {
+        boolean hasPassword = password != null;
+        String sql;
+        if (hasPassword) {
+            sql = "INSERT INTO users (uuid, username, email, status, password, regTime, questionnaire_score, questionnaire_passed, questionnaire_review_summary, questionnaire_scored_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        } else {
+            sql = "INSERT INTO users (uuid, username, email, status, regTime, questionnaire_score, questionnaire_passed, questionnaire_review_summary, questionnaire_scored_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        }
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, uuid);
+            ps.setString(2, username);
+            ps.setString(3, email);
+            ps.setString(4, status);
+
+            int index = 5;
+            if (hasPassword) {
+                ps.setString(index++, password);
+            }
+
+            ps.setLong(index++, System.currentTimeMillis());
+            if (questionnaireScore != null) ps.setInt(index++, questionnaireScore); else ps.setNull(index++, Types.INTEGER);
+            if (questionnairePassed != null) ps.setBoolean(index++, questionnairePassed); else ps.setNull(index++, Types.BOOLEAN);
+            ps.setString(index++, questionnaireReviewSummary);
+            if (questionnaireScoredAt != null) ps.setLong(index, questionnaireScoredAt); else ps.setNull(index, Types.BIGINT);
+            ps.executeUpdate();
+            debugLog("User registered: " + username);
+            return true;
+        } catch (SQLException e) {
+            debugLog(messages.getString("storage.migrate.fail").replace("{0}", e.getMessage()));
+            return false;
+        }
+    }
+
     @Override
     public boolean registerUser(String uuid, String username, String email, String status) {
         return registerUser(uuid, username, email, status, null, null, null, null);
@@ -127,38 +179,11 @@ public class MysqlUserDao implements UserDao {
     public boolean registerUser(String uuid, String username, String email, String status,
                                 Integer questionnaireScore, Boolean questionnairePassed,
                                 String questionnaireReviewSummary, Long questionnaireScoredAt) {
-        // First check if user already exists
-        String checkSql = "SELECT uuid FROM users WHERE uuid = ?";
-        try (PreparedStatement checkPs = conn.prepareStatement(checkSql)) {
-            checkPs.setString(1, uuid);
-            ResultSet rs = checkPs.executeQuery();
-            if (rs.next()) {
-                debugLog("User already exists with UUID: " + uuid + ", skipping registration");
-                return false;
-            }
-        } catch (SQLException e) {
-            debugLog("Error checking existing user: " + e.getMessage());
+        if (userExists(uuid)) {
             return false;
         }
-
-        String sql = "INSERT INTO users (uuid, username, email, status, regTime, questionnaire_score, questionnaire_passed, questionnaire_review_summary, questionnaire_scored_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, uuid);
-            ps.setString(2, username);
-            ps.setString(3, email);
-            ps.setString(4, status);
-            ps.setLong(5, System.currentTimeMillis());
-            if (questionnaireScore != null) ps.setInt(6, questionnaireScore); else ps.setNull(6, Types.INTEGER);
-            if (questionnairePassed != null) ps.setBoolean(7, questionnairePassed); else ps.setNull(7, Types.BOOLEAN);
-            ps.setString(8, questionnaireReviewSummary);
-            if (questionnaireScoredAt != null) ps.setLong(9, questionnaireScoredAt); else ps.setNull(9, Types.BIGINT);
-            ps.executeUpdate();
-            debugLog("User registered: " + username);
-            return true;
-        } catch (SQLException e) {
-            debugLog(messages.getString("storage.migrate.fail").replace("{0}", e.getMessage()));
-            return false;
-        }
+        return insertUser(uuid, username, email, status, null,
+                questionnaireScore, questionnairePassed, questionnaireReviewSummary, questionnaireScoredAt);
     }
 
     @Override
@@ -170,39 +195,11 @@ public class MysqlUserDao implements UserDao {
     public boolean registerUser(String uuid, String username, String email, String status, String password,
                                 Integer questionnaireScore, Boolean questionnairePassed,
                                 String questionnaireReviewSummary, Long questionnaireScoredAt) {
-        // First check if user already exists
-        String checkSql = "SELECT uuid FROM users WHERE uuid = ?";
-        try (PreparedStatement checkPs = conn.prepareStatement(checkSql)) {
-            checkPs.setString(1, uuid);
-            ResultSet rs = checkPs.executeQuery();
-            if (rs.next()) {
-                debugLog("User already exists with UUID: " + uuid + ", skipping registration");
-                return false;
-            }
-        } catch (SQLException e) {
-            debugLog("Error checking existing user: " + e.getMessage());
+        if (userExists(uuid)) {
             return false;
         }
-
-        String sql = "INSERT INTO users (uuid, username, email, status, password, regTime, questionnaire_score, questionnaire_passed, questionnaire_review_summary, questionnaire_scored_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, uuid);
-            ps.setString(2, username);
-            ps.setString(3, email);
-            ps.setString(4, status);
-            ps.setString(5, password);
-            ps.setLong(6, System.currentTimeMillis());
-            if (questionnaireScore != null) ps.setInt(7, questionnaireScore); else ps.setNull(7, Types.INTEGER);
-            if (questionnairePassed != null) ps.setBoolean(8, questionnairePassed); else ps.setNull(8, Types.BOOLEAN);
-            ps.setString(9, questionnaireReviewSummary);
-            if (questionnaireScoredAt != null) ps.setLong(10, questionnaireScoredAt); else ps.setNull(10, Types.BIGINT);
-            ps.executeUpdate();
-            debugLog("User registered with password: " + username);
-            return true;
-        } catch (SQLException e) {
-            debugLog(messages.getString("storage.migrate.fail").replace("{0}", e.getMessage()));
-            return false;
-        }
+        return insertUser(uuid, username, email, status, password,
+                questionnaireScore, questionnairePassed, questionnaireReviewSummary, questionnaireScoredAt);
     }
 
     @Override
