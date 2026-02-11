@@ -29,6 +29,34 @@
 
       <form v-if="currentStep === 'basic'" @submit.prevent="goToQuestionnaire" class="space-y-5 relative z-10">
         <div class="space-y-3">
+          <div v-if="bedrockEnabled">
+            <label for="platform-java" class="block text-sm font-medium text-white mb-1">{{ $t('register.form.platform') }}</label>
+            <div class="platform-switch" role="radiogroup" :aria-label="$t('register.form.platform')">
+              <button
+                id="platform-java"
+                type="button"
+                role="radio"
+                :aria-checked="form.platform === 'java'"
+                class="platform-switch-option"
+                :class="{ 'platform-switch-option-active': form.platform === 'java' }"
+                @click="form.platform = 'java'"
+              >
+                {{ $t('register.form.platform_java') }}
+              </button>
+              <button
+                id="platform-bedrock"
+                type="button"
+                role="radio"
+                :aria-checked="form.platform === 'bedrock'"
+                class="platform-switch-option"
+                :class="{ 'platform-switch-option-active': form.platform === 'bedrock' }"
+                @click="form.platform = 'bedrock'"
+              >
+                {{ $t('register.form.platform_bedrock') }}
+              </button>
+            </div>
+          </div>
+
           <div>
             <label for="username" class="block text-sm font-medium text-white mb-1">{{ $t('register.form.username') }}</label>
             <input id="username" v-model="form.username" type="text" :placeholder="$t('register.form.username_placeholder')" class="glass-input" :class="{ 'glass-input-error': errors.username }" @blur="validateUsername" />
@@ -74,7 +102,7 @@
 
           <div v-if="discordEnabled" class="pt-2">
             <label class="block text-sm font-medium text-white mb-2">Discord {{ discordRequired ? '*' : '' }}</label>
-            <DiscordLink :username="form.username" :required="discordRequired" @linked="onDiscordLinked" @unlinked="onDiscordUnlinked" />
+            <DiscordLink :username="normalizedUsername" :required="discordRequired" @linked="onDiscordLinked" @unlinked="onDiscordUnlinked" />
             <p v-if="errors.discord" class="mt-1 text-sm text-red-400">{{ errors.discord }}</p>
           </div>
         </div>
@@ -133,13 +161,24 @@ const config = ref<ConfigResponse>({
   frontend: { theme: '', logo_url: '', announcement: '', web_server_prefix: '', username_regex: '' },
   authme: { enabled: false, require_password: false, auto_register: false, auto_unregister: false, password_regex: '' },
   captcha: { enabled: false, email_enabled: true, type: 'math' },
-  questionnaire: { enabled: false, pass_score: 60, auto_approve_on_pass: false, require_pass_before_register: false }
+  questionnaire: { enabled: false, pass_score: 60, auto_approve_on_pass: false, require_pass_before_register: false },
+  bedrock: { enabled: false, prefix: '.', username_regex: '^\\.[a-zA-Z0-9_\\s]{3,16}$' }
 })
 
 const captchaImage = ref('')
 const captchaToken = ref('')
 const captchaEnabled = computed(() => config.value.captcha?.enabled || false)
 const emailEnabled = computed(() => config.value.captcha?.email_enabled !== false)
+const bedrockEnabled = computed(() => config.value.bedrock?.enabled || false)
+
+const normalizedUsername = computed(() => {
+  const username = form.username.trim()
+  if (!bedrockEnabled.value || form.platform !== 'bedrock') return username
+
+  const prefix = config.value.bedrock?.prefix || '.'
+  if (!prefix) return username
+  return username.startsWith(prefix) ? username : `${prefix}${username}`
+})
 
 const discordLinked = ref(false)
 const discordEnabled = computed(() => config.value.discord?.enabled || false)
@@ -176,7 +215,7 @@ const refreshCaptcha = async () => {
   }
 }
 
-const form = reactive({ username: '', email: '', code: '', password: '', captchaAnswer: '' })
+const form = reactive({ username: '', email: '', code: '', password: '', captchaAnswer: '', platform: 'java' as 'java' | 'bedrock' })
 const errors = reactive({ username: '', email: '', code: '', password: '', captcha: '', discord: '' })
 
 const onDiscordLinked = () => {
@@ -195,12 +234,18 @@ const validateDiscord = () => {
 }
 const validateUsername = () => {
   errors.username = ''
-  if (!form.username) {
+  const submitUsername = normalizedUsername.value
+  if (!submitUsername) {
     errors.username = t('register.validation.username_required')
-  } else if (config.value.frontend?.username_regex && !new RegExp(config.value.frontend.username_regex).test(form.username)) {
-    errors.username = t('register.validation.username_format', { regex: config.value.frontend.username_regex })
-  } else if (!config.value.frontend?.username_regex && !/^[a-zA-Z0-9_]+$/.test(form.username)) {
-    errors.username = t('register.validation.username_format', { regex: '^[a-zA-Z0-9_]+$' })
+    return
+  }
+
+  const usernameRegex = bedrockEnabled.value && form.platform === 'bedrock'
+    ? (config.value.bedrock?.username_regex || '^\\.[a-zA-Z0-9_\\s]{3,16}$')
+    : (config.value.frontend?.username_regex || '^[a-zA-Z0-9_]+$')
+
+  if (!new RegExp(usernameRegex).test(submitUsername)) {
+    errors.username = t('register.validation.username_format', { regex: usernameRegex })
   }
 }
 const validateEmail = () => {
@@ -332,10 +377,11 @@ const handleSubmit = async () => {
   registrationSubmitted.value = false
   try {
     const registerData: any = {
-      username: form.username,
+      username: normalizedUsername.value,
       email: form.email.trim().toLowerCase(),
       uuid: generateUUID(),
-      language: locale.value
+      language: locale.value,
+      platform: form.platform
     }
 
     if (emailEnabled.value) registerData.code = form.code
@@ -381,6 +427,11 @@ function generateUUID() {
 .glass-input::placeholder { color: rgba(255,255,255,.4); }
 .glass-input:hover { background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.25); }
 .glass-input:focus { background: rgba(255,255,255,.12); border-color: rgba(59,130,246,.5); box-shadow: 0 0 0 3px rgba(59,130,246,.15), 0 0 20px rgba(59,130,246,.2); }
+.platform-switch { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .35rem; padding: .3rem; background: rgba(255,255,255,.08); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,.16); border-radius: 9999px; box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 10px 24px rgba(0,0,0,.15); }
+.platform-switch-option { border: 1px solid transparent; border-radius: 9999px; padding: .55rem .8rem; color: rgba(255,255,255,.75); font-size: .92rem; font-weight: 500; line-height: 1.2; background: transparent; cursor: pointer; transition: all .25s cubic-bezier(.4,0,.2,1); }
+.platform-switch-option:hover { color: rgba(255,255,255,.95); background: rgba(255,255,255,.08); }
+.platform-switch-option:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(59,130,246,.3); }
+.platform-switch-option-active { color: #fff; border-color: rgba(255,255,255,.25); background: linear-gradient(135deg, rgba(59,130,246,.45) 0%, rgba(139,92,246,.45) 100%); box-shadow: 0 6px 16px rgba(59,130,246,.3), inset 0 1px 0 rgba(255,255,255,.24); }
 .glass-input-error { border-color: rgba(239,68,68,.5)!important; }
 .glass-input-error:focus { border-color: rgba(239,68,68,.6)!important; box-shadow: 0 0 0 3px rgba(239,68,68,.15), 0 0 20px rgba(239,68,68,.2)!important; }
 .glass-button-secondary { padding: .75rem 1.25rem; background: rgba(255,255,255,.1); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,.2); border-radius: 12px; color: #fff; font-weight: 500; white-space: nowrap; cursor: pointer; transition: all .3s cubic-bezier(.4,0,.2,1); }

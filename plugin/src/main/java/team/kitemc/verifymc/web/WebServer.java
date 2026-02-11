@@ -378,8 +378,43 @@ public class WebServer {
         if (username == null || username.trim().isEmpty()) {
             return false;
         }
-        String regex = plugin.getConfig().getString("username_regex", "^[a-zA-Z0-9_-]{3,16}$");
+        String regex = plugin.getConfig().getString("register.username_regex",
+            plugin.getConfig().getString("username_regex", "^[a-zA-Z0-9_-]{3,16}$"));
         return username.matches(regex);
+    }
+
+    private String normalizeBedrockUsername(String username) {
+        if (username == null) {
+            return "";
+        }
+        String normalized = username.trim();
+        String prefix = plugin.getConfig().getString("bedrock.prefix", ".");
+        if (prefix == null || prefix.isEmpty()) {
+            return normalized;
+        }
+        return normalized.startsWith(prefix) ? normalized : prefix + normalized;
+    }
+
+    private boolean isValidBedrockUsername(String username) {
+        if (username == null || username.trim().isEmpty()) {
+            return false;
+        }
+        String regex = plugin.getConfig().getString("bedrock.username_regex", "^\\.[a-zA-Z0-9_\\s]{3,16}$");
+        return username.matches(regex);
+    }
+
+    private boolean shouldUseBedrockUsernameRule(String platform, String username) {
+        boolean bedrockEnabled = plugin.getConfig().getBoolean("bedrock.enabled", false);
+        if (!bedrockEnabled) {
+            return false;
+        }
+
+        if ("bedrock".equals(platform)) {
+            return true;
+        }
+
+        String bedrockPrefix = plugin.getConfig().getString("bedrock.prefix", ".");
+        return bedrockPrefix != null && !bedrockPrefix.isEmpty() && username != null && username.trim().startsWith(bedrockPrefix);
     }
     private boolean isUsernameCaseConflict(String username) {
         return ((team.kitemc.verifymc.VerifyMC)plugin).isUsernameCaseConflict(username);
@@ -567,7 +602,8 @@ public class WebServer {
             authme.put("auto_unregister", config.getBoolean("authme.auto_unregister", false));
             authme.put("password_regex", config.getString("authme.password_regex", "^[a-zA-Z0-9_]{3,16}$"));
             // Username regex pattern
-            frontend.put("username_regex", config.getString("username_regex", "^[a-zA-Z0-9_-]{3,16}$"));
+            frontend.put("username_regex", config.getString("register.username_regex",
+                config.getString("username_regex", "^[a-zA-Z0-9_-]{3,16}$")));
             
             // Captcha configuration
             JSONObject captcha = new JSONObject();
@@ -1145,6 +1181,7 @@ public class WebServer {
             String code = req.optString("code");
             String uuid = req.optString("uuid");
             String username = req.optString("username");
+            String platform = req.optString("platform", "java").trim().toLowerCase();
             String password = req.optString("password", ""); // New password parameter
             String captchaToken = req.optString("captchaToken", "");
             String captchaAnswer = req.optString("captchaAnswer", "");
@@ -1194,6 +1231,13 @@ public class WebServer {
                     return;
                 }
             }
+            boolean useBedrockUsernameRule = shouldUseBedrockUsernameRule(platform, username);
+            if (useBedrockUsernameRule) {
+                username = normalizeBedrockUsername(username);
+            } else if (username != null) {
+                username = username.trim();
+            }
+
             // Username uniqueness check
             if (userDao.getUserByUsername(username) != null) {
                 debugLog("Username already exists: " + username);
@@ -1204,10 +1248,13 @@ public class WebServer {
                 return;
             }
             // Pre-registration username rule validation and case conflict check
-            if (!isValidUsername(username)) {
+            if (useBedrockUsernameRule ? !isValidBedrockUsername(username) : !isValidUsername(username)) {
                 JSONObject resp = new JSONObject();
                 resp.put("success", false);
-                String usernameRegex = plugin.getConfig().getString("username_regex", "^[a-zA-Z0-9_-]{3,16}$");
+                String usernameRegex = useBedrockUsernameRule
+                    ? plugin.getConfig().getString("bedrock.username_regex", "^\\.[a-zA-Z0-9_\\s]{3,16}$")
+                    : plugin.getConfig().getString("register.username_regex",
+                        plugin.getConfig().getString("username_regex", "^[a-zA-Z0-9_-]{3,16}$"));
                 resp.put("msg", getMsg("username.invalid", language).replace("{regex}", usernameRegex));
                 sendJson(exchange, resp);
                 return;
@@ -1394,6 +1441,19 @@ public class WebServer {
                 
                 debugLog("registerUser result: " + ok);
                 if (ok) {
+                    // Registration successful, automatically add to whitelist
+                    String registeredUsername = username;
+                    debugLog("Execute: whitelist add " + registeredUsername);
+                    org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
+                        org.bukkit.Bukkit.dispatchCommand(org.bukkit.Bukkit.getConsoleSender(), "whitelist add " + registeredUsername);
+                    });
+                    
+                    // If Authme integration is enabled and auto registration is enabled, register to Authme
+                    if (authmeService.isAuthmeEnabled() && authmeService.isAutoRegisterEnabled() && 
+                        password != null && !password.trim().isEmpty()) {
+                        authmeService.registerToAuthme(username, password);
+                    }
+
                     if (submissionRecord != null && questionnaireSubmissionToken != null) {
                         boolean questionnaireConsumed = questionnaireSubmissionStore.remove(questionnaireSubmissionToken, submissionRecord);
                         if (!questionnaireConsumed) {
@@ -1403,18 +1463,6 @@ public class WebServer {
                             sendJson(exchange, resp);
                             return;
                         }
-                    }
-
-                    // Registration successful, automatically add to whitelist
-                    debugLog("Execute: whitelist add " + username);
-                    org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
-                        org.bukkit.Bukkit.dispatchCommand(org.bukkit.Bukkit.getConsoleSender(), "whitelist add " + username);
-                    });
-                    
-                    // If Authme integration is enabled and auto registration is enabled, register to Authme
-                    if (authmeService.isAuthmeEnabled() && authmeService.isAutoRegisterEnabled() && 
-                        password != null && !password.trim().isEmpty()) {
-                        authmeService.registerToAuthme(username, password);
                     }
                 }
                 if (!ok) {

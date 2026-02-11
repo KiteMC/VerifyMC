@@ -43,6 +43,11 @@ export interface ConfigResponse {
     auto_approve_on_pass: boolean
     require_pass_before_register?: boolean
   }
+  bedrock?: {
+    enabled: boolean
+    prefix: string
+    username_regex: string
+  }
 }
 
 export interface QuestionnaireAnswer {
@@ -87,6 +92,7 @@ export interface RegisterRequest {
   captchaToken?: string
   captchaAnswer?: string
   language: string
+  platform?: 'java' | 'bedrock'
   questionnaire?: QuestionnaireSubmission
 }
 

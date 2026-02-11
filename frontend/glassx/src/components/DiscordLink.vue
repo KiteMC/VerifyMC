@@ -92,18 +92,33 @@ const startDiscordLink = async () => {
 }
 
 const checkLinkStatus = async () => {
-  if (!props.username) return
+  if (!props.username) {
+    linked.value = false
+    discordUser.value = null
+    emit('unlinked')
+    return
+  }
   
   try {
     const response = await apiService.getDiscordStatus(props.username)
-    
+
     if (response.success && response.linked) {
+      const wasLinked = linked.value
       linked.value = true
       discordUser.value = response.user
       stopPolling()
       emit('linked', response.user)
-      success(t('discord.link_success'))
+      if (!wasLinked) {
+        success(t('discord.link_success'))
+      }
+      return
     }
+
+    if (linked.value) {
+      emit('unlinked')
+    }
+    linked.value = false
+    discordUser.value = null
   } catch (e) {
     console.error('Check Discord status error:', e)
   }
