@@ -30,11 +30,31 @@
       <form v-if="currentStep === 'basic'" @submit.prevent="goToQuestionnaire" class="space-y-5 relative z-10">
         <div class="space-y-3">
           <div v-if="bedrockEnabled">
-            <label for="platform" class="block text-sm font-medium text-white mb-1">{{ $t('register.form.platform') }}</label>
-            <select id="platform" v-model="form.platform" class="glass-input">
-              <option value="java">{{ $t('register.form.platform_java') }}</option>
-              <option value="bedrock">{{ $t('register.form.platform_bedrock') }}</option>
-            </select>
+            <label for="platform-java" class="block text-sm font-medium text-white mb-1">{{ $t('register.form.platform') }}</label>
+            <div class="platform-switch" role="radiogroup" :aria-label="$t('register.form.platform')">
+              <button
+                id="platform-java"
+                type="button"
+                role="radio"
+                :aria-checked="form.platform === 'java'"
+                class="platform-switch-option"
+                :class="{ 'platform-switch-option-active': form.platform === 'java' }"
+                @click="form.platform = 'java'"
+              >
+                {{ $t('register.form.platform_java') }}
+              </button>
+              <button
+                id="platform-bedrock"
+                type="button"
+                role="radio"
+                :aria-checked="form.platform === 'bedrock'"
+                class="platform-switch-option"
+                :class="{ 'platform-switch-option-active': form.platform === 'bedrock' }"
+                @click="form.platform = 'bedrock'"
+              >
+                {{ $t('register.form.platform_bedrock') }}
+              </button>
+            </div>
           </div>
 
           <div>
@@ -407,6 +427,11 @@ function generateUUID() {
 .glass-input::placeholder { color: rgba(255,255,255,.4); }
 .glass-input:hover { background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.25); }
 .glass-input:focus { background: rgba(255,255,255,.12); border-color: rgba(59,130,246,.5); box-shadow: 0 0 0 3px rgba(59,130,246,.15), 0 0 20px rgba(59,130,246,.2); }
+.platform-switch { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .35rem; padding: .3rem; background: rgba(255,255,255,.08); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,.16); border-radius: 9999px; box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 10px 24px rgba(0,0,0,.15); }
+.platform-switch-option { border: 1px solid transparent; border-radius: 9999px; padding: .55rem .8rem; color: rgba(255,255,255,.75); font-size: .92rem; font-weight: 500; line-height: 1.2; background: transparent; cursor: pointer; transition: all .25s cubic-bezier(.4,0,.2,1); }
+.platform-switch-option:hover { color: rgba(255,255,255,.95); background: rgba(255,255,255,.08); }
+.platform-switch-option:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(59,130,246,.3); }
+.platform-switch-option-active { color: #fff; border-color: rgba(255,255,255,.25); background: linear-gradient(135deg, rgba(59,130,246,.45) 0%, rgba(139,92,246,.45) 100%); box-shadow: 0 6px 16px rgba(59,130,246,.3), inset 0 1px 0 rgba(255,255,255,.24); }
 .glass-input-error { border-color: rgba(239,68,68,.5)!important; }
 .glass-input-error:focus { border-color: rgba(239,68,68,.6)!important; box-shadow: 0 0 0 3px rgba(239,68,68,.15), 0 0 20px rgba(239,68,68,.2)!important; }
 .glass-button-secondary { padding: .75rem 1.25rem; background: rgba(255,255,255,.1); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,.2); border-radius: 12px; color: #fff; font-weight: 500; white-space: nowrap; cursor: pointer; transition: all .3s cubic-bezier(.4,0,.2,1); }
