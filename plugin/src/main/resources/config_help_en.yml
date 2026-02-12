@@ -219,7 +219,7 @@ llm:
   enabled: true
   # Scoring provider. Options: deepseek / google
   provider: deepseek
-  # OpenAI-compatible API base URL, must use https (plugin appends /chat/completions automatically)
+  # OpenAI-compatible API base URL, must use https (plugin appends /chat/completions automatically; http:// local proxy endpoints are rejected by ensureHttpsApiBase())
   api_base: https://api.deepseek.com/v1
   # API key
   api_key: ""
