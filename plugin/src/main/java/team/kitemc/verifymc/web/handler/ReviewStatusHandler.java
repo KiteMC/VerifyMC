@@ -38,7 +38,7 @@ public class ReviewStatusHandler implements HttpHandler {
 
         Map<String, Object> user = null;
         if (username != null && !username.isBlank()) {
-            user = ctx.getUserDao().getUserByUsername(username);
+            user = ctx.getUserByConfiguredUsername(username);
         }
 
         JSONObject resp = new JSONObject();

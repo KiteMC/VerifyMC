@@ -171,9 +171,7 @@ public class RegistrationProcessingHandler implements HttpHandler {
 
         // 4. Uniqueness checks (require DB access)
         boolean caseSensitive = usernameCaseSensitiveProvider.get();
-        var existingUser = caseSensitive
-            ? userDao.getUserByUsernameExact(request.normalizedUsername())
-            : userDao.getUserByUsername(request.normalizedUsername());
+        var existingUser = userDao.getUserByUsername(request.normalizedUsername(), caseSensitive);
         if (existingUser != null) {
             return RegistrationValidationResult.reject("register.username_exists");
         }

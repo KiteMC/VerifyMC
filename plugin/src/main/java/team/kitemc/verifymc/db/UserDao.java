@@ -52,6 +52,44 @@ public interface UserDao {
 
     Map<String, Object> getUserByUsernameExact(String username);
 
+    default Map<String, Object> getUserByUsername(String username, boolean caseSensitive) {
+        return caseSensitive ? getUserByUsernameExact(username) : getUserByUsername(username);
+    }
+
+    default String resolveStoredUsername(String username, boolean caseSensitive) {
+        Map<String, Object> user = getUserByUsername(username, caseSensitive);
+        if (user == null) {
+            return null;
+        }
+        Object storedUsername = user.get("username");
+        return storedUsername == null ? null : String.valueOf(storedUsername);
+    }
+
+    default boolean updateUserStatus(String username, String status, String operator, boolean caseSensitive) {
+        String storedUsername = resolveStoredUsername(username, caseSensitive);
+        return storedUsername != null && updateUserStatus(storedUsername, status, operator);
+    }
+
+    default boolean updateUserPassword(String username, String plainPassword, boolean caseSensitive) {
+        String storedUsername = resolveStoredUsername(username, caseSensitive);
+        return storedUsername != null && updateUserPassword(storedUsername, plainPassword);
+    }
+
+    default boolean updateUserEmail(String username, String email, boolean caseSensitive) {
+        String storedUsername = resolveStoredUsername(username, caseSensitive);
+        return storedUsername != null && updateUserEmail(storedUsername, email);
+    }
+
+    default boolean deleteUser(String username, boolean caseSensitive) {
+        String storedUsername = resolveStoredUsername(username, caseSensitive);
+        return storedUsername != null && deleteUser(storedUsername);
+    }
+
+    default boolean updateUserDiscordId(String username, String discordId, boolean caseSensitive) {
+        String storedUsername = resolveStoredUsername(username, caseSensitive);
+        return storedUsername != null && updateUserDiscordId(storedUsername, discordId);
+    }
+
     Map<String, Object> getUserByEmail(String email);
 
     boolean deleteUser(String username);

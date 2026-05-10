@@ -121,12 +121,15 @@ public class AuthmeService {
             return;
         }
         try {
+            boolean usernameCaseSensitive = plugin.getConfig().getBoolean("username_case_sensitive", false);
             List<Map<String, Object>> localUsers = userDao.getAllUsers();
             Map<String, Map<String, Object>> localByLowerName = new HashMap<>();
+            Map<String, Map<String, Object>> localByName = new HashMap<>();
             for (Map<String, Object> u : localUsers) {
                 String username = (String) u.get("username");
                 if (username != null) {
                     localByLowerName.put(username.toLowerCase(), u);
+                    localByName.put(username, u);
                 }
             }
 
@@ -144,7 +147,10 @@ public class AuthmeService {
                 if (username == null || !"approved".equals(status)) {
                     continue;
                 }
-                String authName = authmeByLowerName.get(username.toLowerCase());
+                String authName = usernameCaseSensitive ? username : authmeByLowerName.get(username.toLowerCase());
+                if (usernameCaseSensitive && !authmeProfilesByName.containsKey(authName)) {
+                    authName = null;
+                }
                 if (authName == null && password != null && !password.trim().isEmpty()) {
                     upsertAuthmeUser(username, password);
                     continue;
@@ -170,7 +176,9 @@ public class AuthmeService {
                 AuthmeProfile profile = entry.getValue();
                 String authPassword = profile != null ? profile.password : null;
                 String authEmail = profile != null ? profile.email : null;
-                Map<String, Object> local = localByLowerName.get(authName.toLowerCase());
+                Map<String, Object> local = usernameCaseSensitive
+                        ? localByName.get(authName)
+                        : localByLowerName.get(authName.toLowerCase());
                 if (local == null) {
                     String localEmail = authEmail != null ? authEmail : "";
                     if (authPassword != null && !authPassword.trim().isEmpty()) {

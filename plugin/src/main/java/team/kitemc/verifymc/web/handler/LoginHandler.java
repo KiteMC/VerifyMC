@@ -88,7 +88,7 @@ public class LoginHandler implements HttpHandler {
         }
 
         UserDao userDao = ctx.getUserDao();
-        Map<String, Object> user = userDao.getUserByUsername(username);
+        Map<String, Object> user = userDao.getUserByUsername(username, ctx.isUsernameCaseSensitive());
         if (user == null) {
             user = userDao.getUserByEmail(username);
         }

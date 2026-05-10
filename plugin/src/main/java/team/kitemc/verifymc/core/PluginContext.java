@@ -2,11 +2,14 @@ package team.kitemc.verifymc.core;
 
 import org.bukkit.plugin.java.JavaPlugin;
 import team.kitemc.verifymc.db.AuditDao;
+import team.kitemc.verifymc.db.FileUserDao;
 import team.kitemc.verifymc.db.UserDao;
 import team.kitemc.verifymc.mail.MailService;
 import team.kitemc.verifymc.service.*;
 import team.kitemc.verifymc.web.ReviewWebSocketServer;
 import team.kitemc.verifymc.web.WebAuthHelper;
+
+import java.util.Map;
 
 /**
  * Central service container that holds references to all services.
@@ -104,5 +107,29 @@ public class PluginContext {
      */
     public String getMessage(String key, String language) {
         return i18nManager.getMessage(key, language);
+    }
+
+    public boolean isUsernameCaseSensitive() {
+        return configManager.isUsernameCaseSensitive();
+    }
+
+    public Map<String, Object> getUserByConfiguredUsername(String username) {
+        return userDao.getUserByUsername(username, isUsernameCaseSensitive());
+    }
+
+    public String resolveStoredUsername(String username) {
+        return userDao.resolveStoredUsername(username, isUsernameCaseSensitive());
+    }
+
+    public void reloadRuntimeConfigDependents() {
+        if (userDao instanceof FileUserDao fileUserDao) {
+            fileUserDao.rebuildUsernameIndex();
+        }
+        if (discordService != null) {
+            discordService.loadConfig();
+        }
+        if (questionnaireService != null) {
+            questionnaireService.reloadConfig();
+        }
     }
 }

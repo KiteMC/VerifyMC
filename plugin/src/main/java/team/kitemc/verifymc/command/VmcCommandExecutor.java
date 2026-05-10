@@ -94,6 +94,7 @@ public class VmcCommandExecutor implements CommandExecutor, TabCompleter {
         ctx.getConfigManager().reloadConfig();
         ctx.getI18nManager().clearCache();
         ctx.getI18nManager().init(ctx.getConfigManager().getLanguage());
+        ctx.reloadRuntimeConfigDependents();
         sender.sendMessage("§6[VerifyMC] §aConfiguration reloaded.");
     }
 
@@ -107,22 +108,23 @@ public class VmcCommandExecutor implements CommandExecutor, TabCompleter {
             return;
         }
         String target = args[1];
-        boolean ok = ctx.getUserDao().updateUserStatus(target, "approved", sender.getName());
+        String storedTarget = ctx.resolveStoredUsername(target);
+        boolean ok = storedTarget != null && ctx.getUserDao().updateUserStatus(storedTarget, "approved", sender.getName());
         if (ok) {
-            org.bukkit.Bukkit.dispatchCommand(org.bukkit.Bukkit.getConsoleSender(), "whitelist add " + target);
-            ctx.getAuditDao().addAudit(new AuditRecord("approve", sender.getName(), target, "", System.currentTimeMillis()));
+            org.bukkit.Bukkit.dispatchCommand(org.bukkit.Bukkit.getConsoleSender(), "whitelist add " + storedTarget);
+            ctx.getAuditDao().addAudit(new AuditRecord("approve", sender.getName(), storedTarget, "", System.currentTimeMillis()));
 
             // Send approval email
-            var user = ctx.getUserDao().getUserByUsername(target);
+            var user = ctx.getUserByConfiguredUsername(storedTarget);
             if (user != null) {
                 String email = (String) user.get("email");
                 if (email != null && !email.isEmpty()) {
-                    ctx.getMailService().sendReviewResult(email, target, true,
+                    ctx.getMailService().sendReviewResult(email, storedTarget, true,
                             "", ctx.getConfigManager().getLanguage());
                 }
             }
 
-            sender.sendMessage("§6[VerifyMC] §aUser " + target + " approved.");
+            sender.sendMessage("§6[VerifyMC] §aUser " + storedTarget + " approved.");
         } else {
             sender.sendMessage("§6[VerifyMC] §cFailed to approve user " + target);
         }
@@ -138,21 +140,22 @@ public class VmcCommandExecutor implements CommandExecutor, TabCompleter {
             return;
         }
         String target = args[1];
+        String storedTarget = ctx.resolveStoredUsername(target);
         String reason = args.length > 2 ? String.join(" ", Arrays.copyOfRange(args, 2, args.length)) : "";
-        boolean ok = ctx.getUserDao().updateUserStatus(target, "rejected", sender.getName());
+        boolean ok = storedTarget != null && ctx.getUserDao().updateUserStatus(storedTarget, "rejected", sender.getName());
         if (ok) {
-            ctx.getAuditDao().addAudit(new AuditRecord("reject", sender.getName(), target, reason, System.currentTimeMillis()));
+            ctx.getAuditDao().addAudit(new AuditRecord("reject", sender.getName(), storedTarget, reason, System.currentTimeMillis()));
 
-            var user = ctx.getUserDao().getUserByUsername(target);
+            var user = ctx.getUserByConfiguredUsername(storedTarget);
             if (user != null) {
                 String email = (String) user.get("email");
                 if (email != null && !email.isEmpty()) {
-                    ctx.getMailService().sendReviewResult(email, target, false,
+                    ctx.getMailService().sendReviewResult(email, storedTarget, false,
                             reason, ctx.getConfigManager().getLanguage());
                 }
             }
 
-            sender.sendMessage("§6[VerifyMC] §cUser " + target + " rejected.");
+            sender.sendMessage("§6[VerifyMC] §cUser " + storedTarget + " rejected.");
         } else {
             sender.sendMessage("§6[VerifyMC] §cFailed to reject user " + target);
         }
@@ -168,11 +171,12 @@ public class VmcCommandExecutor implements CommandExecutor, TabCompleter {
             return;
         }
         String target = args[1];
-        boolean ok = ctx.getUserDao().deleteUser(target);
+        String storedTarget = ctx.resolveStoredUsername(target);
+        boolean ok = storedTarget != null && ctx.getUserDao().deleteUser(storedTarget);
         if (ok) {
-            org.bukkit.Bukkit.dispatchCommand(org.bukkit.Bukkit.getConsoleSender(), "whitelist remove " + target);
-            ctx.getAuditDao().addAudit(new AuditRecord("delete", sender.getName(), target, "", System.currentTimeMillis()));
-            sender.sendMessage("§6[VerifyMC] §aUser " + target + " deleted.");
+            org.bukkit.Bukkit.dispatchCommand(org.bukkit.Bukkit.getConsoleSender(), "whitelist remove " + storedTarget);
+            ctx.getAuditDao().addAudit(new AuditRecord("delete", sender.getName(), storedTarget, "", System.currentTimeMillis()));
+            sender.sendMessage("§6[VerifyMC] §aUser " + storedTarget + " deleted.");
         } else {
             sender.sendMessage("§6[VerifyMC] §cFailed to delete user " + target);
         }
@@ -188,12 +192,13 @@ public class VmcCommandExecutor implements CommandExecutor, TabCompleter {
             return;
         }
         String target = args[1];
+        String storedTarget = ctx.resolveStoredUsername(target);
         String reason = args.length > 2 ? String.join(" ", Arrays.copyOfRange(args, 2, args.length)) : "";
-        boolean ok = ctx.getUserDao().banUser(target);
+        boolean ok = storedTarget != null && ctx.getUserDao().banUser(storedTarget);
         if (ok) {
-            org.bukkit.Bukkit.dispatchCommand(org.bukkit.Bukkit.getConsoleSender(), "whitelist remove " + target);
-            ctx.getAuditDao().addAudit(new AuditRecord("ban", sender.getName(), target, reason, System.currentTimeMillis()));
-            sender.sendMessage("§6[VerifyMC] §cUser " + target + " banned.");
+            org.bukkit.Bukkit.dispatchCommand(org.bukkit.Bukkit.getConsoleSender(), "whitelist remove " + storedTarget);
+            ctx.getAuditDao().addAudit(new AuditRecord("ban", sender.getName(), storedTarget, reason, System.currentTimeMillis()));
+            sender.sendMessage("§6[VerifyMC] §cUser " + storedTarget + " banned.");
         } else {
             sender.sendMessage("§6[VerifyMC] §cFailed to ban user " + target);
         }
@@ -209,11 +214,12 @@ public class VmcCommandExecutor implements CommandExecutor, TabCompleter {
             return;
         }
         String target = args[1];
-        boolean ok = ctx.getUserDao().unbanUser(target);
+        String storedTarget = ctx.resolveStoredUsername(target);
+        boolean ok = storedTarget != null && ctx.getUserDao().unbanUser(storedTarget);
         if (ok) {
-            org.bukkit.Bukkit.dispatchCommand(org.bukkit.Bukkit.getConsoleSender(), "whitelist add " + target);
-            ctx.getAuditDao().addAudit(new AuditRecord("unban", sender.getName(), target, "", System.currentTimeMillis()));
-            sender.sendMessage("§6[VerifyMC] §aUser " + target + " unbanned.");
+            org.bukkit.Bukkit.dispatchCommand(org.bukkit.Bukkit.getConsoleSender(), "whitelist add " + storedTarget);
+            ctx.getAuditDao().addAudit(new AuditRecord("unban", sender.getName(), storedTarget, "", System.currentTimeMillis()));
+            sender.sendMessage("§6[VerifyMC] §aUser " + storedTarget + " unbanned.");
         } else {
             sender.sendMessage("§6[VerifyMC] §cFailed to unban user " + target);
         }
@@ -254,7 +260,7 @@ public class VmcCommandExecutor implements CommandExecutor, TabCompleter {
             return;
         }
         String target = args[1];
-        Map<String, Object> user = ctx.getUserDao().getUserByUsername(target);
+        Map<String, Object> user = ctx.getUserByConfiguredUsername(target);
         if (user == null) {
             sender.sendMessage("§6[VerifyMC] §cUser not found: " + target);
             return;

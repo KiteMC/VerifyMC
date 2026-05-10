@@ -26,6 +26,7 @@ public class DiscordService {
     private final Plugin plugin;
     private final boolean debug;
     private UserDao userDao;
+    private boolean usernameCaseSensitive;
     
     // OAuth2 configuration
     private String clientId;
@@ -122,6 +123,7 @@ public class DiscordService {
         redirectUri = plugin.getConfig().getString("discord.redirect_uri", "");
         guildId = plugin.getConfig().getString("discord.guild_id", "");
         required = plugin.getConfig().getBoolean("discord.required", false);
+        usernameCaseSensitive = plugin.getConfig().getBoolean("username_case_sensitive", false);
         
         debugLog("Discord config loaded: clientId=" + (clientId.isEmpty() ? "not set" : "***") + 
                  ", guildId=" + (guildId.isEmpty() ? "not set" : guildId));
@@ -214,7 +216,10 @@ public class DiscordService {
                 Map<String, Object> existingUser = userDao.getUserByDiscordId(user.id);
                 if (existingUser != null) {
                     String existingUsername = (String) existingUser.get("username");
-                    if (!existingUsername.equalsIgnoreCase(username)) {
+                    boolean sameUsername = usernameCaseSensitive
+                            ? existingUsername.equals(username)
+                            : existingUsername.equalsIgnoreCase(username);
+                    if (!sameUsername) {
                         debugLog("Discord account already linked to: " + existingUsername);
                         return new DiscordCallbackResult(false, "This Discord account is already linked to another user", username, user);
                     }
@@ -235,7 +240,7 @@ public class DiscordService {
             
             // Persist Discord ID to database
             if (userDao != null) {
-                boolean updated = userDao.updateUserDiscordId(username, user.id);
+                boolean updated = userDao.updateUserDiscordId(username, user.id, usernameCaseSensitive);
                 if (updated) {
                     debugLog("Persisted Discord ID to database for " + username + ": " + user.id);
                 } else {
@@ -429,7 +434,7 @@ public class DiscordService {
     public boolean isLinked(String username) {
         // First check database
         if (userDao != null) {
-            Map<String, Object> user = userDao.getUserByUsername(username);
+            Map<String, Object> user = userDao.getUserByUsername(username, usernameCaseSensitive);
             if (user != null) {
                 Object discordId = user.get("discordId");
                 if (discordId == null) {
@@ -452,7 +457,7 @@ public class DiscordService {
      */
     public String getLinkedDiscordId(String username) {
         if (userDao != null) {
-            Map<String, Object> user = userDao.getUserByUsername(username);
+            Map<String, Object> user = userDao.getUserByUsername(username, usernameCaseSensitive);
             if (user != null) {
                 Object discordId = user.get("discordId");
                 if (discordId == null) {
@@ -500,7 +505,7 @@ public class DiscordService {
         tokenCache.remove(username.toLowerCase());
         
         if (userDao != null) {
-            return userDao.updateUserDiscordId(username, null);
+            return userDao.updateUserDiscordId(username, null, usernameCaseSensitive);
         }
         
         return true;

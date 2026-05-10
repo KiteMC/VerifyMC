@@ -66,6 +66,25 @@ public class FileUserDao implements UserDao {
         if (debug && plugin != null) plugin.getLogger().info("[DEBUG] FileUserDao: " + msg);
     }
 
+    private boolean isUsernameCaseSensitive() {
+        return plugin != null && plugin.getConfig().getBoolean("username_case_sensitive", false);
+    }
+
+    private String keyForUsername(String username) {
+        if (username == null) {
+            return "";
+        }
+        return isUsernameCaseSensitive() ? username : username.toLowerCase(Locale.ROOT);
+    }
+
+    private String storageKeyForUser(Map<String, Object> user, String fallbackKey) {
+        Object username = user != null ? user.get("username") : null;
+        if (username != null) {
+            return keyForUsername(username.toString());
+        }
+        return isUsernameCaseSensitive() ? fallbackKey : fallbackKey.toLowerCase(Locale.ROOT);
+    }
+
     @Override
     public long getRegTimeAsLong(Object regTimeValue) {
         if (regTimeValue == null) {
@@ -158,7 +177,13 @@ public class FileUserDao implements UserDao {
                     }
                 }
 
-                users.putAll(loaded);
+                users.clear();
+                for (Map.Entry<String, Map<String, Object>> entry : loaded.entrySet()) {
+                    Map<String, Object> user = entry.getValue();
+                    if (user != null) {
+                        users.put(storageKeyForUser(user, entry.getKey()), user);
+                    }
+                }
                 debugLog("Loaded " + loaded.size() + " users from database");
 
                 if (hasUpgraded) {
@@ -171,6 +196,19 @@ public class FileUserDao implements UserDao {
         } catch (Exception e) {
             debugLog("Error loading users: " + e.getMessage());
         }
+    }
+
+    public synchronized void rebuildUsernameIndex() {
+        Map<String, Map<String, Object>> reindexed = new ConcurrentHashMap<>();
+        for (Map.Entry<String, Map<String, Object>> entry : users.entrySet()) {
+            Map<String, Object> user = entry.getValue();
+            if (user != null) {
+                reindexed.put(storageKeyForUser(user, entry.getKey()), user);
+            }
+        }
+        users.clear();
+        users.putAll(reindexed);
+        debugLog("Rebuilt username index for case_sensitive=" + isUsernameCaseSensitive());
     }
 
     @Override
@@ -231,7 +269,7 @@ public class FileUserDao implements UserDao {
                                 String questionnaireReviewSummary, Long questionnaireScoredAt) {
         debugLog("registerUser called: username=" + username + ", email=" + email + ", status=" + status);
         try {
-            String key = username.toLowerCase();
+            String key = keyForUsername(username);
             if (users.containsKey(key)) {
                 debugLog("User already exists with username: " + username + ", skipping registration");
                 return false;
@@ -265,7 +303,7 @@ public class FileUserDao implements UserDao {
                                 String questionnaireReviewSummary, Long questionnaireScoredAt) {
         debugLog("registerUser with password called: username=" + username + ", email=" + email + ", status=" + status);
         try {
-            String key = username.toLowerCase();
+            String key = keyForUsername(username);
             if (users.containsKey(key)) {
                 debugLog("User already exists with username: " + username + ", skipping registration");
                 return false;
@@ -298,7 +336,7 @@ public class FileUserDao implements UserDao {
     @Override
     public boolean updateUserStatus(String username, String status) {
         debugLog("updateUserStatus called: username=" + username + ", status=" + status);
-        String key = username.toLowerCase();
+        String key = keyForUsername(username);
         Map<String, Object> user = users.get(key);
 
         if (user == null) {
@@ -315,7 +353,7 @@ public class FileUserDao implements UserDao {
     @Override
     public boolean updateUserPassword(String username, String plainPassword) {
         debugLog("updateUserPassword called: username=" + username);
-        String key = username.toLowerCase();
+        String key = keyForUsername(username);
         Map<String, Object> user = users.get(key);
 
         if (user == null) {
@@ -332,7 +370,7 @@ public class FileUserDao implements UserDao {
     @Override
     public boolean updateUserEmail(String username, String email) {
         debugLog("updateUserEmail called: username=" + username);
-        String key = username.toLowerCase();
+        String key = keyForUsername(username);
         Map<String, Object> user = users.get(key);
 
         if (user == null) {
@@ -349,8 +387,16 @@ public class FileUserDao implements UserDao {
     @Override
     public Map<String, Object> getUserByUsername(String username) {
         debugLog("Getting user by username: " + username);
-        String key = username.toLowerCase();
+        String key = username.toLowerCase(Locale.ROOT);
         Map<String, Object> user = users.get(key);
+        if (user == null) {
+            for (Map<String, Object> candidate : users.values()) {
+                if (candidate.get("username") != null && candidate.get("username").toString().equalsIgnoreCase(username)) {
+                    user = candidate;
+                    break;
+                }
+            }
+        }
         if (user != null) {
             debugLog("User found: " + user.get("username"));
         } else {
@@ -393,7 +439,7 @@ public class FileUserDao implements UserDao {
     public boolean deleteUser(String username) {
         debugLog("deleteUser called: username=" + username);
         try {
-            String key = username.toLowerCase();
+            String key = keyForUsername(username);
             Map<String, Object> removed = users.remove(key);
 
             if (removed != null) {
@@ -645,7 +691,7 @@ public class FileUserDao implements UserDao {
     @Override
     public boolean updateUserDiscordId(String username, String discordId) {
         debugLog("updateUserDiscordId called: username=" + username + ", discordId=" + discordId);
-        String key = username.toLowerCase();
+        String key = keyForUsername(username);
         Map<String, Object> user = users.get(key);
 
         if (user == null) {

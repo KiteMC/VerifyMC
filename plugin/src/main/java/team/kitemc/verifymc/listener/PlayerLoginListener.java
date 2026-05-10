@@ -26,7 +26,7 @@ public class PlayerLoginListener implements Listener {
         String whitelistMode = ctx.getConfigManager().getWhitelistMode();
         boolean isPluginMode = "plugin".equalsIgnoreCase(whitelistMode);
 
-        Map<String, Object> user = ctx.getUserDao().getUserByUsername(username);
+        Map<String, Object> user = ctx.getUserByConfiguredUsername(username);
 
         if (user == null) {
             if (isPluginMode) {

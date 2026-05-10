@@ -47,7 +47,7 @@ public class UserProfileHandler implements HttpHandler {
 
         JSONObject resp = new JSONObject();
         if (username != null && !username.isBlank()) {
-            Map<String, Object> user = ctx.getUserDao().getUserByUsername(username);
+            Map<String, Object> user = ctx.getUserByConfiguredUsername(username);
             if (user != null) {
                 resp.put("success", true);
                 JSONObject data = new JSONObject();
@@ -80,7 +80,7 @@ public class UserProfileHandler implements HttpHandler {
             return;
         }
 
-        Map<String, Object> user = ctx.getUserDao().getUserByUsername(request.username());
+        Map<String, Object> user = ctx.getUserByConfiguredUsername(request.username());
         if (user == null) {
             sendFailure(exchange, "error.user_not_found", request.language());
             return;
@@ -109,7 +109,7 @@ public class UserProfileHandler implements HttpHandler {
             return;
         }
 
-        boolean updated = ctx.getUserDao().updateUserEmail(request.username(), newEmail);
+        boolean updated = ctx.getUserDao().updateUserEmail(request.username(), newEmail, ctx.isUsernameCaseSensitive());
         if (updated) {
             addAudit("email_update", request.username(), request.username(), "Email updated to: " + newEmail);
             sendSuccess(exchange, "user.update_success", request.language());
@@ -137,7 +137,7 @@ public class UserProfileHandler implements HttpHandler {
             return;
         }
 
-        Map<String, Object> user = ctx.getUserDao().getUserByUsername(request.username());
+        Map<String, Object> user = ctx.getUserByConfiguredUsername(request.username());
         if (user == null) {
             sendFailure(exchange, "error.user_not_found", request.language());
             return;
@@ -154,10 +154,11 @@ public class UserProfileHandler implements HttpHandler {
             return;
         }
 
-        boolean updated = ctx.getUserDao().updatePassword(request.username(), newPassword);
+        String actualUsername = String.valueOf(user.get("username"));
+        boolean updated = ctx.getUserDao().updateUserPassword(actualUsername, newPassword, true);
         if (updated) {
-            changeAuthmePasswordIfPossible(request.username(), newPassword);
-            addAudit("password_change", request.username(), request.username(), "User changed own password");
+            changeAuthmePasswordIfPossible(actualUsername, newPassword);
+            addAudit("password_change", actualUsername, actualUsername, "User changed own password");
             sendSuccess(exchange, "admin.password_change_success", request.language());
         } else {
             sendFailure(exchange, "admin.password_change_failed", request.language());

@@ -6,6 +6,8 @@ import org.bukkit.plugin.Plugin;
 import team.kitemc.verifymc.util.PasswordUtil;
 
 public class MysqlUserDao implements UserDao, AutoCloseable {
+    private static final String USERNAME_COLUMN_DEFINITION = "VARCHAR(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin";
+
     private Connection conn;
     private final String jdbcUrl;
     private final String jdbcUser;
@@ -70,7 +72,7 @@ public class MysqlUserDao implements UserDao, AutoCloseable {
     private void initDatabase() throws SQLException {
         try (Statement stmt = getConnection().createStatement()) {
             stmt.executeUpdate("CREATE TABLE IF NOT EXISTS users (" +
-                    "username VARCHAR(32) PRIMARY KEY," +
+                    "username " + USERNAME_COLUMN_DEFINITION + " PRIMARY KEY," +
                     "email VARCHAR(64)," +
                     "status VARCHAR(16)," +
                     "password VARCHAR(255)," +
@@ -86,6 +88,7 @@ public class MysqlUserDao implements UserDao, AutoCloseable {
             } catch (SQLException e) {
                 stmt.executeUpdate("ALTER TABLE users ADD COLUMN password VARCHAR(255)");
             }
+            ensureCaseSensitiveUsernameColumn(stmt);
 
             try {
                 stmt.executeQuery("SELECT regTime FROM users LIMIT 1");
@@ -137,6 +140,14 @@ public class MysqlUserDao implements UserDao, AutoCloseable {
     private void debugLog(String msg) {
         if (debug && plugin != null)
             plugin.getLogger().info("[DEBUG] MysqlUserDao: " + msg);
+    }
+
+    private void ensureCaseSensitiveUsernameColumn(Statement stmt) throws SQLException {
+        stmt.executeUpdate("ALTER TABLE users MODIFY username " + USERNAME_COLUMN_DEFINITION + " NOT NULL");
+    }
+
+    private boolean isUsernameCaseSensitive() {
+        return plugin != null && plugin.getConfig().getBoolean("username_case_sensitive", false);
     }
 
     @Override
@@ -328,12 +339,15 @@ public class MysqlUserDao implements UserDao, AutoCloseable {
 
     @Override
     public Map<String, Object> getUserByUsernameExact(String username) {
-        String sql = "SELECT * FROM users WHERE username=?";
+        String sql = "SELECT * FROM users WHERE LOWER(username)=LOWER(?)";
         try (PreparedStatement ps = getConnection().prepareStatement(sql)) {
             ps.setString(1, username);
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return mapUserFromResultSet(rs);
+                while (rs.next()) {
+                    Map<String, Object> user = mapUserFromResultSet(rs);
+                    if (username.equals(user.get("username"))) {
+                        return user;
+                    }
                 }
             }
         } catch (SQLException e) {
@@ -623,12 +637,16 @@ public class MysqlUserDao implements UserDao, AutoCloseable {
     @Override
     public boolean updateUserDiscordId(String username, String discordId) {
         debugLog("updateUserDiscordId called: username=" + username + ", discordId=" + discordId);
-        String sql = "UPDATE users SET discord_id=? WHERE LOWER(username)=LOWER(?)";
+        String storedUsername = resolveStoredUsername(username, isUsernameCaseSensitive());
+        if (storedUsername == null) {
+            return false;
+        }
+        String sql = "UPDATE users SET discord_id=? WHERE username=?";
         try (PreparedStatement ps = getConnection().prepareStatement(sql)) {
             ps.setString(1, discordId);
-            ps.setString(2, username);
+            ps.setString(2, storedUsername);
             int rows = ps.executeUpdate();
-            debugLog("User Discord ID updated: " + username + " -> " + discordId + ", rows affected: " + rows);
+            debugLog("User Discord ID updated: " + storedUsername + " -> " + discordId + ", rows affected: " + rows);
             return rows > 0;
         } catch (SQLException e) {
             debugLog("Error updating Discord ID: " + e.getMessage());

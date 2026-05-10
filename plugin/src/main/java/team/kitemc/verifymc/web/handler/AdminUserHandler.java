@@ -86,13 +86,19 @@ public class AdminUserHandler implements HttpHandler {
         AdminRequest request = readAdminRequest(exchange, true);
         if (request == null) return;
 
-        boolean ok = ctx.getUserDao().updateUserStatus(request.target(), "approved", request.operator());
+        String target = resolveTarget(request);
+        if (target == null) {
+            sendFailure(exchange, "review.failed", request.language());
+            return;
+        }
+
+        boolean ok = ctx.getUserDao().updateUserStatus(target, "approved", request.operator());
         if (ok) {
-            addToWhitelist(request.target());
-            registerWithAuthmeIfPossible(request.target());
-            sendReviewResult(request.target(), true, "");
-            addAudit("approve", request.operator(), request.target(), "");
-            broadcast("user_approved", request.target());
+            addToWhitelist(target);
+            registerWithAuthmeIfPossible(target);
+            sendReviewResult(target, true, "");
+            addAudit("approve", request.operator(), target, "");
+            broadcast("user_approved", target);
             sendSuccess(exchange, "review.approve_success", request.language());
         } else {
             sendFailure(exchange, "review.failed", request.language());
@@ -103,12 +109,18 @@ public class AdminUserHandler implements HttpHandler {
         AdminRequest request = readAdminRequest(exchange, false);
         if (request == null) return;
 
+        String target = resolveTarget(request);
+        if (target == null) {
+            sendFailure(exchange, "review.failed", request.language());
+            return;
+        }
+
         String reason = request.body().optString("reason", "");
-        boolean ok = ctx.getUserDao().updateUserStatus(request.target(), "rejected", request.operator());
+        boolean ok = ctx.getUserDao().updateUserStatus(target, "rejected", request.operator());
         if (ok) {
-            sendReviewResult(request.target(), false, reason);
-            addAudit("reject", request.operator(), request.target(), reason);
-            broadcast("user_rejected", request.target());
+            sendReviewResult(target, false, reason);
+            addAudit("reject", request.operator(), target, reason);
+            broadcast("user_rejected", target);
             sendSuccess(exchange, "review.reject_success", request.language());
         } else {
             sendFailure(exchange, "review.failed", request.language());
@@ -119,11 +131,17 @@ public class AdminUserHandler implements HttpHandler {
         AdminRequest request = readAdminRequest(exchange, true);
         if (request == null) return;
 
-        boolean ok = ctx.getUserDao().deleteUser(request.target());
+        String target = resolveTarget(request);
+        if (target == null) {
+            sendFailure(exchange, "admin.delete_failed", request.language());
+            return;
+        }
+
+        boolean ok = ctx.getUserDao().deleteUser(target);
         if (ok) {
-            removeFromWhitelist(request.target());
-            unregisterFromAuthmeIfPossible(request.target());
-            addAudit("delete", request.operator(), request.target(), "");
+            removeFromWhitelist(target);
+            unregisterFromAuthmeIfPossible(target);
+            addAudit("delete", request.operator(), target, "");
             sendSuccess(exchange, "admin.delete_success", request.language());
         } else {
             sendFailure(exchange, "admin.delete_failed", request.language());
@@ -134,12 +152,18 @@ public class AdminUserHandler implements HttpHandler {
         AdminRequest request = readAdminRequest(exchange, true);
         if (request == null) return;
 
+        String target = resolveTarget(request);
+        if (target == null) {
+            sendFailure(exchange, "admin.ban_failed", request.language());
+            return;
+        }
+
         String reason = request.body().optString("reason", "");
-        boolean ok = ctx.getUserDao().banUser(request.target());
+        boolean ok = ctx.getUserDao().banUser(target);
         if (ok) {
-            removeFromWhitelist(request.target());
-            unregisterFromAuthmeIfPossible(request.target());
-            addAudit("ban", request.operator(), request.target(), reason);
+            removeFromWhitelist(target);
+            unregisterFromAuthmeIfPossible(target);
+            addAudit("ban", request.operator(), target, reason);
             sendSuccess(exchange, "admin.ban_success", request.language());
         } else {
             sendFailure(exchange, "admin.ban_failed", request.language());
@@ -150,11 +174,17 @@ public class AdminUserHandler implements HttpHandler {
         AdminRequest request = readAdminRequest(exchange, false);
         if (request == null) return;
 
-        boolean ok = ctx.getUserDao().unbanUser(request.target());
+        String target = resolveTarget(request);
+        if (target == null) {
+            sendFailure(exchange, "admin.unban_failed", request.language());
+            return;
+        }
+
+        boolean ok = ctx.getUserDao().unbanUser(target);
         if (ok) {
-            addToWhitelist(request.target());
-            registerWithAuthmeIfPossible(request.target());
-            addAudit("unban", request.operator(), request.target(), "");
+            addToWhitelist(target);
+            registerWithAuthmeIfPossible(target);
+            addAudit("unban", request.operator(), target, "");
             sendSuccess(exchange, "admin.unban_success", request.language());
         } else {
             sendFailure(exchange, "admin.unban_failed", request.language());
@@ -165,19 +195,25 @@ public class AdminUserHandler implements HttpHandler {
         AdminRequest request = readAdminRequest(exchange, false);
         if (request == null) return;
 
+        String target = resolveTarget(request);
+        if (target == null) {
+            sendFailure(exchange, "admin.password_change_failed", request.language());
+            return;
+        }
+
         String password = request.body().optString("password", "");
         if (password.isBlank()) {
             sendFailure(exchange, "admin.missing_user_identifier", request.language());
             return;
         }
 
-        boolean ok = ctx.getUserDao().updatePassword(request.target(), password);
+        boolean ok = ctx.getUserDao().updatePassword(target, password);
         if (ok && ctx.getAuthmeService() != null && ctx.getAuthmeService().isAuthmeEnabled()) {
-            ctx.getAuthmeService().changePassword(request.target(), password);
+            ctx.getAuthmeService().changePassword(target, password);
         }
 
         if (ok) {
-            addAudit("password_change", request.operator(), request.target(), "");
+            addAudit("password_change", request.operator(), target, "");
             sendSuccess(exchange, "admin.password_change_success", request.language());
         } else {
             sendFailure(exchange, "admin.password_change_failed", request.language());
@@ -219,6 +255,10 @@ public class AdminUserHandler implements HttpHandler {
         }
     }
 
+    private String resolveTarget(AdminRequest request) {
+        return ctx.resolveStoredUsername(request.target());
+    }
+
     private QueryParams parseQuery(HttpExchange exchange) {
         QueryParams params = new QueryParams();
         String query = exchange.getRequestURI().getQuery();
@@ -253,7 +293,7 @@ public class AdminUserHandler implements HttpHandler {
     private void registerWithAuthmeIfPossible(String username) {
         if (ctx.getAuthmeService() == null || !ctx.getAuthmeService().isAuthmeEnabled()) return;
 
-        var user = ctx.getUserDao().getUserByUsername(username);
+        var user = ctx.getUserByConfiguredUsername(username);
         if (user == null) return;
 
         String storedPassword = (String) user.get("password");
@@ -269,7 +309,7 @@ public class AdminUserHandler implements HttpHandler {
     }
 
     private void sendReviewResult(String username, boolean approved, String reason) {
-        var user = ctx.getUserDao().getUserByUsername(username);
+        var user = ctx.getUserByConfiguredUsername(username);
         if (user == null) return;
 
         String email = (String) user.get("email");

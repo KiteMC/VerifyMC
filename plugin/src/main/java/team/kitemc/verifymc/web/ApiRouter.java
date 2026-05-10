@@ -130,7 +130,7 @@ public class ApiRouter {
             return false;
         }
         // If username is case-insensitive, check for case conflicts
-        var existing = ctx.getUserDao().getUserByUsername(username);
+        var existing = ctx.getUserDao().getUserByUsername(username, false);
         if (existing == null) return false;
         String storedName = (String) existing.get("username");
         return storedName != null && !storedName.equals(username) && storedName.equalsIgnoreCase(username);
