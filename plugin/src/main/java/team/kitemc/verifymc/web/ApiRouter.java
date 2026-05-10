@@ -73,27 +73,27 @@ public class ApiRouter {
 
         // --- Admin endpoints ---
         server.createContext("/api/admin/verify", new AdminVerifyHandler(ctx));
-        server.createContext("/api/admin/users", new AdminUserListHandler(ctx));
-        server.createContext("/api/admin/user/approve", new AdminUserApproveHandler(ctx));
-        server.createContext("/api/admin/user/reject", new AdminUserRejectHandler(ctx));
-        server.createContext("/api/admin/user/delete", new AdminUserDeleteHandler(ctx));
-        server.createContext("/api/admin/user/ban", new AdminUserBanHandler(ctx));
-        server.createContext("/api/admin/user/unban", new AdminUserUnbanHandler(ctx));
-        server.createContext("/api/admin/user/password", new AdminUserPasswordHandler(ctx));
+        server.createContext("/api/admin/users", new AdminUserHandler(ctx, AdminUserHandler.Action.LIST));
+        server.createContext("/api/admin/user/approve", new AdminUserHandler(ctx, AdminUserHandler.Action.APPROVE));
+        server.createContext("/api/admin/user/reject", new AdminUserHandler(ctx, AdminUserHandler.Action.REJECT));
+        server.createContext("/api/admin/user/delete", new AdminUserHandler(ctx, AdminUserHandler.Action.DELETE));
+        server.createContext("/api/admin/user/ban", new AdminUserHandler(ctx, AdminUserHandler.Action.BAN));
+        server.createContext("/api/admin/user/unban", new AdminUserHandler(ctx, AdminUserHandler.Action.UNBAN));
+        server.createContext("/api/admin/user/password", new AdminUserHandler(ctx, AdminUserHandler.Action.PASSWORD));
         server.createContext("/api/admin/audits", new AdminAuditHandler(ctx));
         server.createContext("/api/admin/sync", new AdminSyncHandler(ctx));
 
         // --- Discord endpoints ---
-        server.createContext("/api/discord/auth", new DiscordAuthHandler(ctx));
-        server.createContext("/api/discord/callback", new DiscordCallbackHandler(ctx));
-        server.createContext("/api/discord/status", new DiscordStatusHandler(ctx));
-        server.createContext("/api/discord/unlink", new DiscordUnlinkHandler(ctx));
+        server.createContext("/api/discord/auth", new DiscordHandler(ctx, DiscordHandler.Action.AUTH));
+        server.createContext("/api/discord/callback", new DiscordHandler(ctx, DiscordHandler.Action.CALLBACK));
+        server.createContext("/api/discord/status", new DiscordHandler(ctx, DiscordHandler.Action.STATUS));
+        server.createContext("/api/discord/unlink", new DiscordHandler(ctx, DiscordHandler.Action.UNLINK));
 
         // --- Version check ---
         server.createContext("/api/version", new VersionHandler(ctx));
 
         // --- User status query ---
-        server.createContext("/api/user/status", new UserStatusHandler(ctx));
+        server.createContext("/api/user/status", new UserProfileHandler(ctx, UserProfileHandler.Action.STATUS));
 
         // --- Server status ---
         server.createContext("/api/server/status", new ServerStatusHandler(ctx));
@@ -102,8 +102,8 @@ public class ApiRouter {
         server.createContext("/api/downloads", new DownloadsHandler(ctx));
 
         // --- User profile management ---
-        server.createContext("/api/user/update", new UserUpdateHandler(ctx));
-        server.createContext("/api/user/password", new UserPasswordHandler(ctx));
+        server.createContext("/api/user/update", new UserProfileHandler(ctx, UserProfileHandler.Action.UPDATE));
+        server.createContext("/api/user/password", new UserProfileHandler(ctx, UserProfileHandler.Action.PASSWORD));
 
         // --- Static files (front-end) ---
         server.createContext("/", new StaticFileHandler(ctx));
