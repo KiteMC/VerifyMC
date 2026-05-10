@@ -1,38 +1,30 @@
 release: true
-version: 1.7.1
+version: 1.7.2
 release_notes: |
-  [简体中文](https://github.com/KiteMC/VerifyMC/blob/v1.7.1/release_notes_zh.md) | English | [Official Documentation](https://kitemc.com/docs/verifymc/)
+  [简体中文](https://github.com/KiteMC/VerifyMC/blob/v1.7.2/release_notes_zh.md) | English | [Official Documentation](https://kitemc.com/docs/verifymc/)
 
-  ## Security Fixes
+  ## Improvements
 
-  - Added IP-based login rate limiting (5 attempts/60s) to prevent brute force attacks
-  - Added `X-Content-Type-Options` and `X-Frame-Options` security headers to all API responses
-  - Added SQL identifier whitelist validation for AuthMe table/column names from config
-  - Removed sensitive data (verification codes, password hashes) from debug logs
+  - Shortened verification code expiry to 5 minutes to reduce the risk of stale code misuse
+  - Added frontend verification code input flow for a more complete registration experience
+  - Refactored mail sending with HTML escaping and default subject support
+  - Updated user info APIs and removed unused legacy methods
 
-  ## Critical Bug Fixes
+  ## Web Refactoring
 
-  - Fixed `sendReviewResult` parameter mapping: language was incorrectly passed as rejection reason in 4 call sites
-  - Fixed WebSocket `broadcast()` → `broadcastMessage()` method name mismatch in approve/reject handlers
-  - Fixed BungeeCord proxy kick message garbled character (`搂` → `§`)
-  - Fixed token cleanup thread never starting (memory leak of expired tokens)
-  - Fixed `VerifyCodeService`, `CaptchaService`, `WebAuthHelper` cleanup threads not stopped on plugin disable (thread leak)
-  - Fixed registration validation order: null/empty checks now run before database lookups (prevents NPE)
-  - Fixed `auth_methods` empty list causing forced email verification even when not configured
+  - Consolidated scattered Discord HTTP handlers into a unified handler
+  - Organized user profile, status, and password endpoints to reduce duplicated logic
+  - Clarified backend API routing structure for easier maintenance
 
-  ## Database Reliability
+  ## User Management
 
-  - MySQL: Added auto-reconnect via `getConnection()` with validity check (`isValid(2)`)
-  - MySQL: Replaced TOCTOU SELECT+INSERT with atomic `INSERT IGNORE` to prevent duplicate registration under concurrency
-  - MySQL: Added `autoReconnect=true` to JDBC URL
-  - File storage: Replaced synchronous full-file write on every operation with dirty-flag + 5-second background flush
+  - Added support for username case-sensitivity configuration
+  - Unified user lookup behavior around the configured case-sensitivity mode
+  - Synchronized user matching logic between the main plugin and proxy plugin
+  - Improved data access abstractions for future storage extensions
 
-  ## Robustness Improvements
+  ## Compatibility and Experience
 
-  - `OpsManager.isOp()` now uses local snapshot to prevent race condition during iteration
-  - `ConfigManager.getWebPort()`/`getWsPort()` now fall back to default when configured value is out of range
-  - `FileAuditDao.save()` now logs warnings instead of silently swallowing exceptions
-  - Admin username validation broadened to support Bedrock usernames (dot prefix, hyphens, spaces)
-  - BungeeCord proxy `PreLoginEvent` handler converted to async mode to avoid blocking Netty event loop
-  - Added Javadoc clarifying `getApprovedUserCount()` actually returns non-pending user count
+  - Updated related mail templates and frontend display content
+  - Synchronized version check metadata and release information for 1.7.2
 

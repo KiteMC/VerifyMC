@@ -3,6 +3,7 @@ package team.kitemc.verifymc.service;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
 import team.kitemc.verifymc.db.UserDao;
+import team.kitemc.verifymc.util.PluginScheduler;
 import team.kitemc.verifymc.util.PasswordUtil;
 
 import java.sql.Connection;
@@ -186,14 +187,14 @@ public class AuthmeService {
                     } else {
                         userDao.registerUser(authName, localEmail, "approved");
                     }
-                    Bukkit.getScheduler().runTask(plugin, () ->
+                    PluginScheduler.runGlobal(plugin, () ->
                             Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "whitelist add " + authName));
                     continue;
                 }
                 String status = (String) local.get("status");
                 if (!"approved".equals(status) && !"banned".equals(status)) {
                     userDao.updateUserStatus(authName, "approved");
-                    Bukkit.getScheduler().runTask(plugin, () ->
+                    PluginScheduler.runGlobal(plugin, () ->
                             Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "whitelist add " + authName));
                 }
 

@@ -30,7 +30,7 @@ import team.kitemc.verifymc.proxy.ProxyVersionCheckService;
 @Plugin(
     id = "verifymc-proxy",
     name = "VerifyMC-Proxy",
-    version = "1.7.1",
+    version = "1.7.2",
     description = "VerifyMC proxy plugin for Velocity",
     authors = {"KiteMC"}
 )
@@ -89,7 +89,7 @@ public class VerifyMCVelocity {
         apiClient = new ApiClient(config, julLogger);
 
         // Initialize version check service
-        String version = "1.7.1"; // From @Plugin annotation
+        String version = "1.7.2"; // From @Plugin annotation
         versionCheckService = new ProxyVersionCheckService(version, julLogger, config.isDebug());
 
         // Initialize resource updater

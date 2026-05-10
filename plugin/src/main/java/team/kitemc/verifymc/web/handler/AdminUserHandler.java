@@ -8,6 +8,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import team.kitemc.verifymc.core.PluginContext;
 import team.kitemc.verifymc.db.AuditRecord;
+import team.kitemc.verifymc.util.PluginScheduler;
 import team.kitemc.verifymc.web.ApiResponseFactory;
 import team.kitemc.verifymc.web.WebResponseHelper;
 
@@ -281,12 +282,12 @@ public class AdminUserHandler implements HttpHandler {
     }
 
     private void addToWhitelist(String username) {
-        Bukkit.getScheduler().runTask(ctx.getPlugin(), () ->
+        PluginScheduler.runGlobal(ctx.getPlugin(), () ->
                 Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "whitelist add " + username));
     }
 
     private void removeFromWhitelist(String username) {
-        Bukkit.getScheduler().runTask(ctx.getPlugin(), () ->
+        PluginScheduler.runGlobal(ctx.getPlugin(), () ->
                 Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "whitelist remove " + username));
     }
 

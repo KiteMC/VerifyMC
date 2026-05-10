@@ -90,7 +90,7 @@ cd plugin
 mvn clean package
 ```
 
-Output jar: `plugin/target/verifymc-1.7.1.jar`
+Output jar: `plugin/target/verifymc-1.7.2.jar`
 
 ---
 

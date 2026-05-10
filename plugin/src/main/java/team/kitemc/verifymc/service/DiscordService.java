@@ -1,10 +1,10 @@
 package team.kitemc.verifymc.service;
 
 import org.bukkit.plugin.Plugin;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.json.JSONObject;
 import org.json.JSONArray;
 import team.kitemc.verifymc.db.UserDao;
+import team.kitemc.verifymc.util.PluginScheduler;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -25,6 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class DiscordService {
     private final Plugin plugin;
     private final boolean debug;
+    private PluginScheduler.ScheduledTask cleanupTask;
     private UserDao userDao;
     private boolean usernameCaseSensitive;
     
@@ -72,13 +73,20 @@ public class DiscordService {
      * Start periodic cleanup task for expired state tokens and token cache
      */
     private void startCleanupTask() {
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                cleanupExpiredTokens();
-            }
-        }.runTaskTimerAsynchronously(plugin, CLEANUP_INTERVAL_TICKS, CLEANUP_INTERVAL_TICKS);
+        cleanupTask = PluginScheduler.runAsyncTimer(
+                plugin,
+                this::cleanupExpiredTokens,
+                CLEANUP_INTERVAL_TICKS,
+                CLEANUP_INTERVAL_TICKS
+        );
         debugLog("Started cleanup task for expired tokens");
+    }
+
+    public void stop() {
+        if (cleanupTask != null) {
+            cleanupTask.cancel();
+            cleanupTask = null;
+        }
     }
     
     /**

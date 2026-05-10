@@ -22,6 +22,7 @@ import team.kitemc.verifymc.service.DiscordService;
 import team.kitemc.verifymc.service.QuestionnaireService;
 import team.kitemc.verifymc.service.RegistrationApplicationService;
 import team.kitemc.verifymc.service.VerifyCodeService;
+import team.kitemc.verifymc.util.PluginScheduler;
 
 public class RegistrationProcessingHandler implements HttpHandler {
     private static final long QUESTIONNAIRE_SUBMISSION_TTL_MS = 10 * 60 * 1000;
@@ -297,7 +298,7 @@ public class RegistrationProcessingHandler implements HttpHandler {
         RegistrationApplicationService.RegistrationDecision decision =
                 registrationApplicationService.resolveDecision(ok, manualReviewRequired, questionnairePassed, registerAutoApprove, scoringServiceUnavailable);
         if (decision.outcome() == RegistrationOutcome.SUCCESS_WHITELISTED) {
-            org.bukkit.Bukkit.getScheduler().runTask(plugin, () ->
+            PluginScheduler.runGlobal(plugin, () ->
                     org.bukkit.Bukkit.dispatchCommand(org.bukkit.Bukkit.getConsoleSender(), "whitelist add " + request.normalizedUsername()));
             if (authmeService.isAuthmeEnabled() && request.password() != null && !request.password().trim().isEmpty()) {
                 authmeService.registerToAuthme(request.normalizedUsername(), request.password());

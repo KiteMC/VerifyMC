@@ -1,6 +1,5 @@
 package team.kitemc.verifymc;
 
-import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 import team.kitemc.verifymc.core.ConfigManager;
 import team.kitemc.verifymc.core.OpsManager;
@@ -11,6 +10,7 @@ import team.kitemc.verifymc.command.VmcCommandExecutor;
 import team.kitemc.verifymc.mail.MailService;
 import team.kitemc.verifymc.registration.RegistrationOutcomeResolver;
 import team.kitemc.verifymc.service.*;
+import team.kitemc.verifymc.util.PluginScheduler;
 import team.kitemc.verifymc.web.ReviewWebSocketServer;
 import team.kitemc.verifymc.web.WebAuthHelper;
 import team.kitemc.verifymc.web.WebServer;
@@ -34,6 +34,7 @@ public class VerifyMC extends JavaPlugin {
     private WebServer webServer;
     private ReviewWebSocketServer wsServer;
     private Metrics metrics;
+    private PluginScheduler.ScheduledTask authmeSyncTask;
 
     @Override
     public void onEnable() {
@@ -100,6 +101,10 @@ public class VerifyMC extends JavaPlugin {
         }
 
         // Stop service cleanup threads
+        if (authmeSyncTask != null) {
+            authmeSyncTask.cancel();
+            authmeSyncTask = null;
+        }
         if (context != null) {
             if (context.getWebAuthHelper() != null) {
                 context.getWebAuthHelper().stopTokenCleanupTask();
@@ -109,6 +114,9 @@ public class VerifyMC extends JavaPlugin {
             }
             if (context.getCaptchaService() != null) {
                 context.getCaptchaService().stop();
+            }
+            if (context.getDiscordService() != null) {
+                context.getDiscordService().stop();
             }
         }
 
@@ -183,9 +191,12 @@ public class VerifyMC extends JavaPlugin {
             // Schedule periodic sync
             int syncInterval = config.getAuthmeSyncInterval();
             if (syncInterval > 0) {
-                Bukkit.getScheduler().runTaskTimerAsynchronously(this, () -> {
-                    authmeService.syncApprovedUsers();
-                }, syncInterval * 20L, syncInterval * 20L);
+                authmeSyncTask = PluginScheduler.runAsyncTimer(
+                        this,
+                        authmeService::syncApprovedUsers,
+                        syncInterval * 20L,
+                        syncInterval * 20L
+                );
                 log.info("[VerifyMC] AuthMe periodic sync scheduled every " + syncInterval + " seconds.");
             }
         }

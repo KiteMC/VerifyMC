@@ -4,7 +4,7 @@
   <groupId>team.kitemc</groupId>
   <artifactId>verifymc</artifactId>
   <name>VerifyMC</name>
-  <version>1.7.1</version>
+  <version>1.7.2</version>
   <description>Web-based MC whitelist authentication plugin (refactored)</description>
   <build>
     <resources>
@@ -101,6 +101,26 @@
         <exclusion>
           <artifactId>junit-jupiter-engine</artifactId>
           <groupId>org.junit.jupiter</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <version>5.12.0</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>byte-buddy</artifactId>
+          <groupId>net.bytebuddy</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>byte-buddy-agent</artifactId>
+          <groupId>net.bytebuddy</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>objenesis</artifactId>
+          <groupId>org.objenesis</groupId>
         </exclusion>
       </exclusions>
     </dependency>
