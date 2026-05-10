@@ -85,10 +85,10 @@ public class MailService {
             if (templateFile.exists()) {
                 debugLog("Using custom template: " + templateFile.getAbsolutePath());
                 content = new String(Files.readAllBytes(templateFile.toPath()), StandardCharsets.UTF_8);
-                content = content.replace("{code}", code);
+                content = content.replace("{code}", escapeHtml(code));
             } else {
                 debugLog("Using default template");
-                content = getDefaultVerifyCodeTemplate(lang, code);
+                content = getDefaultVerifyCodeTemplate(lang, escapeHtml(code));
             }
             
             debugLog("Creating email message");
@@ -128,6 +128,14 @@ public class MailService {
      * Send verification code email (alias for sendCode with language)
      */
     public boolean sendVerifyCode(String to, String subject, String code, String language) {
+        return sendCode(to, subject, code, language);
+    }
+
+    /**
+     * Send verification code email with the configured subject.
+     */
+    public boolean sendVerifyCodeWithDefaultSubject(String to, String code, String language) {
+        String subject = plugin.getConfig().getString("email_subject", "VerifyMC Verification Code");
         return sendCode(to, subject, code, language);
     }
 
@@ -234,9 +242,9 @@ public class MailService {
             }
             
             String serverName = plugin.getConfig().getString("web_server_prefix", "[ Server ]");
-            content = content.replace("{username}", username)
-                             .replace("{server_name}", serverName)
-                             .replace("{reason}", reason != null ? reason : "");
+            content = content.replace("{username}", escapeHtml(username))
+                             .replace("{server_name}", escapeHtml(serverName))
+                             .replace("{reason}", escapeHtml(reason != null ? reason : ""));
             
             debugLog("Creating review result notification email");
             Message message = new MimeMessage(session);
@@ -332,5 +340,16 @@ public class MailService {
                        "</div></body></html>";
             }
         }
+    }
+
+    private String escapeHtml(String value) {
+        if (value == null) {
+            return "";
+        }
+        return value.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;")
+                .replace("'", "&#39;");
     }
 }

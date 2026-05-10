@@ -45,6 +45,26 @@
           <Label>{{ $t('register.form.email') }}</Label>
           <Input v-model="form.email" :placeholder="$t('register.form.email_placeholder')" :disabled="saving" />
         </div>
+
+        <div v-if="emailChanged" class="flex flex-col gap-2 md:col-span-2">
+          <Label>{{ $t('register.form.code') }}</Label>
+          <div class="flex flex-col sm:flex-row gap-2">
+            <Input
+              v-model="form.code"
+              :placeholder="$t('register.form.code_placeholder')"
+              :disabled="saving"
+            />
+            <Button
+              type="button"
+              variant="secondary"
+              class="whitespace-nowrap"
+              :disabled="sendingCode || saving || !form.email || cooldownSeconds > 0"
+              @click="sendEmailCode"
+            >
+              {{ sendingCode ? $t('register.sending') : cooldownSeconds > 0 ? `${cooldownSeconds}s` : $t('register.sendCode') }}
+            </Button>
+          </div>
+        </div>
       </div>
 
       <div class="mt-5 flex justify-end">
@@ -120,7 +140,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, inject } from 'vue'
+import { ref, computed, onMounted, onUnmounted, inject } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { User, Clock, CheckCircle, XCircle } from 'lucide-vue-next'
 import { useNotification } from '@/composables/useNotification'
@@ -142,10 +162,14 @@ const userStatus = ref<UserStatusType>('pending')
 const rejectReason = ref<string>('')
 const saving = ref(false)
 const changingPassword = ref(false)
+const sendingCode = ref(false)
+const cooldownSeconds = ref(0)
+const cooldownTimer = ref<ReturnType<typeof setInterval> | null>(null)
 const discordStatus = ref<DiscordStatus | null>(null)
 
 const form = ref({
   email: '',
+  code: '',
 })
 
 const passwordForm = ref({
@@ -154,6 +178,7 @@ const passwordForm = ref({
 })
 
 const discordEnabled = computed(() => config.value?.discord?.enabled)
+const emailChanged = computed(() => form.value.email.trim().toLowerCase() !== (userInfo.value?.email || '').trim().toLowerCase())
 
 const statusClass = computed(() => {
   const colors = getStatusColors(userStatus.value)
@@ -176,6 +201,48 @@ const loadUserInfo = async () => {
   userInfo.value = sessionService.getUserInfo()
   if (userInfo.value) {
     form.value.email = userInfo.value.email || ''
+    form.value.code = ''
+  }
+}
+
+const startCooldown = (seconds: number) => {
+  cooldownSeconds.value = seconds
+  if (cooldownTimer.value) clearInterval(cooldownTimer.value)
+  cooldownTimer.value = setInterval(() => {
+    cooldownSeconds.value--
+    if (cooldownSeconds.value <= 0 && cooldownTimer.value) {
+      clearInterval(cooldownTimer.value)
+      cooldownTimer.value = null
+    }
+  }, 1000)
+}
+
+const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+
+const sendEmailCode = async () => {
+  if (sendingCode.value || cooldownSeconds.value > 0) return
+  const email = form.value.email.trim().toLowerCase()
+  if (!email || !isValidEmail(email)) {
+    notification.error(t('register.validation.email_format'))
+    return
+  }
+
+  sendingCode.value = true
+  try {
+    const response = await apiService.sendCode({ email, language: locale.value })
+    if (response.success) {
+      notification.success(t('register.codeSent'))
+      startCooldown(response.remainingSeconds || 60)
+    } else {
+      if (response.remainingSeconds && response.remainingSeconds > 0) {
+        startCooldown(response.remainingSeconds)
+      }
+      notification.error(response.message || t('register.sendFailed'))
+    }
+  } catch {
+    notification.error(t('register.sendFailed'))
+  } finally {
+    sendingCode.value = false
   }
 }
 
@@ -207,18 +274,25 @@ const loadDiscordStatus = async () => {
 }
 
 const saveProfile = async () => {
+  if (emailChanged.value && !form.value.code.trim()) {
+    notification.error(t('register.validation.code_required'))
+    return
+  }
+
   saving.value = true
   try {
     const response = await apiService.updateUserInfo({
-      email: form.value.email,
+      email: form.value.email.trim().toLowerCase(),
+      code: emailChanged.value ? form.value.code.trim() : undefined,
       language: locale.value,
     })
     if (response.success) {
       notification.success(t('dashboard.profile.save_success'))
       if (userInfo.value) {
-        userInfo.value.email = form.value.email
+        userInfo.value.email = form.value.email.trim().toLowerCase()
         sessionService.setUserInfo(userInfo.value)
       }
+      form.value.code = ''
     } else {
       notification.error(response.message || t('common.error'))
     }
@@ -272,6 +346,13 @@ onMounted(() => {
   loadUserStatus()
   if (discordEnabled.value) {
     loadDiscordStatus()
+  }
+})
+
+onUnmounted(() => {
+  if (cooldownTimer.value) {
+    clearInterval(cooldownTimer.value)
+    cooldownTimer.value = null
   }
 })
 </script>

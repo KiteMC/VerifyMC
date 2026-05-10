@@ -498,13 +498,6 @@ class ApiService {
     })
   }
 
-  // AuthMe 同步
-  async syncAuthme(language: string = 'en'): Promise<{ success: boolean; message?: string }> {
-    return this.request<{ success: boolean; message?: string }>('/admin/sync', {
-      method: 'POST',
-      body: JSON.stringify({ language }),
-    })
-  }
   // 获取审计日志
   async getAuditLogs(): Promise<AuditListResponse> {
     return this.request<AuditListResponse>('/admin/audits')
@@ -527,6 +520,7 @@ class ApiService {
   // 更新用户信息（预留接口）
   async updateUserInfo(data: {
     email?: string
+    code?: string
     language?: string
   }): Promise<{ success: boolean; message?: string }> {
     return this.request('/user/update', {

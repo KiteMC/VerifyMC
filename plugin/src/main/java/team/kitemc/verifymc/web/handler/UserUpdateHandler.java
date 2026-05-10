@@ -37,7 +37,8 @@ public class UserUpdateHandler implements HttpHandler {
         }
 
         String language = req.optString("language", "en");
-        String newEmail = req.optString("email", "");
+        String newEmail = req.optString("email", "").trim().toLowerCase();
+        String code = req.optString("code", "").trim();
 
         if (newEmail.isBlank()) {
             WebResponseHelper.sendJson(exchange, ApiResponseFactory.failure(
@@ -80,6 +81,12 @@ public class UserUpdateHandler implements HttpHandler {
         if (emailCount >= maxAccounts) {
             WebResponseHelper.sendJson(exchange, ApiResponseFactory.failure(
                     ctx.getMessage("register.email_limit", language)));
+            return;
+        }
+
+        if (code.isEmpty() || !ctx.getVerifyCodeService().checkCode(newEmail, code)) {
+            WebResponseHelper.sendJson(exchange, ApiResponseFactory.failure(
+                    ctx.getMessage("verify.wrong_code", language)));
             return;
         }
 

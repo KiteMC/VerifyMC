@@ -38,7 +38,7 @@ public class VerifyCodeHandler implements HttpHandler {
 
         if (email.isEmpty() || !email.matches("^[\\w.+-]+@[\\w.-]+\\.[a-zA-Z]{2,}$")) {
             WebResponseHelper.sendJson(exchange, ApiResponseFactory.failure(
-                    ctx.getMessage("verify.invalid_email", language)));
+                    ctx.getMessage("email.invalid_format", language)));
             return;
         }
 
@@ -54,24 +54,28 @@ public class VerifyCodeHandler implements HttpHandler {
 
         // Check rate limit
         if (!ctx.getVerifyCodeService().canSendCode(email)) {
-            WebResponseHelper.sendJson(exchange, ApiResponseFactory.failure(
-                    ctx.getMessage("verify.rate_limit", language)));
+            long remainingSeconds = ctx.getVerifyCodeService().getRemainingCooldownSeconds(email);
+            JSONObject response = ApiResponseFactory.failure(
+                    ctx.getMessage("email.rate_limited", language)
+                            .replace("{seconds}", String.valueOf(remainingSeconds)));
+            response.put("remainingSeconds", remainingSeconds);
+            WebResponseHelper.sendJson(exchange, response);
             return;
         }
 
         // Generate and send code
         String code = ctx.getVerifyCodeService().generateCode(email);
-        boolean sent = ctx.getMailService().sendVerifyCode(email, code, language);
+        boolean sent = ctx.getMailService().sendVerifyCodeWithDefaultSubject(email, code, language);
 
         if (sent) {
             // Get remaining cooldown seconds for next send
             long remainingSeconds = ctx.getVerifyCodeService().getRemainingCooldownSeconds(email);
-            JSONObject response = ApiResponseFactory.success(ctx.getMessage("verify.sent", language));
+            JSONObject response = ApiResponseFactory.success(ctx.getMessage("email.sent", language));
             response.put("remainingSeconds", remainingSeconds);
             WebResponseHelper.sendJson(exchange, response);
         } else {
             WebResponseHelper.sendJson(exchange, ApiResponseFactory.failure(
-                    ctx.getMessage("verify.send_failed", language)));
+                    ctx.getMessage("email.failed", language)));
         }
     }
 }
