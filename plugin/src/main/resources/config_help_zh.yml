@@ -307,29 +307,17 @@ discord:
 # ----------------------------------------
 # 配置服务器客户端资源下载项，显示在网页界面的下载页面
 downloads:
-  client-modpack:
-    # 下载项名称
-    name: "Client Modpack"
-    # 下载项描述
-    description: "Required modpack for the server. Includes all necessary mods and configurations."
-    # 版本号
-    version: "1.0.0"
-    # 文件大小（显示用）
-    size: "256 MB"
-    # 下载链接
-    url: "#"
-    # 图标名称（可选：gamepad, package, download, file, folder 等）
-    icon: "gamepad"
-  server-resource-pack:
-    # 下载项名称
-    name: "Server Resource Pack"
-    # 下载项描述
-    description: "Custom textures and assets for the server."
-    # 版本号
-    version: "2.1.0"
-    # 文件大小（显示用）
-    size: "64 MB"
-    # 下载链接
-    url: "#"
-    # 图标名称
-    icon: "package"
+  # 示例：
+  # client-modpack:
+  #   # 下载项名称
+  #   name: "Client Modpack"
+  #   # 下载项描述
+  #   description: "Required modpack for the server. Includes all necessary mods and configurations."
+  #   # 版本号
+  #   version: "1.0.0"
+  #   # 文件大小（显示用）
+  #   size: "256 MB"
+  #   # 下载链接
+  #   url: "https://example.com/modpack.zip"
+  #   # 图标名称（可选：gamepad, package, download, file, folder 等）
+  #   icon: "gamepad"

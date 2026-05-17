@@ -396,7 +396,7 @@
       "version": "Version",
       "online_players": "Online Players",
       "no_players": "No players online",
-      "api_not_available": "Server status API not implemented, showing mock data"
+      "load_failed": "Unable to load server status. Please try again later."
     },
     "audit_log": {
       "title": "Audit Log",

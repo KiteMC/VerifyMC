@@ -390,7 +390,7 @@
       "version": "版本",
       "online_players": "在线玩家列表",
       "no_players": "暂无玩家在线",
-      "api_not_available": "服务器状态 API 暂未实现，显示的是模拟数据"
+      "load_failed": "无法获取服务器状态，请稍后重试"
     },
     "audit_log": {
       "title": "审计日志",

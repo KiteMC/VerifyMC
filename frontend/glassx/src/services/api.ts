@@ -503,12 +503,12 @@ class ApiService {
     return this.request<AuditListResponse>('/admin/audits')
   }
 
-  // 获取下载资源列表（预留接口，后端可能未实现）
+  // 获取下载资源列表
   async getDownloadResources(): Promise<{ success: boolean; resources?: DownloadResource[]; message?: string }> {
     return this.request('/downloads')
   }
 
-  // 获取服务器状态（预留接口，后端可能未实现）
+  // 获取服务器状态
   async getServerStatus(): Promise<{
     success: boolean
     data?: ServerStatusData

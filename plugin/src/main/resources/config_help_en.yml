@@ -306,29 +306,17 @@ discord:
 # ----------------------------------------
 # Configure server client resource downloads, displayed on the web interface downloads page
 downloads:
-  client-modpack:
-    # Download item name
-    name: "Client Modpack"
-    # Download item description
-    description: "Required modpack for the server. Includes all necessary mods and configurations."
-    # Version number
-    version: "1.0.0"
-    # File size (for display)
-    size: "256 MB"
-    # Download URL
-    url: "#"
-    # Icon name (options: gamepad, package, download, file, folder, etc.)
-    icon: "gamepad"
-  server-resource-pack:
-    # Download item name
-    name: "Server Resource Pack"
-    # Download item description
-    description: "Custom textures and assets for the server."
-    # Version number
-    version: "2.1.0"
-    # File size (for display)
-    size: "64 MB"
-    # Download URL
-    url: "#"
-    # Icon name
-    icon: "package"
+  # Example:
+  # client-modpack:
+  #   # Download item name
+  #   name: "Client Modpack"
+  #   # Download item description
+  #   description: "Required modpack for the server. Includes all necessary mods and configurations."
+  #   # Version number
+  #   version: "1.0.0"
+  #   # File size (for display)
+  #   size: "256 MB"
+  #   # Download URL
+  #   url: "https://example.com/modpack.zip"
+  #   # Icon name (options: gamepad, package, download, file, folder, etc.)
+  #   icon: "gamepad"

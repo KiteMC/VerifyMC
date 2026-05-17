@@ -121,28 +121,6 @@ const openUrl = (url: string | undefined) => {
 const loading = ref(true)
 const resources = ref<DownloadResource[]>([])
 
-// Default mock resources when API is not available
-const defaultResources: DownloadResource[] = [
-  {
-    id: 'client-modpack',
-    name: 'Client Modpack',
-    description: 'Required modpack for the server. Includes all necessary mods and configurations.',
-    version: '1.0.0',
-    size: '256 MB',
-    url: '#',
-    icon: 'gamepad',
-  },
-  {
-    id: 'server-resource-pack',
-    name: 'Server Resource Pack',
-    description: 'Custom textures and assets for the server.',
-    version: '2.1.0',
-    size: '64 MB',
-    url: '#',
-    icon: 'package',
-  },
-]
-
 const getResourceIcon = (icon?: string) => {
   switch (icon) {
     case 'gamepad':
@@ -161,13 +139,11 @@ const loadResources = async () => {
     if (response.success && response.resources) {
       resources.value = response.resources
     } else {
-      // Use default resources when API is not available
-      resources.value = defaultResources
+      resources.value = []
     }
   } catch (error) {
     console.error('Failed to load resources:', error)
-    // Use default resources on error
-    resources.value = defaultResources
+    resources.value = []
   } finally {
     loading.value = false
   }

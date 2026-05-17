@@ -138,18 +138,4 @@ discord:
   guild_id: ""
   required: false
 
-downloads:
-  client-modpack:
-    name: "Client Modpack"
-    description: "Required modpack for the server. Includes all necessary mods and configurations."
-    version: "1.0.0"
-    size: "256 MB"
-    url: "#"
-    icon: "gamepad"
-  server-resource-pack:
-    name: "Server Resource Pack"
-    description: "Custom textures and assets for the server."
-    version: "2.1.0"
-    size: "64 MB"
-    url: "#"
-    icon: "package"
+downloads: {}

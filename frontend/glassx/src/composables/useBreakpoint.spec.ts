@@ -1,5 +1,9 @@
 import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest';
 
+const windowMock = new EventTarget() as Window & typeof globalThis;
+Object.defineProperty(windowMock, 'innerWidth', { value: 1024, writable: true, configurable: true });
+Object.defineProperty(globalThis, 'window', { value: windowMock, writable: true, configurable: true });
+
 // Mock Vue lifecycle hooks BEFORE importing useBreakpoint
 vi.mock('vue', async (importOriginal) => {
   const actual = await importOriginal<typeof import('vue')>();

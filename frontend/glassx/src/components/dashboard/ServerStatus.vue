@@ -131,10 +131,10 @@
         <p>{{ $t('dashboard.server_status.no_players') }}</p>
       </Card>
 
-      <!-- API Not Available Notice -->
-      <div v-if="apiNotAvailable" class="flex items-center gap-2 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg text-yellow-500 text-sm">
+      <!-- Error Notice -->
+      <div v-if="errorMessage" class="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">
         <AlertCircle class="w-4 h-4" />
-        <span>{{ $t('dashboard.server_status.api_not_available') }}</span>
+        <span>{{ errorMessage }}</span>
       </div>
     </div>
   </div>
@@ -142,6 +142,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import {
   Users,
   Activity,
@@ -155,8 +156,9 @@ import { apiService } from '@/services/api'
 import Card from '../ui/Card.vue'
 import Button from '../ui/Button.vue'
 
+const { t } = useI18n()
 const loading = ref(false)
-const apiNotAvailable = ref(false)
+const errorMessage = ref('')
 
 interface ServerStatus {
   online: boolean
@@ -175,27 +177,6 @@ interface ServerStatus {
 }
 
 const status = ref<ServerStatus | null>(null)
-
-// Mock data for when API is not available
-const mockStatus: ServerStatus = {
-  online: true,
-  players: {
-    online: 12,
-    max: 50,
-    list: [
-      { name: 'Steve', uuid: '12345678-1234-1234-1234-123456789012' },
-      { name: 'Alex', uuid: '87654321-4321-4321-4321-210987654321' },
-      { name: 'Notch', uuid: '11111111-2222-3333-4444-555555555555' },
-    ],
-  },
-  version: '1.20.4',
-  tps: 19.8,
-  memory: {
-    used: 4096,
-    max: 8192,
-  },
-  motd: 'Welcome to our Minecraft Server!',
-}
 
 const tpsStatus = computed(() => {
   const tps = status.value?.tps
@@ -220,21 +201,19 @@ const formatMemory = (mb?: number): string => {
 
 const loadStatus = async () => {
   loading.value = true
+  errorMessage.value = ''
   try {
     const response = await apiService.getServerStatus()
     if (response.success && response.data) {
       status.value = response.data
-      apiNotAvailable.value = false
     } else {
-      // Use mock data when API is not available
-      status.value = mockStatus
-      apiNotAvailable.value = true
+      status.value = null
+      errorMessage.value = response.message || t('dashboard.server_status.load_failed')
     }
   } catch (error) {
     console.error('Failed to load server status:', error)
-    // Use mock data on error
-    status.value = mockStatus
-    apiNotAvailable.value = true
+    status.value = null
+    errorMessage.value = t('dashboard.server_status.load_failed')
   } finally {
     loading.value = false
   }
