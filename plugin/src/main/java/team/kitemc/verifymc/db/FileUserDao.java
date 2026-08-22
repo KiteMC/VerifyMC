@@ -385,6 +385,23 @@ public class FileUserDao implements UserDao {
     }
 
     @Override
+    public boolean setUserLanguage(String username, String language) {
+        debugLog("setUserLanguage called: username=" + username + ", language=" + language);
+        String key = keyForUsername(username);
+        Map<String, Object> user = users.get(key);
+
+        if (user == null) {
+            debugLog("User not found: " + username);
+            return false;
+        }
+
+        user.put("language", language);
+        saveLater();
+        debugLog("User language updated: " + user.get("username"));
+        return true;
+    }
+
+    @Override
     public Map<String, Object> getUserByUsername(String username) {
         debugLog("Getting user by username: " + username);
         String key = username.toLowerCase(Locale.ROOT);

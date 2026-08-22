@@ -78,6 +78,7 @@ public class MysqlUserDao implements UserDao, AutoCloseable {
                     "password VARCHAR(255)," +
                     "regTime BIGINT," +
                     "discord_id VARCHAR(64)," +
+                    "language VARCHAR(8) NULL," +
                     "questionnaire_score INT NULL," +
                     "questionnaire_passed BOOLEAN NULL," +
                     "questionnaire_review_summary TEXT NULL," +
@@ -101,6 +102,12 @@ public class MysqlUserDao implements UserDao, AutoCloseable {
                 stmt.executeQuery("SELECT discord_id FROM users LIMIT 1");
             } catch (SQLException e) {
                 stmt.executeUpdate("ALTER TABLE users ADD COLUMN discord_id VARCHAR(64)");
+            }
+
+            try {
+                stmt.executeQuery("SELECT language FROM users LIMIT 1");
+            } catch (SQLException e) {
+                stmt.executeUpdate("ALTER TABLE users ADD COLUMN language VARCHAR(8) NULL");
             }
 
             try {
@@ -279,6 +286,21 @@ public class MysqlUserDao implements UserDao, AutoCloseable {
     }
 
     @Override
+    public boolean setUserLanguage(String username, String language) {
+        String sql = "UPDATE users SET language=? WHERE username=?";
+        try (PreparedStatement ps = getConnection().prepareStatement(sql)) {
+            ps.setString(1, language);
+            ps.setString(2, username);
+            int rows = ps.executeUpdate();
+            debugLog("User language updated: " + username);
+            return rows > 0;
+        } catch (SQLException e) {
+            debugLog("Error updating user language: " + e.getMessage());
+            return false;
+        }
+    }
+
+    @Override
     public List<Map<String, Object>> getAllUsers() {
         List<Map<String, Object>> result = new ArrayList<>();
         String sql = "SELECT * FROM users";
@@ -314,6 +336,7 @@ public class MysqlUserDao implements UserDao, AutoCloseable {
         user.put("password", rs.getString("password"));
         user.put("regTime", rs.getLong("regTime"));
         user.put("discordId", rs.getString("discord_id"));
+        user.put("language", rs.getString("language"));
         user.put("questionnaireScore", rs.getObject("questionnaire_score"));
         user.put("questionnairePassed", rs.getObject("questionnaire_passed"));
         user.put("questionnaireReviewSummary", rs.getString("questionnaire_review_summary"));

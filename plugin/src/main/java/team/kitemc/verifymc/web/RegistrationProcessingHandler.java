@@ -294,6 +294,9 @@ public class RegistrationProcessingHandler implements HttpHandler {
             ok = userDao.registerUser(request.normalizedUsername(), request.email(), status,
                     questionnaireScore, questionnairePassedValue, questionnaireReviewSummary, questionnaireScoredAt);
         }
+        if (ok && request.language() != null && !request.language().isEmpty()) {
+            userDao.setUserLanguage(request.normalizedUsername(), request.language());
+        }
 
         RegistrationApplicationService.RegistrationDecision decision =
                 registrationApplicationService.resolveDecision(ok, manualReviewRequired, questionnairePassed, registerAutoApprove, scoringServiceUnavailable);
