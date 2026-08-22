@@ -26,6 +26,12 @@ public interface UserDao {
 
     boolean updateUserEmail(String username, String email);
 
+    /**
+     * Persists the interface language the user registered with,
+     * so later emails (e.g. review notifications) can be localized per user.
+     */
+    boolean setUserLanguage(String username, String language);
+
     List<Map<String, Object>> getAllUsers();
 
     List<Map<String, Object>> getUsersWithPagination(int page, int pageSize);
