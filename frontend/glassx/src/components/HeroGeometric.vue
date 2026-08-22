@@ -132,7 +132,7 @@ const announcement = computed(() => {
   return config.value?.announcement || ''
 })
 
-const currentVersion = ref('1.7.3')
+const currentVersion = ref('1.8.0')
 const updateAvailable = ref(false)
 const releasesUrl = ref('https://github.com/KiteMC/VerifyMC/releases')
 
