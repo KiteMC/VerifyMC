@@ -1,30 +1,34 @@
-release: true
-version: 1.7.2
+version: 1.7.3
 release_notes: |
-  [简体中文](https://github.com/KiteMC/VerifyMC/blob/v1.7.2/release_notes_zh.md) | English | [Official Documentation](https://kitemc.com/docs/verifymc/)
+  # VerifyMC v1.7.3 更新日志
 
-  ## Improvements
+  ## 简体中文
 
-  - Shortened verification code expiry to 5 minutes to reduce the risk of stale code misuse
-  - Added frontend verification code input flow for a more complete registration experience
-  - Refactored mail sending with HTML escaping and default subject support
-  - Updated user info APIs and removed unused legacy methods
+  ### 本次更新
 
-  ## Web Refactoring
+  - 将中文设为插件、后端和前端的默认语言，同时保留中文/English 切换
+  - 重写中文 README，并新增英文 README；补充安装、构建和管理员登录说明
+  - 管理员面板使用已注册账号密码和服务器 OP 权限登录，明确 `/op <玩家名>` 与 `ops.json` 的使用方式
+  - 新增独立 Release 工作流，构建工作流与发布工作流分离，发布不再由版本文件中的开关决定
+  - Release 信息统一在本文件中维护，中文和英文直接写入同一份 Release 正文，移除单独的中文 Release 文件
+  - 版本检查改为读取 GitHub 最新正式 Release，忽略 draft/prerelease，并在首页显示当前版本和升级提示图标
+  - 修复语言切换器图标在中文和 English 切换时颜色闪变的问题，并校验本地语言值
+  - 改进后台全局 UI，减少玻璃拟态、模糊和过度渐变，采用更清晰的深色工作台布局
+  - 修复前端构建产物未完整打包进主插件 JAR 导致网页空白的问题
+  - 完成代码审查并修复相关默认语言、版本检查、登录权限和前端质量问题
 
-  - Consolidated scattered Discord HTTP handlers into a unified handler
-  - Organized user profile, status, and password endpoints to reduce duplicated logic
-  - Clarified backend API routing structure for easier maintenance
+  ## English
 
-  ## User Management
+  ### Changes in This Release
 
-  - Added support for username case-sensitivity configuration
-  - Unified user lookup behavior around the configured case-sensitivity mode
-  - Synchronized user matching logic between the main plugin and proxy plugin
-  - Improved data access abstractions for future storage extensions
-
-  ## Compatibility and Experience
-
-  - Updated related mail templates and frontend display content
-  - Synchronized version check metadata and release information for 1.7.2
+  - Made Chinese the default language across the plugin, backend, and frontend while keeping the Chinese/English switcher
+  - Rewrote the Chinese README, added an English README, and documented installation, builds, and administrator login
+  - Admin login now uses the registered account password together with the server OP list; documented `/op <player>` and `ops.json`
+  - Added a standalone Release workflow and separated publishing from the build workflow; publishing is no longer controlled by a version-file flag
+  - Unified Chinese and English release notes in this file and removed the separate Chinese release-notes file
+  - Switched version checks to GitHub's latest official Release API, ignoring drafts and prereleases, with a homepage upgrade indicator
+  - Fixed the language switcher icon color flicker and validated stored locale values
+  - Refined the global admin UI into a clearer dark workspace with less glassmorphism, blur, and excessive gradients
+  - Fixed the blank frontend caused by incomplete frontend assets in the main plugin JAR
+  - Completed a code review and fixed related default-language, version-check, login-permission, and frontend quality issues
 

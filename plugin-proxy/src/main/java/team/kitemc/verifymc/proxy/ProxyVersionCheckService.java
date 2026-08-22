@@ -1,21 +1,20 @@
 package team.kitemc.verifymc.proxy;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Version check service for VerifyMC Proxy Plugin
  * Checks for updates from GitHub repository
  */
 public class ProxyVersionCheckService {
-    private static final String GITHUB_POM_URL = "https://raw.githubusercontent.com/KiteMC/VerifyMC/refs/heads/master/plugin-proxy/pom.xml";
-    private static final Pattern VERSION_PATTERN = Pattern.compile("<version>([^<]+)</version>");
+    private static final String GITHUB_RELEASES_API_URL = "https://api.github.com/repos/KiteMC/VerifyMC/releases/latest";
     private static final int TIMEOUT_MS = 10000;
     
     private final String currentVersion;
@@ -74,19 +73,21 @@ public class ProxyVersionCheckService {
     }
     
     /**
-     * Fetch latest version from GitHub pom.xml
+     * Fetch latest official version from GitHub. The latest endpoint excludes
+     * drafts and prereleases by definition.
      * @return Latest version string or null if failed
      */
     private String fetchLatestVersionFromGitHub() {
         try {
-            debugLog("Fetching version from: " + GITHUB_POM_URL);
+            debugLog("Fetching latest official release from: " + GITHUB_RELEASES_API_URL);
             
-            URL url = new URL(GITHUB_POM_URL);
+            URL url = new URL(GITHUB_RELEASES_API_URL);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
             connection.setConnectTimeout(TIMEOUT_MS);
             connection.setReadTimeout(TIMEOUT_MS);
             connection.setRequestProperty("User-Agent", "VerifyMC-Proxy/" + currentVersion);
+            connection.setRequestProperty("Accept", "application/vnd.github+json");
             
             int responseCode = connection.getResponseCode();
             if (responseCode != 200) {
@@ -102,17 +103,15 @@ public class ProxyVersionCheckService {
                 }
             }
             
-            String pomContent = content.toString();
-            Matcher matcher = VERSION_PATTERN.matcher(pomContent);
-            
-            if (matcher.find()) {
-                String version = matcher.group(1).trim();
-                debugLog("Found version in pom.xml: " + version);
-                return version;
-            } else {
-                debugLog("No version found in pom.xml content");
-                return null;
-            }
+            JsonObject release = JsonParser.parseString(content.toString()).getAsJsonObject();
+            if (release.has("draft") && release.get("draft").getAsBoolean()) return null;
+            if (release.has("prerelease") && release.get("prerelease").getAsBoolean()) return null;
+
+            String tagName = release.has("tag_name") ? release.get("tag_name").getAsString().trim() : "";
+            if (tagName.isEmpty()) return null;
+            String version = tagName.replaceFirst("^[vV]", "");
+            debugLog("Found latest official release: " + version);
+            return version;
             
         } catch (Exception e) {
             debugLog("Exception while fetching version: " + e.getMessage());

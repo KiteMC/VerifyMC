@@ -30,10 +30,10 @@ public class AdminSyncHandler implements HttpHandler {
             req = WebResponseHelper.readJson(exchange);
         } catch (JSONException e) {
             WebResponseHelper.sendJson(exchange, ApiResponseFactory.failure(
-                    ctx.getMessage("error.invalid_json", "en")), 400);
+                    ctx.getMessage("error.invalid_json", "zh")), 400);
             return;
         }
-        String language = req.optString("language", "en");
+        String language = req.optString("language", "zh");
 
         if (ctx.getAuthmeService() == null) {
             WebResponseHelper.sendJson(exchange, ApiResponseFactory.failure(

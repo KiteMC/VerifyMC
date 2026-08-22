@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen w-full relative">
     <!-- Mobile Overlay -->
-    <div v-if="isOpen" class="fixed inset-0 bg-black/50 z-40 lg:hidden backdrop-blur-sm" @click="setOpen(false)"></div>
+    <div v-if="isOpen" class="fixed inset-0 bg-black/60 z-40 lg:hidden" @click="setOpen(false)"></div>
 
     <!-- Sidebar -->
     <DashboardSidebar
@@ -21,7 +21,10 @@
     >
       <div class="pt-20 lg:pt-8 px-4 lg:px-8 pb-8 flex-1">
         <div class="mb-6 flex items-center justify-between">
-          <h1 class="text-2xl font-bold text-white">{{ currentSectionTitle }}</h1>
+          <div>
+            <p class="text-xs uppercase tracking-wider text-slate-400 mb-1">{{ isAdmin ? $t('dashboard.sections.admin') : $t('dashboard.sections.player') }}</p>
+            <h1 class="text-2xl font-semibold text-slate-100">{{ currentSectionTitle }}</h1>
+          </div>
           <div class="hidden">
             <LanguageSwitcher />
           </div>
@@ -43,13 +46,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, inject, defineAsyncComponent, type Ref } from 'vue'
+import { ref, computed, onMounted, onUnmounted, defineAsyncComponent } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { sessionService } from '@/services/session'
 import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
 import DashboardSidebar from '@/components/dashboard/DashboardSidebar.vue'
-import type { AppConfig, UserInfo } from '@/types'
+import type { UserInfo } from '@/types'
 import { getPlayerMenuItems, getAdminMenuItems } from '@/config/menu'
 import { useSidebar } from '@/composables/useSidebar'
 
@@ -62,13 +65,11 @@ const AuditLog = defineAsyncComponent(() => import('@/components/dashboard/Audit
 
 const { t } = useI18n()
 const router = useRouter()
-const config = inject<Ref<AppConfig>>('config', ref({}))
 const { isCollapsed, isOpen, setTrigger, setOpen, setCollapse } = useSidebar()
 
 const activeSection = ref('profile')
 const userInfo = ref<UserInfo | null>(null)
 
-const serverName = computed(() => config.value?.webServerPrefix || 'VerifyMC')
 const isAdmin = computed(() => sessionService.isAdmin())
 
 const currentSectionTitle = computed(() => {

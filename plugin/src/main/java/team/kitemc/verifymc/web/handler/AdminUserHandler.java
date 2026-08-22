@@ -231,7 +231,7 @@ public class AdminUserHandler implements HttpHandler {
         if (body == null) return null;
 
         String target = body.optString("username", body.optString("uuid", ""));
-        String language = body.optString("language", "en");
+        String language = body.optString("language", "zh");
 
         if (target.isBlank()) {
             sendFailure(exchange, "admin.missing_user_identifier", language);
@@ -251,7 +251,7 @@ public class AdminUserHandler implements HttpHandler {
             return WebResponseHelper.readJson(exchange);
         } catch (JSONException e) {
             WebResponseHelper.sendJson(exchange, ApiResponseFactory.failure(
-                    ctx.getMessage("error.invalid_json", "en")), 400);
+                    ctx.getMessage("error.invalid_json", "zh")), 400);
             return null;
         }
     }

@@ -5,7 +5,7 @@
 - `plugin-proxy/`: Proxy-side plugin for Waterfall/Bungee/Velocity.
 - `frontend/glassx/`: Vue 3 + TypeScript + Vite admin/user web UI.
 - `docs/` and `docs/zh/`: screenshots and documentation assets.
-- Root metadata: `version.yml` (release/version source), `release_notes_zh.md`, and GitHub workflow in `.github/workflows/plugin.yml`.
+- Root metadata: `version.yml` (version source and bilingual release notes), and GitHub workflows in `.github/workflows/`.
 
 ## Build, Test, and Development Commands
 - Frontend dev server:

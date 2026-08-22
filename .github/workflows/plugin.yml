@@ -6,11 +6,6 @@ on:
   pull_request:
     branches: [master]
 
-env:
-  RELEASE: false
-  VERSION: '0.0.0'
-  RELEASE_NOTES: ''
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -20,14 +15,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Read version config
-        id: version
+      - name: Read version
         run: |
-          echo "RELEASE=$(awk '/release:/ {print $2}' version.yml)" >> $GITHUB_ENV
           echo "VERSION=$(awk '/version:/ {print $2}' version.yml)" >> $GITHUB_ENV
-          echo "RELEASE_NOTES<<EOF" >> $GITHUB_ENV
-          awk '/release_notes:/,0' version.yml | sed '1d' >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
 
       # ========== Frontend Build ==========
       - name: Cache Node modules
@@ -122,19 +112,3 @@ jobs:
         run: |
           ls -lR plugin/target || true
           ls -lR plugin-proxy/target || true
-
-      # ========== Release ==========
-      - name: Extract release notes from version.yml
-        run: |
-          python3 -c "import yaml; d=yaml.safe_load(open('version.yml', encoding='utf-8')); open('release_notes.md','w',encoding='utf-8').write(d['release_notes'])"
-
-      - name: Create GitHub Release
-        if: env.RELEASE == 'true'
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: v${{ env.VERSION }}
-          name: v${{ env.VERSION }}
-          body_path: ${{ github.workspace }}/release_notes.md
-          files: |
-            plugin/target/verifymc-*.jar
-            plugin-proxy/target/verifymc-proxy-*.jar

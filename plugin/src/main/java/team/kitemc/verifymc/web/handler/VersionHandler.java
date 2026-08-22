@@ -7,6 +7,7 @@ import team.kitemc.verifymc.core.PluginContext;
 import team.kitemc.verifymc.web.WebResponseHelper;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Returns the current plugin version and checks for updates.
@@ -27,6 +28,15 @@ public class VersionHandler implements HttpHandler {
         resp.put("currentVersion", ctx.getPlugin().getDescription().getVersion());
 
         if (ctx.getVersionCheckService() != null) {
+            // The initial check runs asynchronously during plugin startup. Trigger
+            // a retry when the first browser request arrives before it completes.
+            if (ctx.getVersionCheckService().getLatestVersion() == null) {
+                try {
+                    ctx.getVersionCheckService().checkForUpdatesAsync().get(5, TimeUnit.SECONDS);
+                } catch (Exception ignored) {
+                    // Return the current version even when GitHub is unavailable.
+                }
+            }
             JSONObject info = ctx.getVersionCheckService().getVersionInfo();
             if (info != null) {
                 resp.put("latestVersion", info.optString("latestVersion", ""));

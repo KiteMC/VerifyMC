@@ -6,7 +6,7 @@
 
     <groupId>team.kitemc</groupId>
     <artifactId>verifymc-proxy</artifactId>
-    <version>1.7.2</version>
+    <version>1.7.3</version>
     <packaging>jar</packaging>
     <name>VerifyMC-Proxy</name>
     <description>VerifyMC proxy plugin for BungeeCord and Velocity</description>

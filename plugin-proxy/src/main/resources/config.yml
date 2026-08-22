@@ -17,7 +17,7 @@ kick_message: "&c[ VerifyMC ]\n&7Please visit &a{url} &7to register\n&7before jo
 register_url: "https://yourdomain.com/"
 
 # Language setting (zh or en)
-language: en
+language: zh
 
 # Debug mode - enable for troubleshooting
 debug: false

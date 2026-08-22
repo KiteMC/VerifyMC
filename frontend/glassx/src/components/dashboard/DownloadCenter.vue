@@ -17,7 +17,7 @@
         :key="resource.id"
         class="p-6 flex flex-col h-full hover:border-blue-500/30 transition-all"
       >
-        <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center text-purple-500 mb-4">
+        <div class="w-14 h-14 rounded-lg bg-blue-500/15 border border-blue-500/25 flex items-center justify-center text-blue-400 mb-4">
           <component :is="getResourceIcon(resource.icon)" class="w-8 h-8" />
         </div>
         <div class="flex-1 mb-4">
@@ -47,7 +47,7 @@
 
     <!-- Empty State -->
     <div v-else class="flex flex-col items-center justify-center py-16 text-center">
-      <div class="w-20 h-20 rounded-3xl bg-white/5 flex items-center justify-center text-white/30 mb-6">
+      <div class="w-20 h-20 rounded-lg bg-[#202832] border border-[#34404d] flex items-center justify-center text-white/30 mb-6">
         <Package class="w-16 h-16" />
       </div>
       <h3 class="text-xl font-semibold text-white mb-2">{{ $t('dashboard.downloads.no_resources') }}</h3>
@@ -62,15 +62,15 @@
       </h3>
       <div class="flex flex-col gap-4">
         <div class="flex items-start gap-3">
-          <span class="w-6 h-6 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-xs font-bold text-white shrink-0">1</span>
+          <span class="w-6 h-6 rounded bg-blue-600 flex items-center justify-center text-xs font-bold text-white shrink-0">1</span>
           <p class="text-white/70 text-sm leading-relaxed m-0">{{ $t('dashboard.downloads.instruction_1') }}</p>
         </div>
         <div class="flex items-start gap-3">
-          <span class="w-6 h-6 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-xs font-bold text-white shrink-0">2</span>
+          <span class="w-6 h-6 rounded bg-blue-600 flex items-center justify-center text-xs font-bold text-white shrink-0">2</span>
           <p class="text-white/70 text-sm leading-relaxed m-0">{{ $t('dashboard.downloads.instruction_2') }}</p>
         </div>
         <div class="flex items-start gap-3">
-          <span class="w-6 h-6 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-xs font-bold text-white shrink-0">3</span>
+          <span class="w-6 h-6 rounded bg-blue-600 flex items-center justify-center text-xs font-bold text-white shrink-0">3</span>
           <p class="text-white/70 text-sm leading-relaxed m-0">{{ $t('dashboard.downloads.instruction_3') }}</p>
         </div>
       </div>

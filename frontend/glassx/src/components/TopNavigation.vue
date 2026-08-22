@@ -1,7 +1,5 @@
 <template>
-  <nav class="fixed top-0 left-0 right-0 z-40 w-full bg-white/5 backdrop-blur-xl border-b border-white/10">
-    <!-- Gradient accent line -->
-    <div class="nav-gradient-line"></div>
+  <nav class="fixed top-0 left-0 right-0 z-40 w-full bg-[#151b22] border-b border-[#2b3540]">
     
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="relative flex justify-between items-center h-16">
@@ -69,7 +67,7 @@
       <transition name="slide-fade">
         <div
           v-show="mobileMenuOpen"
-          class="md:hidden border-t border-white/10 bg-white/5 backdrop-blur-xl"
+          class="md:hidden border-t border-[#2b3540] bg-[#171d24]"
         >
           <div class="px-3 pt-3 pb-4 space-y-2">
             <AnimatedMenuBar :vertical="true" />
@@ -139,18 +137,12 @@ const toggleMobileMenu = () => {
   font-size: 1.25rem;
   font-weight: 700;
   color: #fff;
-  background: linear-gradient(135deg, #fff 0%, rgba(255, 255, 255, 0.8) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #f3f4f6;
   transition: all 0.3s ease;
 }
 
 .logo-link:hover .logo-text {
-  background: linear-gradient(135deg, #93c5fd 0%, #c4b5fd 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #93c5fd;
 }
 
 /* Slide animation for mobile menu */

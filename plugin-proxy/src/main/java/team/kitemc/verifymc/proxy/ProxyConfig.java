@@ -26,7 +26,7 @@ public class ProxyConfig {
     private boolean autoUpdateConfig = true;
     private boolean autoUpdateI18n = true;
     private boolean backupOnUpdate = true;
-    private String language = "en";
+    private String language = "zh";
     
     public ProxyConfig(File dataFolder) {
         this.configFile = new File(dataFolder, "config.yml");

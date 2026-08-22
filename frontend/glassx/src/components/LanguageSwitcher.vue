@@ -14,9 +14,6 @@
       <span class="fluid-trigger-content">
         <div class="fluid-icon-wrapper">
           <Globe class="fluid-icon" />
-          <div v-if="hoveredLanguage" class="fluid-icon-highlight" :style="{ color: currentLanguage.color }">
-            <Globe class="fluid-icon" />
-          </div>
         </div>
         <span class="fluid-trigger-text">{{ currentLanguage.label }}</span>
       </span>
@@ -86,6 +83,9 @@ const languages = [
   { code: 'zh', label: '中文', flag: '🇨🇳', color: '#FF6B6B' },
   { code: 'en', label: 'English', flag: '🇺🇸', color: '#4ECDC4' }
 ]
+
+const isSupportedLanguage = (value: string | null): value is 'zh' | 'en' =>
+  value === 'zh' || value === 'en'
 
 const currentLocale = computed(() => locale.value)
 
@@ -160,7 +160,7 @@ const handleKeyDown = (event: KeyboardEvent) => {
 onMounted(() => {
   // 初始化优先读取 localStorage
   const savedLang = localStorage.getItem('language') || localStorage.getItem('lang')
-  if (savedLang && savedLang !== locale.value) {
+  if (isSupportedLanguage(savedLang) && savedLang !== locale.value) {
     locale.value = savedLang
   }
 
@@ -208,29 +208,7 @@ onUnmounted(() => {
 .fluid-icon {
   width: 16px;
   height: 16px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.fluid-icon-highlight {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  animation: iconPulse 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-}
-
-@keyframes iconPulse {
-  0% {
-    opacity: 0;
-    transform: scale(0.8);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.2);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
+  color: rgba(226, 232, 240, 0.88);
 }
 
 .fluid-trigger-text {
@@ -429,7 +407,6 @@ onUnmounted(() => {
   .fluid-highlight,
   .fluid-option,
   .fluid-icon,
-  .fluid-icon-highlight,
   .fluid-flag-highlight {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;

@@ -22,7 +22,7 @@ public class ReviewStatusHandler implements HttpHandler {
 
         String query = exchange.getRequestURI().getQuery();
         String username = null;
-        String language = "en";
+        String language = "zh";
         if (query != null) {
             for (String param : query.split("&")) {
                 String[] kv = param.split("=", 2);

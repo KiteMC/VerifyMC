@@ -6,13 +6,13 @@
    Global CSS Custom Properties (Migrated from App.vue)
    =========================================== */
 :root {
-  --glass-bg: rgba(255, 255, 255, 0.08);
-  --glass-bg-hover: rgba(255, 255, 255, 0.12);
-  --glass-border: rgba(255, 255, 255, 0.15);
-  --glass-border-hover: rgba(255, 255, 255, 0.25);
-  --glass-blur: 20px;
-  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  --glass-inset: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  --glass-bg: #1a2027;
+  --glass-bg-hover: #202832;
+  --glass-border: #303b47;
+  --glass-border-hover: #435160;
+  --glass-blur: 0;
+  --glass-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  --glass-inset: none;
 
   --gradient-primary: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
   --gradient-accent: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899);
@@ -28,13 +28,8 @@
 
   body {
     @apply min-h-screen text-white overflow-x-hidden;
-    background-color: #0f0c29;
-    background-image: 
-      radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
-      radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
-      radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%),
-      radial-gradient(at 80% 100%, hsla(242,100%,15%,1) 0, transparent 50%),
-      radial-gradient(at 0% 100%, hsla(300,100%,10%,1) 0, transparent 50%);
+    background-color: #11161c;
+    background-image: linear-gradient(180deg, #151b22 0%, #0f1419 100%);
     background-attachment: fixed;
     font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
     -webkit-font-smoothing: antialiased;
@@ -48,25 +43,17 @@
 
 @layer components {
   .glass-panel {
-    @apply bg-white/5 border border-white/10;
-    /* Extra properties for enhanced glass effect */
-    backdrop-filter: blur(24px) saturate(180%);
-    -webkit-backdrop-filter: blur(24px) saturate(180%);
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    background: #171d24;
+    border: 1px solid #2b3540;
+    box-shadow: var(--glass-shadow);
   }
 
   .glass-card {
-    background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    border-radius: 24px;
-    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37), 
-                0 0 0 1px rgba(255, 255, 255, 0.1) inset,
-                0 1px 0 0 rgba(255, 255, 255, 0.2) inset;
-    transform: translateZ(0);
-    will-change: transform;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
+    box-shadow: var(--glass-shadow);
+    transition: background-color 0.2s ease, border-color 0.2s ease;
   }
   
   .glass-card-hover {
@@ -74,22 +61,16 @@
   }
 
   .glass-card-hover:hover {
-    background: rgba(255, 255, 255, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.5),
-                0 0 0 1px rgba(255, 255, 255, 0.15) inset,
-                0 1px 0 0 rgba(255, 255, 255, 0.25) inset;
-    transform: translateY(-2px) translateZ(0);
+    background: var(--glass-bg-hover);
+    border-color: var(--glass-border-hover);
   }
 
   .glass-button {
-    @apply relative overflow-hidden rounded-xl px-6 py-3 transition-all duration-300 ease-out flex items-center justify-center gap-2;
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(12px) saturate(180%);
-    -webkit-backdrop-filter: blur(12px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    color: white;
+    @apply relative overflow-hidden rounded-md px-6 py-3 transition-colors duration-200 ease-out flex items-center justify-center gap-2;
+    background: #202832;
+    border: 1px solid #3a4652;
+    box-shadow: none;
+    color: #e5e7eb;
     font-weight: 500;
   }
 
@@ -100,8 +81,7 @@
     left: -100%;
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-    transition: left 0.5s;
+    display: none;
   }
 
   .glass-button:hover::before {
@@ -109,10 +89,8 @@
   }
 
   .glass-button:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.2);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+    background: #2a3540;
+    border-color: #4a5968;
   }
 
   .glass-button:active {
@@ -122,51 +100,44 @@
   /* Variants */
   .glass-button-primary {
     @apply glass-button;
-    background: rgba(59, 130, 246, 0.2); /* blue-500/20 */
-    border-color: rgba(59, 130, 246, 0.3);
+    background: #2563eb;
+    border-color: #3b82f6;
   }
 
   .glass-button-primary:hover {
-    background: rgba(59, 130, 246, 0.3);
-    border-color: rgba(59, 130, 246, 0.5);
-    box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+    background: #1d4ed8;
+    border-color: #60a5fa;
   }
 
   .glass-button-success {
     @apply glass-button;
-    background: rgba(16, 185, 129, 0.2); /* emerald-500/20 */
-    border-color: rgba(16, 185, 129, 0.3);
+    background: #166534;
+    border-color: #22c55e;
   }
 
   .glass-button-success:hover {
-    background: rgba(16, 185, 129, 0.3);
-    border-color: rgba(16, 185, 129, 0.5);
-    box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
+    background: #15803d;
+    border-color: #4ade80;
   }
 
   .glass-button-danger {
     @apply glass-button;
-    background: rgba(239, 68, 68, 0.2); /* red-500/20 */
-    border-color: rgba(239, 68, 68, 0.3);
+    background: #991b1b;
+    border-color: #ef4444;
   }
 
   .glass-button-danger:hover {
-    background: rgba(239, 68, 68, 0.3);
-    border-color: rgba(239, 68, 68, 0.5);
-    box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
+    background: #b91c1c;
+    border-color: #f87171;
   }
 
   .glass-input {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(16px) saturate(180%);
-    -webkit-backdrop-filter: blur(16px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 16px;
+    background: #111820;
+    border: 1px solid #344250;
+    border-radius: 6px;
     padding: 12px 16px;
     outline: none;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    transform: translateZ(0);
-    will-change: border-color, box-shadow, background-color;
     color: white;
   }
   
@@ -175,11 +146,9 @@
   }
   
   .glass-input:focus {
-    background: rgba(255, 255, 255, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1),
-                0 8px 25px 0 rgba(31, 38, 135, 0.3),
-                0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+    background: #151f29;
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.14);
   }
 
   .glass-tab {

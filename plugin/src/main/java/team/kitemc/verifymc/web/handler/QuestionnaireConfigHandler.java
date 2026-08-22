@@ -20,7 +20,7 @@ public class QuestionnaireConfigHandler implements HttpHandler {
         if (!WebResponseHelper.requireMethod(exchange, "GET")) return;
 
         String query = exchange.getRequestURI().getQuery();
-        String lang = "en";
+        String lang = "zh";
         if (query != null) {
             for (String param : query.split("&")) {
                 String[] kv = param.split("=", 2);

@@ -8,17 +8,14 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.concurrent.CompletableFuture;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Version check service for VerifyMC plugin
  * Checks for updates from GitHub repository
  */
 public class VersionCheckService {
-    private static final String GITHUB_POM_URL = "https://raw.githubusercontent.com/KiteMC/VerifyMC/refs/heads/master/plugin/pom.xml";
+    private static final String GITHUB_RELEASES_API_URL = "https://api.github.com/repos/KiteMC/VerifyMC/releases/latest";
     private static final String GITHUB_RELEASES_URL = "https://github.com/KiteMC/VerifyMC/releases";
-    private static final Pattern VERSION_PATTERN = Pattern.compile("<version>([^<]+)</version>");
     private static final int TIMEOUT_MS = 10000; // 10 seconds timeout
     
     private final Plugin plugin;
@@ -90,15 +87,17 @@ public class VersionCheckService {
     }
     
     /**
-     * Fetch latest version from GitHub pom.xml
+     * Fetch the latest official release from GitHub.
+     * The releases/latest endpoint excludes drafts and prereleases, so branch
+     * versions and release candidates cannot trigger a misleading update notice.
      * @return Latest version string or null if failed
      */
     private String fetchLatestVersionFromGitHub() {
         HttpURLConnection connection = null;
         try {
-            debugLog("Fetching version from: " + GITHUB_POM_URL);
+            debugLog("Fetching latest official release from: " + GITHUB_RELEASES_API_URL);
             
-            URL url = new URL(GITHUB_POM_URL);
+            URL url = new URL(GITHUB_RELEASES_API_URL);
             connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
             connection.setConnectTimeout(TIMEOUT_MS);
@@ -119,19 +118,21 @@ public class VersionCheckService {
                 }
             }
             
-            // Parse version from pom.xml content
-            String pomContent = content.toString();
-            Matcher matcher = VERSION_PATTERN.matcher(pomContent);
-            
-            // Find the first version tag (should be the project version)
-            if (matcher.find()) {
-                String version = matcher.group(1).trim();
-                debugLog("Found version in pom.xml: " + version);
-                return version;
-            } else {
-                debugLog("No version found in pom.xml content");
+            JSONObject release = new JSONObject(content.toString());
+            if (release.optBoolean("draft", true) || release.optBoolean("prerelease", true)) {
+                debugLog("Latest GitHub release is not an official release");
                 return null;
             }
+
+            String tagName = release.optString("tag_name", "").trim();
+            if (tagName.isEmpty()) {
+                debugLog("GitHub release did not contain a tag name");
+                return null;
+            }
+
+            String version = tagName.replaceFirst("^[vV]", "");
+            debugLog("Found latest official release: " + version);
+            return version;
             
         } catch (Exception e) {
             debugLog("Exception while fetching version: " + e.getMessage());

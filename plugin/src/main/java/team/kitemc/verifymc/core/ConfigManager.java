@@ -90,7 +90,7 @@ public class ConfigManager {
     }
 
     public String getLanguage() {
-        return getConfig().getString("language", "en");
+        return getConfig().getString("language", "zh");
     }
 
     // --- Web server ---

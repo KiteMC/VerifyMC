@@ -25,8 +25,8 @@
       <Card
         class="p-6"
         :class="status?.online
-          ? 'bg-white/5 backdrop-blur-xl border border-green-500/20 shadow-[0_0_20px_rgba(34,197,94,0.1)]'
-          : 'bg-white/5 backdrop-blur-xl border border-red-500/20 shadow-[0_0_20px_rgba(239,68,68,0.1)]'"
+          ? 'bg-[#192720] border border-green-500/30'
+          : 'bg-[#2b1d22] border border-red-500/30'"
       >
         <div class="flex items-center gap-3 mb-3">
           <div
@@ -87,7 +87,7 @@
             </div>
           </div>
           <div class="w-full h-1 bg-white/10 rounded-full overflow-hidden z-10" v-if="status?.memory">
-            <div class="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300" :style="{ width: memoryPercent + '%' }"></div>
+            <div class="h-full bg-blue-500 transition-all duration-300" :style="{ width: memoryPercent + '%' }"></div>
           </div>
         </Card>
 

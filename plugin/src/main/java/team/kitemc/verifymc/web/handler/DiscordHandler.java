@@ -42,7 +42,7 @@ public class DiscordHandler implements HttpHandler {
 
         QueryParams params = parseQuery(exchange);
         String username = params.get("username");
-        String language = params.getOrDefault("language", "en");
+        String language = params.getOrDefault("language", "zh");
 
         if (username == null || username.isBlank()) {
             sendMissingUsername(exchange, language);
@@ -59,7 +59,7 @@ public class DiscordHandler implements HttpHandler {
         QueryParams params = parseQuery(exchange);
         String code = params.get("code");
         String state = params.get("state");
-        String language = params.getOrDefault("language", "en");
+        String language = params.getOrDefault("language", "zh");
 
         String html;
         if (code == null || state == null) {
@@ -84,7 +84,7 @@ public class DiscordHandler implements HttpHandler {
 
         QueryParams params = parseQuery(exchange);
         String username = params.get("username");
-        String language = params.getOrDefault("language", "en");
+        String language = params.getOrDefault("language", "zh");
 
         JSONObject resp = new JSONObject();
         if (username != null && !username.isBlank()) {
@@ -114,7 +114,7 @@ public class DiscordHandler implements HttpHandler {
         if (req == null) return;
 
         String targetUsername = req.optString("username", "");
-        String language = req.optString("language", "en");
+        String language = req.optString("language", "zh");
 
         if (targetUsername.isBlank()) {
             WebResponseHelper.sendJson(exchange, ApiResponseFactory.failure(
@@ -146,7 +146,7 @@ public class DiscordHandler implements HttpHandler {
             return WebResponseHelper.readJson(exchange);
         } catch (JSONException e) {
             WebResponseHelper.sendJson(exchange, ApiResponseFactory.failure(
-                    ctx.getMessage("error.invalid_json", "en")), 400);
+                    ctx.getMessage("error.invalid_json", "zh")), 400);
             return null;
         }
     }

@@ -176,7 +176,10 @@ public class WebAuthHelper {
             if (lang.startsWith("zh")) {
                 return "zh";
             }
+            if (lang.startsWith("en")) {
+                return "en";
+            }
         }
-        return "en";
+        return "zh";
     }
 }

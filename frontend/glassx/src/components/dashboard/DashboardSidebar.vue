@@ -1,6 +1,6 @@
 <template>
   <aside 
-    class="fixed left-0 top-0 h-full bg-white/5 backdrop-blur-xl border-r border-white/10 z-50 transition-all duration-300 flex flex-col pt-16 max-w-[80vw]"
+    class="fixed left-0 top-0 h-full bg-[#171d24] border-r border-[#2b3540] z-50 transition-all duration-300 flex flex-col pt-16 max-w-[80vw]"
     :class="[
       isCollapsed ? 'w-20' : 'w-64',
       isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
@@ -52,7 +52,7 @@
     <!-- User Info -->
     <div class="p-4 border-t border-white/10 bg-white/5 shrink-0">
       <div class="flex items-center gap-3 mb-3 overflow-hidden">
-        <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white shrink-0">
+        <div class="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center text-white shrink-0">
           <User class="w-5 h-5" />
         </div>
         <div v-if="!isCollapsed" class="flex flex-col overflow-hidden">

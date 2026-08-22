@@ -21,7 +21,7 @@ public class CaptchaHandler implements HttpHandler {
         if (!WebResponseHelper.requireMethod(exchange, "GET")) return;
 
         String query = exchange.getRequestURI().getQuery();
-        String language = "en";
+        String language = "zh";
         if (query != null) {
             for (String param : query.split("&")) {
                 String[] kv = param.split("=", 2);

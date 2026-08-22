@@ -1,4 +1,4 @@
-language: en
+language: zh
 debug: false
 web_port: 8080
 ws_port: 8081

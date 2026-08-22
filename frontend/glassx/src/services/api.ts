@@ -466,7 +466,7 @@ class ApiService {
   }
 
   // Discord OAuth - 获取授权 URL
-  async getDiscordAuthUrl(username: string, language: string = 'en'): Promise<{
+  async getDiscordAuthUrl(username: string, language: string = 'zh'): Promise<{
     success: boolean;
     authUrl?: string;
     message?: string;
@@ -475,7 +475,7 @@ class ApiService {
   }
 
   // Discord OAuth - 检查绑定状态
-  async getDiscordStatus(username: string, language: string = 'en'): Promise<{
+  async getDiscordStatus(username: string, language: string = 'zh'): Promise<{
     success: boolean;
     linked: boolean;
     user?: {
@@ -491,7 +491,7 @@ class ApiService {
   }
 
   // Discord OAuth - 解绑 Discord 账号
-  async unlinkDiscord(username: string, language: string = 'en'): Promise<ReviewResponse> {
+  async unlinkDiscord(username: string, language: string = 'zh'): Promise<ReviewResponse> {
     return this.request<ReviewResponse>('/discord/unlink', {
       method: 'POST',
       body: JSON.stringify({ username, language }),
@@ -542,7 +542,7 @@ class ApiService {
   }
 
   // AuthMe 同步
-  async syncAuthme(language: string = 'en'): Promise<{ success: boolean; message?: string; msg?: string }> {
+  async syncAuthme(language: string = 'zh'): Promise<{ success: boolean; message?: string; msg?: string }> {
     return this.request<{ success: boolean; message?: string; msg?: string }>('/admin/sync', {
       method: 'POST',
       body: JSON.stringify({ language }),

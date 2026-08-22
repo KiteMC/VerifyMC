@@ -15,8 +15,19 @@
               </svg>
               <span class="text-sm font-medium tracking-wide">GitHub</span>
             </a>
-            <div class="px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-medium text-white/90">
-              v1.6.6
+            <div class="version-badge inline-flex items-center gap-2">
+              <span>v{{ currentVersion }}</span>
+              <a
+                v-if="updateAvailable"
+                :href="releasesUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="update-indicator"
+                :title="$t('version.upgrade_available')"
+                :aria-label="$t('version.upgrade_available')"
+              >
+                <ArrowUpCircle class="w-4 h-4" />
+              </a>
             </div>
           </div>
         </div>
@@ -80,10 +91,11 @@
 </template>
 
 <script setup lang="ts">
-import { inject, computed, watch, ref, type Ref } from 'vue'
+import { inject, computed, watch, ref, onMounted, type Ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { sessionService } from '@/services/session'
-import { LogIn, Settings } from 'lucide-vue-next'
+import { ArrowUpCircle, LogIn, Settings } from 'lucide-vue-next'
+import { apiService } from '@/services/api'
 
 const { t } = useI18n()
 
@@ -118,6 +130,23 @@ const displayTitle2 = computed(() => serverName.value)
 // 获取announcement
 const announcement = computed(() => {
   return config.value?.announcement || ''
+})
+
+const currentVersion = ref('1.7.3')
+const updateAvailable = ref(false)
+const releasesUrl = ref('https://github.com/KiteMC/VerifyMC/releases')
+
+onMounted(async () => {
+  try {
+    const response = await apiService.checkVersion()
+    if (response.success) {
+      currentVersion.value = response.currentVersion || currentVersion.value
+      updateAvailable.value = response.updateAvailable === true
+      releasesUrl.value = response.releasesUrl || releasesUrl.value
+    }
+  } catch {
+    // The version badge keeps the bundled version when the server is offline.
+  }
 })
 
 const isAdminLoggedIn = computed(() => {
@@ -214,6 +243,27 @@ watch(() => config.value?.webServerPrefix, (newPrefix) => {
   background: rgba(255, 255, 255, 0.08);
   border-color: rgba(255, 255, 255, 0.2);
   transform: translateY(-2px);
+}
+
+.version-badge {
+  padding: 0.35rem 0.65rem;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.48);
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.update-indicator {
+  display: inline-flex;
+  color: #fbbf24;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.update-indicator:hover {
+  color: #fde68a;
+  transform: translateY(-1px);
 }
 
 /* Content animation */

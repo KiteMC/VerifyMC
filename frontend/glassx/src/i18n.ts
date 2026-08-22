@@ -10,10 +10,10 @@ const messages = {
 // SSR 兼容性：检查是否在浏览器环境中
 const canUseBrowser = () => typeof window !== "undefined"
 
-// 获取存储的语言或根据浏览器语言推断
+// 获取存储的语言，未保存时使用中文默认值
 const getSavedLanguage = (): "zh" | "en" => {
   if (!canUseBrowser()) {
-    return "en" // SSR 环境默认返回英文
+    return "zh" // SSR 环境默认使用中文
   }
 
   const stored = localStorage.getItem("language")
@@ -21,8 +21,8 @@ const getSavedLanguage = (): "zh" | "en" => {
     return stored
   }
 
-  // 根据浏览器语言推断
-  return navigator.language.startsWith("zh") ? "zh" : "en"
+  // 没有保存的用户偏好时，统一使用中文默认文本
+  return "zh"
 }
 
 const savedLanguage = getSavedLanguage()
@@ -30,7 +30,7 @@ const savedLanguage = getSavedLanguage()
 const i18n = createI18n({
   legacy: false,
   locale: savedLanguage,
-  fallbackLocale: "en",
+  fallbackLocale: "zh",
   messages,
   globalInjection: true,
 })

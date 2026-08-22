@@ -68,7 +68,7 @@ public final class AdminAuthUtil {
         if (!ctx.getOpsManager().isOp(username)) {
             // Get language from Accept-Language header
             String acceptLanguage = exchange.getRequestHeaders().getFirst("Accept-Language");
-            String language = (acceptLanguage != null && acceptLanguage.startsWith("zh")) ? "zh" : "en";
+            String language = (acceptLanguage != null && acceptLanguage.startsWith("en")) ? "en" : "zh";
 
             // Record audit log for unauthorized admin access attempt
             ctx.getAuditDao().addAudit(new AuditRecord(

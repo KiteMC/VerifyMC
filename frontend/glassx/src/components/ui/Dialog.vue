@@ -9,11 +9,11 @@
     :aria-describedby="ariaDescribedby"
   >
     <!-- Background mask -->
-    <div class="fixed inset-0 bg-black/50 backdrop-blur-xl" @click="handleClose"></div>
+    <div class="fixed inset-0 bg-black/70" @click="handleClose"></div>
     
     <!-- Dialog container -->
     <div 
-      class="relative w-full bg-white/5 border border-white/10 rounded-xl p-6 shadow-2xl backdrop-blur-xl flex flex-col max-h-[90vh] outline-none" 
+      class="relative w-full bg-[#1b222b] border border-[#34404d] rounded-lg p-6 shadow-2xl flex flex-col max-h-[90vh] outline-none"
       :class="maxWidth"
       ref="dialogRef"
       tabindex="-1"

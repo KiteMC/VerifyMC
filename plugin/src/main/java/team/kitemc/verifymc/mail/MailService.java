@@ -76,7 +76,7 @@ public class MailService {
     public boolean sendCode(String to, String subject, String code, String language) {
         debugLog("sendCode called: to=" + to + ", subject=" + subject + ", language=" + language);
         try {
-            String lang = (language != null && !language.isEmpty()) ? language : plugin.getConfig().getString("language", "en");
+            String lang = (language != null && !language.isEmpty()) ? language : plugin.getConfig().getString("language", "zh");
             debugLog("Using language: " + lang);
             
             File emailDir = new File(plugin.getDataFolder(), "email");
@@ -103,7 +103,7 @@ public class MailService {
             debugLog("Email sent successfully");
             return true;
         } catch (Exception e) {
-            String lang = plugin.getConfig().getString("language", "en");
+            String lang = plugin.getConfig().getString("language", "zh");
             debugLog("Failed to send email: " + e.getMessage());
             plugin.getLogger().warning(getMessage.apply("email.failed", lang) + ": " + e.getMessage());
             return false;
@@ -223,7 +223,7 @@ public class MailService {
         debugLog("sendReviewResultNotification called: email=" + email + ", username=" + username + ", approved=" + approved + ", language=" + language);
         
         try {
-            String lang = (language != null && !language.isEmpty()) ? language : plugin.getConfig().getString("language", "en");
+            String lang = (language != null && !language.isEmpty()) ? language : plugin.getConfig().getString("language", "zh");
             String templateName = approved ? "review_approved_" + lang + ".html" : "review_rejected_" + lang + ".html";
             String subject = approved ? 
                 ("zh".equals(lang) ? "[VerifyMC] 您的白名单申请已通过" : "[VerifyMC] Your whitelist application has been approved") :

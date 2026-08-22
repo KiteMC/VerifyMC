@@ -43,7 +43,7 @@ public class UserProfileHandler implements HttpHandler {
 
         QueryParams params = parseQuery(exchange);
         String username = params.get("username");
-        String language = params.getOrDefault("language", "en");
+        String language = params.getOrDefault("language", "zh");
 
         JSONObject resp = new JSONObject();
         if (username != null && !username.isBlank()) {
@@ -174,7 +174,7 @@ public class UserProfileHandler implements HttpHandler {
         JSONObject body = readJson(exchange);
         if (body == null) return null;
 
-        return new UserRequest(username, body.optString("language", "en"), body);
+        return new UserRequest(username, body.optString("language", "zh"), body);
     }
 
     private JSONObject readJson(HttpExchange exchange) throws IOException {
@@ -182,7 +182,7 @@ public class UserProfileHandler implements HttpHandler {
             return WebResponseHelper.readJson(exchange);
         } catch (JSONException e) {
             WebResponseHelper.sendJson(exchange, ApiResponseFactory.failure(
-                    ctx.getMessage("error.invalid_json", "en")), 400);
+                    ctx.getMessage("error.invalid_json", "zh")), 400);
             return null;
         }
     }

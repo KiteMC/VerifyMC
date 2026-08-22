@@ -100,7 +100,7 @@ public class RegistrationProcessingHandler implements HttpHandler {
             req = WebResponseHelper.readJson(exchange);
         } catch (JSONException e) {
             WebResponseHelper.sendJson(exchange, ApiResponseFactory.failure(
-                    messageResolver.apply("error.invalid_json", "en")), 400);
+                    messageResolver.apply("error.invalid_json", "zh")), 400);
             return;
         }
         RegistrationRequest request = RegistrationRequest.fromJson(req, usernameNormalizer);

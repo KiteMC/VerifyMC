@@ -211,7 +211,7 @@ public class ProxyResourceUpdater {
             
             if (!existingConfig.contains("language:")) {
                 additions.append("\n# Language setting (zh or en)\n");
-                additions.append("language: en\n");
+                additions.append("language: zh\n");
             }
             
             if (additions.length() > 0) {

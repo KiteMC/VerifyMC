@@ -22,7 +22,7 @@ public record RegistrationRequest(
         String password = req.optString("password", "");
         String captchaToken = req.optString("captchaToken", "");
         String captchaAnswer = req.optString("captchaAnswer", "");
-        String language = req.optString("language", "en");
+        String language = req.optString("language", "zh");
         String platform = req.optString("platform", "java");
         JSONObject questionnaire = req.optJSONObject("questionnaire");
         String normalizedUsername = usernameNormalizer.apply(username, platform);
