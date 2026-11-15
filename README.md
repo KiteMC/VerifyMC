@@ -117,7 +117,7 @@ mvn test
 
 构建工作流位于 `.github/workflows/plugin.yml`，只负责构建和上传产物。
 
-发布 Release 请在 GitHub Actions 中手动运行 `.github/workflows/release.yml`。Release 正文统一从 `version.yml` 读取，中文内容在前，英文内容在后，不再维护单独的中文更新日志文件。
+发布 Release 请在 GitHub Actions 中手动运行 `.github/workflows/release.yml`。发布前在根目录 `release_notes.txt` 中填写本次版本更新内容（UTF-8，中文内容在前，英文内容在后）；Release 正文直接使用该 TXT 的内容，文件不存在或内容为空时发布会失败。`version.yml` 仅保存版本号，不控制是否发布；推送代码或修改版本文件都不会自动发布。
 
 ## 文档与社区
 

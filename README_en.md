@@ -117,7 +117,7 @@ mvn test
 
 The build workflow is `.github/workflows/plugin.yml`; it builds and uploads artifacts only.
 
-To publish a release, manually run `.github/workflows/release.yml` from GitHub Actions. Release notes are read from `version.yml`, with the Chinese section first and the English section second. No separate language-specific release notes file is maintained.
+To publish a release, manually run `.github/workflows/release.yml` from GitHub Actions. Before publishing, write the version update notes in the root `release_notes.txt` file (UTF-8, Chinese first and English second). Its contents are used directly as the Release body; publishing fails if the file is missing or blank. `version.yml` only stores the version number and does not control publishing. Pushing code or changing the version file never publishes a release automatically.
 
 ## Documentation and Community
 

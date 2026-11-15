@@ -17,6 +17,13 @@ jobs:
       - name: Read version
         run: echo "VERSION=$(awk '/version:/ {print $2}' version.yml)" >> "$GITHUB_ENV"
 
+      - name: Validate release notes
+        run: |
+          if ! grep -q '[^[:space:]]' release_notes.txt; then
+            echo "release_notes.txt must contain the release notes." >&2
+            exit 1
+          fi
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -50,17 +57,14 @@ jobs:
           mvn -B -f plugin/pom.xml clean package -DskipTests
           mvn -B -f plugin-proxy/pom.xml clean package -DskipTests
 
-      - name: Compose release notes
-        run: |
-          awk '/^release_notes: \|/{started=1; next} started {sub(/^  /, ""); print}' version.yml > release_notes.md
-
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ env.VERSION }}
           name: v${{ env.VERSION }}
           generate_release_notes: false
-          body_path: release_notes.md
+          fail_on_unmatched_files: true
+          body_path: release_notes.txt
           files: |
             plugin/target/verifymc-${{ env.VERSION }}.jar
             plugin-proxy/target/verifymc-proxy-${{ env.VERSION }}.jar
