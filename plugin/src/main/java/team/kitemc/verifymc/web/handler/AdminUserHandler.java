@@ -316,8 +316,16 @@ public class AdminUserHandler implements HttpHandler {
         String email = (String) user.get("email");
         if (email != null && !email.isEmpty()) {
             ctx.getMailService().sendReviewResult(email, username, approved, reason,
-                    ctx.getConfigManager().getLanguage());
+                    resolveUserLanguage(user));
         }
+    }
+
+    private String resolveUserLanguage(Map<String, Object> user) {
+        String lang = user.get("language") == null ? null : String.valueOf(user.get("language")).trim();
+        if (lang == null || lang.isEmpty()) {
+            lang = ctx.getConfigManager().getLanguage();
+        }
+        return lang;
     }
 
     private void addAudit(String action, String operator, String target, String detail) {

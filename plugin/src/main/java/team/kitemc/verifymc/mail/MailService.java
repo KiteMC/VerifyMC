@@ -82,10 +82,12 @@ public class MailService {
             File emailDir = new File(plugin.getDataFolder(), "email");
             File templateFile = new File(emailDir, "verify_code_" + lang + ".html");
             String content;
+            String serverName = plugin.getConfig().getString("web_server_prefix", "VerifyMC");
             if (templateFile.exists()) {
                 debugLog("Using custom template: " + templateFile.getAbsolutePath());
                 content = new String(Files.readAllBytes(templateFile.toPath()), StandardCharsets.UTF_8);
-                content = content.replace("{code}", escapeHtml(code));
+                content = content.replace("{code}", escapeHtml(code))
+                                 .replace("{server_name}", escapeHtml(serverName));
             } else {
                 debugLog("Using default template");
                 content = getDefaultVerifyCodeTemplate(lang, escapeHtml(code));
@@ -225,9 +227,10 @@ public class MailService {
         try {
             String lang = (language != null && !language.isEmpty()) ? language : plugin.getConfig().getString("language", "zh");
             String templateName = approved ? "review_approved_" + lang + ".html" : "review_rejected_" + lang + ".html";
-            String subject = approved ? 
-                ("zh".equals(lang) ? "[VerifyMC] 您的白名单申请已通过" : "[VerifyMC] Your whitelist application has been approved") :
-                ("zh".equals(lang) ? "[VerifyMC] 您的白名单申请被拒绝" : "[VerifyMC] Your whitelist application has been rejected");
+            String serverPrefix = plugin.getConfig().getString("web_server_prefix", "VerifyMC");
+            String subject = approved ?
+                ("zh".equals(lang) ? serverPrefix + " 白名单申请已通过" : serverPrefix + " Whitelist Application Approved") :
+                ("zh".equals(lang) ? serverPrefix + " 白名单申请未通过" : serverPrefix + " Whitelist Application Rejected");
             
             File emailDir = new File(plugin.getDataFolder(), "email");
             File templateFile = new File(emailDir, templateName);

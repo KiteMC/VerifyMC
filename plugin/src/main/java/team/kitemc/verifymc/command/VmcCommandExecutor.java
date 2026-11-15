@@ -120,7 +120,7 @@ public class VmcCommandExecutor implements CommandExecutor, TabCompleter {
                 String email = (String) user.get("email");
                 if (email != null && !email.isEmpty()) {
                     ctx.getMailService().sendReviewResult(email, storedTarget, true,
-                            "", ctx.getConfigManager().getLanguage());
+                            "", resolveUserLanguage(user));
                 }
             }
 
@@ -151,7 +151,7 @@ public class VmcCommandExecutor implements CommandExecutor, TabCompleter {
                 String email = (String) user.get("email");
                 if (email != null && !email.isEmpty()) {
                     ctx.getMailService().sendReviewResult(email, storedTarget, false,
-                            reason, ctx.getConfigManager().getLanguage());
+                            reason, resolveUserLanguage(user));
                 }
             }
 
@@ -180,6 +180,14 @@ public class VmcCommandExecutor implements CommandExecutor, TabCompleter {
         } else {
             sender.sendMessage("§6[VerifyMC] §cFailed to delete user " + target);
         }
+    }
+
+    private String resolveUserLanguage(java.util.Map<String, Object> user) {
+        String lang = user.get("language") == null ? null : String.valueOf(user.get("language")).trim();
+        if (lang == null || lang.isEmpty()) {
+            lang = ctx.getConfigManager().getLanguage();
+        }
+        return lang;
     }
 
     private void handleBan(CommandSender sender, String[] args) {
